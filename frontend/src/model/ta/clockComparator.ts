@@ -1,7 +1,7 @@
 export enum ClockComparator {
-  EQ = "==",
-  LEQ = "<=",
-  GEQ = ">=",
-  LESSER = "<",
-  GREATER = ">",
+  EQ = '==',
+  LEQ = '<=',
+  GEQ = '>=',
+  LESSER = '<',
+  GREATER = '>',
 }

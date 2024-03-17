@@ -1,4 +1,4 @@
-import { ClockConstraint } from "./ClockConstraint";
+import { ClockConstraint } from './ClockConstraint';
 
 export interface Location {
   name: string;

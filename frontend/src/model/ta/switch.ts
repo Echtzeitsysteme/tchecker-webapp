@@ -1,6 +1,6 @@
-import { ClockConstraint } from "./ClockConstraint";
-import { Action } from "./action";
-import { Clock } from "./clock";
+import { ClockConstraint } from './ClockConstraint';
+import { Action } from './action';
+import { Clock } from './clock';
 
 export interface Switch {
   source: Location;

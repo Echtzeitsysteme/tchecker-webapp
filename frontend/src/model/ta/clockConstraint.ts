@@ -1,5 +1,5 @@
-import { Clock } from "./clock";
-import { ClockComparator } from "./clockComparator.ts";
+import { Clock } from './clock';
+import { ClockComparator } from './clockComparator.ts';
 
 export interface ClockConstraint {
   lhs: Clock; // lhs == left-hand side

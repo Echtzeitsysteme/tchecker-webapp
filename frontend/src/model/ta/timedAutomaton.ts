@@ -1,6 +1,6 @@
-import { Action } from "./action";
-import { Clock } from "./clock";
-import { Switch } from "./switch";
+import { Action } from './action';
+import { Clock } from './clock';
+import { Switch } from './switch';
 
 export interface TimedAutomaton {
   locations: Location[];
