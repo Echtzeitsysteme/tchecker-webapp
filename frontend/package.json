@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "format": "prettier --write \"./**/*.{css,html,md,ts,tsx}\"",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "yarn build && vite preview"
   },
   "dependencies": {
     "react": "18.2.0",
