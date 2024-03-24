@@ -1,4 +1,4 @@
-import { ClockConstraint } from './ClockConstraint';
+import { ClockConstraint } from './clockConstraint';
 import { Action } from './action';
 import { Clock } from './clock';
 
