@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Network } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
+import { ClockConstraint } from '../model/ta/clockConstraint';
 
 interface VisualizationProps {
   ta: TimedAutomaton;
@@ -9,18 +10,34 @@ interface VisualizationProps {
 }
 
 const MyNetwork: React.FC<VisualizationProps> = (props) => {
+  const { ta } = props;
   const networkRef = useRef<HTMLDivElement>(null);
-  console.log(props);
 
   useEffect(() => {
     if (networkRef.current) {
-      // Define nodes and edges
-      const nodes = new DataSet([
-        { id: 1, label: 'State 1\n5' },
-        { id: 2, label: 'State 2' },
-      ]);
+      const nodes = new DataSet<{ id: string; label: string }>();
+      const edges = new DataSet<{ id: string; from: string; to: string; label: string }>();
 
-      const edges = new DataSet([{ id: '1to2', from: 1, to: 2, label: 'x > 5' }]);
+      ta.locations.forEach((location, index) => {
+        const label = `${location.name}${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
+        nodes.add({
+          id: `${index}`,
+          label,
+        });
+      });
+
+      ta.switches.forEach((sw) => {
+        const fromIndex = ta.locations.indexOf(sw.source);
+        const toIndex = ta.locations.indexOf(sw.target);
+        const label = `${sw.action.name}${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
+
+        edges.add({
+          id: `FROM${fromIndex}TO${toIndex}`,
+          from: `${fromIndex}`,
+          to: `${toIndex}`,
+          label,
+        });
+      });
 
       // Provide the data and configuration to the network
       const data = {
@@ -29,12 +46,15 @@ const MyNetwork: React.FC<VisualizationProps> = (props) => {
       };
       const options = {}; // Customization options
 
-      // Initialize the network
       new Network(networkRef.current, data, options);
     }
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, [ta.locations, ta.switches]);
 
   return <div ref={networkRef} style={{ width: '600px', height: '400px' }} />;
 };
+
+function formatClockConstraint(constraint: ClockConstraint): string {
+  return `${constraint.lhs.name} ${constraint.op} ${constraint.rhs}`;
+}
 
 export default MyNetwork;

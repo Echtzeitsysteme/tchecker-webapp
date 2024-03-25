@@ -19,8 +19,8 @@ function App() {
   const action1: Action = { name: 'start' };
   const action2: Action = { name: 'stop' };
 
-  const clock1: Clock = { name: 'timer1' };
-  const clock2: Clock = { name: 'timer2' };
+  const clock1: Clock = { name: 'x' };
+  const clock2: Clock = { name: 'y' };
 
   const clockConstraint1: ClockConstraint = {
     lhs: clock1,
