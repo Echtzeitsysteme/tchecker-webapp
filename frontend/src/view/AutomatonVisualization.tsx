@@ -44,7 +44,21 @@ const MyNetwork: React.FC<VisualizationProps> = (props) => {
         nodes: nodes,
         edges: edges,
       };
-      const options = {}; // Customization options
+      const options = {
+        nodes: {
+          color: '#ffcc00',
+          shape: 'ellipse',
+        },
+        edges: {
+          color: '#848484',
+          arrows: {
+            to: { enabled: true, type: 'arrow' },
+          },
+        },
+        physics: {
+          enabled: false,
+        },
+      };
 
       new Network(networkRef.current, data, options);
     }
