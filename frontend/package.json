@@ -36,10 +36,10 @@
     "vite": "5.2.6"
   },
   "lint-staged": {
-    ".{ts,tsx}": [
+    "*.{ts,tsx}": [
       "prettier --write",
       "eslint --report-unused-disable-directives --max-warnings 0"
     ],
-    ".{css,html,md}": "prettier --write"
+    "*.{css,html,md}": "prettier --write"
   }
 }
