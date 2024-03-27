@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Network } from 'vis-network/peer';
+import { Data, Edge, Network, Node, Options } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { ClockConstraint } from '../model/ta/clockConstraint';
@@ -9,14 +9,14 @@ interface VisualizationProps {
   // Define any props your component might take, such as data for nodes and edges
 }
 
-const MyNetwork: React.FC<VisualizationProps> = (props) => {
+const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
   const { ta } = props;
   const networkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (networkRef.current) {
-      const nodes = new DataSet<{ id: string; label: string }>();
-      const edges = new DataSet<{ id: string; from: string; to: string; label: string }>();
+      const nodes = new DataSet<Node>();
+      const edges = new DataSet<Edge>();
 
       ta.locations.forEach((location, index) => {
         const label = `${location.name}${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
@@ -40,17 +40,20 @@ const MyNetwork: React.FC<VisualizationProps> = (props) => {
       });
 
       // Provide the data and configuration to the network
-      const data = {
+      const data: Data = {
         nodes: nodes,
         edges: edges,
       };
-      const options = {
+      const options: Options = {
         nodes: {
-          color: '#ffcc00',
-          shape: 'ellipse',
+          shape: 'box',
+          color: {
+            background: 'white',
+            border: 'black',
+          },
         },
         edges: {
-          color: '#848484',
+          color: 'gray',
           arrows: {
             to: { enabled: true, type: 'arrow' },
           },
@@ -71,4 +74,4 @@ function formatClockConstraint(constraint: ClockConstraint): string {
   return `${constraint.lhs.name} ${constraint.op} ${constraint.rhs}`;
 }
 
-export default MyNetwork;
+export default AutomatonVisualization;
