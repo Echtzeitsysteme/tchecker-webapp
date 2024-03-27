@@ -67,7 +67,7 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
     }
   }, [ta.locations, ta.switches]);
 
-  return <div ref={networkRef} style={{ width: '600px', height: '400px' }} />;
+  return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;
 };
 
 function formatClockConstraint(constraint: ClockConstraint): string {
