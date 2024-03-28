@@ -1,43 +1,45 @@
 import React, { useEffect, useRef } from 'react';
 import { Data, Edge, Network, Node, Options } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
-import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { ClockConstraint } from '../model/ta/clockConstraint';
+import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 
 interface VisualizationProps {
-  ta: TimedAutomaton;
+  viewModel: AnalysisViewModel;
 }
 
 const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
-  const { ta } = props;
+  const { viewModel } = props;
+  const { ta, updateLocationCoordinates } = viewModel;
   const networkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // TODO: move transformation to a util class
+    // TODO: move transformation to a util class?
     if (networkRef.current) {
       const nodes = new DataSet<Node>();
       const edges = new DataSet<Edge>();
 
-      ta.locations.forEach((location, index) => {
-        const label = `${location.name}${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
+      ta.locations.forEach((location) => {
+        const label =
+          `${location.name}` + `${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
         nodes.add({
-          id: `${index}`,
+          id: `${location.name}`,
           label: label,
+          x: location.xCoordinate,
+          y: location.yCoordinate,
         });
       });
 
       ta.switches.forEach((sw) => {
-        const fromIndex = ta.locations.indexOf(sw.source);
-        const toIndex = ta.locations.indexOf(sw.target);
         const label =
           `${sw.action.name}` +
           `${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}` +
           `\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
 
         edges.add({
-          id: `FROM${fromIndex}TO${toIndex}`,
-          from: `${fromIndex}`,
-          to: `${toIndex}`,
+          id: `FROM${sw.source.name}TO${sw.target.name}`,
+          from: `${sw.source.name}`,
+          to: `${sw.target.name}`,
           label,
         });
       });
@@ -71,9 +73,25 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         },
       };
 
-      new Network(networkRef.current, data, options);
+      const network = new Network(networkRef.current, data, options);
+
+      // Event listener for dragEnd event (update coordinates saved in locations if a location is moved)
+      network.on('dragEnd', (params) => {
+        // Check if nodes are dragged
+        if (params.nodes.length > 0) {
+          const nodeId = params.nodes[0]; // Assuming single node drag (can extend this for multiple nodes)
+          const nodePosition = network.getPositions([nodeId]);
+
+          // Update TA model
+          ta.locations.forEach((location) => {
+            if (location.name === nodeId) {
+              updateLocationCoordinates(viewModel, location.name, nodePosition[nodeId].x, nodePosition[nodeId].y);
+            }
+          });
+        }
+      });
     }
-  }, [ta.locations, ta.switches]);
+  }, [ta.locations, ta.switches, updateLocationCoordinates, viewModel]);
 
   return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;
 };

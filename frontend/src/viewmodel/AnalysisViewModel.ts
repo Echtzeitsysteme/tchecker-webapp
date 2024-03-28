@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Location } from '../model/ta/location';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { Action } from '../model/ta/action';
@@ -10,6 +10,12 @@ import { Switch } from '../model/ta/switch';
 export interface AnalysisViewModel {
   state: AnalysisState;
   ta: TimedAutomaton;
+  updateLocationCoordinates: (
+    viewModel: AnalysisViewModel,
+    locationName: string,
+    xCoordinate: number,
+    yCoordinate: number
+  ) => void;
 }
 
 export enum AnalysisState {
@@ -38,9 +44,13 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       name: 'init',
       isInitial: true,
       invariant: clockConstraint1,
+      xCoordinate: -100,
+      yCoordinate: 100,
     };
     const loc2: Location = {
       name: 'final',
+      xCoordinate: 100,
+      yCoordinate: 100,
     };
     const switch1: Switch = {
       source: loc1,
@@ -57,9 +67,23 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     };
   }, []);
 
+  const updateLocationCoordinates = useCallback(
+    (viewModel: AnalysisViewModel, locationName: string, xCoordinate: number, yCoordinate: number) => {
+      const ta = viewModel.ta;
+      const updatedLocs = [...ta.locations];
+      const loc = updatedLocs.filter((l) => l.name === locationName)[0]; // locations are identified by name
+      loc.xCoordinate = xCoordinate;
+      loc.yCoordinate = yCoordinate;
+      const updatedTa = { ...ta, locations: updatedLocs };
+      setViewModel({ ...viewModel, ta: updatedTa });
+    },
+    []
+  );
+
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({
     state: AnalysisState.INIT,
     ta: initAutomaton,
+    updateLocationCoordinates: updateLocationCoordinates,
   });
 
   // ===================================================================================================================

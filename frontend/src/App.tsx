@@ -73,7 +73,7 @@ function App() {
           <Button variant="contained">Large Button!!! 20</Button>
         </Box>
         <Box sx={{ flexGrow: 1, overflowY: 'hidden', height: '100%' }}>
-          <AutomatonVisualization ta={viewModel.ta} />
+          <AutomatonVisualization viewModel={viewModel} />
         </Box>
       </Box>
     </>

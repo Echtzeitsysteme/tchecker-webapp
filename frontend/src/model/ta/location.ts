@@ -4,4 +4,6 @@ export interface Location {
   name: string;
   isInitial?: boolean;
   invariant?: ClockConstraint;
+  xCoordinate: number;
+  yCoordinate: number;
 }
