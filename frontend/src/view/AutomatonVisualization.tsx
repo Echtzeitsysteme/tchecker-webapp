@@ -6,7 +6,6 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 
 interface VisualizationProps {
   ta: TimedAutomaton;
-  // Define any props your component might take, such as data for nodes and edges
 }
 
 const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
@@ -14,6 +13,7 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
   const networkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // TODO: move transformation to a util class
     if (networkRef.current) {
       const nodes = new DataSet<Node>();
       const edges = new DataSet<Edge>();
@@ -22,14 +22,17 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         const label = `${location.name}${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
         nodes.add({
           id: `${index}`,
-          label,
+          label: label,
         });
       });
 
       ta.switches.forEach((sw) => {
         const fromIndex = ta.locations.indexOf(sw.source);
         const toIndex = ta.locations.indexOf(sw.target);
-        const label = `${sw.action.name}${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
+        const label =
+          `${sw.action.name}` +
+          `${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}` +
+          `\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
 
         edges.add({
           id: `FROM${fromIndex}TO${toIndex}`,
@@ -39,7 +42,6 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         });
       });
 
-      // Provide the data and configuration to the network
       const data: Data = {
         nodes: nodes,
         edges: edges,
@@ -51,11 +53,17 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
             background: 'white',
             border: 'black',
           },
+          font: {
+            size: 20,
+          },
         },
         edges: {
           color: 'gray',
           arrows: {
             to: { enabled: true, type: 'arrow' },
+          },
+          font: {
+            size: 20,
           },
         },
         physics: {
