@@ -5,7 +5,6 @@ import { Location } from './location';
 
 export interface TimedAutomaton {
   locations: Location[];
-  initialLocation: Location;
   actions: Action[];
   clocks: Clock[];
   switches: Switch[];

@@ -1,17 +1,12 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
 import AutomatonVisualization from './view/AutomatonVisualization';
-import { Action } from './model/ta/action';
-import { Clock } from './model/ta/clock';
-import { ClockConstraint } from './model/ta/clockConstraint';
-import { ClockComparator } from './model/ta/clockComparator';
-import { Location } from './model/ta/location';
-import { Switch } from './model/ta/switch';
-import { TimedAutomaton } from './model/ta/timedAutomaton';
 import { Box, Button, TextField } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
 
 function App() {
+  const viewModel = useAnalysisViewModel();
   const { t } = useTranslation();
 
   // calculate size of content elements so that content always fits the window size
@@ -35,49 +30,6 @@ function App() {
 
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
-
-  const action1: Action = { name: 'start' };
-  const action2: Action = { name: 'stop' };
-
-  const clock1: Clock = { name: 'x' };
-  const clock2: Clock = { name: 'y' };
-
-  const clockConstraint1: ClockConstraint = {
-    lhs: clock1,
-    op: ClockComparator.LESSER,
-    rhs: 5,
-  };
-
-  const clockConstraint2: ClockConstraint = {
-    lhs: clock2,
-    op: ClockComparator.GEQ,
-    rhs: 3,
-  };
-
-  const location1: Location = {
-    name: 'InitialState',
-    invariant: clockConstraint1,
-  };
-
-  const location2: Location = {
-    name: 'FinalState',
-  };
-
-  const switch1: Switch = {
-    source: location1,
-    guard: clockConstraint2,
-    action: action1,
-    reset: [clock1],
-    target: location2,
-  };
-
-  const timedAutomaton: TimedAutomaton = {
-    locations: [location1, location2],
-    initialLocation: location1,
-    actions: [action1, action2],
-    clocks: [clock1, clock2],
-    switches: [switch1],
-  };
 
   return (
     <>
@@ -121,7 +73,7 @@ function App() {
           <Button variant="contained">Large Button!!! 20</Button>
         </Box>
         <Box sx={{ flexGrow: 1, overflowY: 'hidden', height: '100%' }}>
-          <AutomatonVisualization ta={timedAutomaton} />
+          <AutomatonVisualization ta={viewModel.ta} />
         </Box>
       </Box>
     </>
