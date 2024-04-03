@@ -32,7 +32,7 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
 
       ta.switches.forEach((sw) => {
         const label =
-          `${sw.action.name}` +
+          `${sw.actionLabel}` +
           `${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}` +
           `\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
 
