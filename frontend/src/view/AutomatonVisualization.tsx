@@ -29,10 +29,9 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         });
       });
 
-      ta.switches.forEach((sw) => {
+      ta.switches.forEach((sw, index) => {
         edges.add({
-          // TODO: add guard and resets to ID (to make ID unique)
-          id: `FROM${sw.source.name}TO${sw.target.name}ACTION${sw.actionLabel}`,
+          id: index,
           from: `${sw.source.name}`,
           to: `${sw.target.name}`,
           label: formatSwitchLabelVisual(sw),
