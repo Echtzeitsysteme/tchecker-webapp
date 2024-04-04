@@ -6,7 +6,7 @@ export interface MathUtils {
 
 export function useMathUtils(): MathUtils {
   const avgRounded = useCallback((numbers: number[]): number => {
-    if (!numbers) {
+    if (!numbers || numbers.length === 0) {
       return 0;
     }
     const avg = numbers.reduce((a, b) => a + b) / numbers.length;

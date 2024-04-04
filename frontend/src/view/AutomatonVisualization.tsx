@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Data, Edge, Network, Node, Options } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
-import { ClockConstraint } from '../model/ta/clockConstraint';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
+import { useFormattingUtils } from '../utils/formattingUtils';
 
 interface VisualizationProps {
   viewModel: AnalysisViewModel;
@@ -11,6 +11,7 @@ interface VisualizationProps {
 const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
   const { viewModel } = props;
   const { ta, updateLocationCoordinates } = viewModel;
+  const { formatLocationLabelVisual, formatSwitchLabelVisual } = useFormattingUtils();
   const networkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,28 +21,21 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
       const edges = new DataSet<Edge>();
 
       ta.locations.forEach((location) => {
-        const label =
-          `${location.name}` + `${location.invariant ? `\n${formatClockConstraint(location.invariant)}` : ''}`;
         nodes.add({
           id: `${location.name}`,
-          label: label,
+          label: formatLocationLabelVisual(location),
           x: location.xCoordinate,
           y: location.yCoordinate,
         });
       });
 
       ta.switches.forEach((sw) => {
-        const label =
-          `${sw.actionLabel}` +
-          `${sw.guard ? `\n${formatClockConstraint(sw.guard)}` : ''}` +
-          `\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
-
         edges.add({
           // TODO: add guard and resets to ID (to make ID unique)
           id: `FROM${sw.source.name}TO${sw.target.name}ACTION${sw.actionLabel}`,
           from: `${sw.source.name}`,
           to: `${sw.target.name}`,
-          label,
+          label: formatSwitchLabelVisual(sw),
         });
       });
 
@@ -92,13 +86,16 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         }
       });
     }
-  }, [ta.locations, ta.switches, updateLocationCoordinates, viewModel]);
+  }, [
+    ta.locations,
+    ta.switches,
+    viewModel,
+    updateLocationCoordinates,
+    formatLocationLabelVisual,
+    formatSwitchLabelVisual,
+  ]);
 
   return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;
 };
-
-function formatClockConstraint(constraint: ClockConstraint): string {
-  return `${constraint.lhs.name} ${constraint.op} ${constraint.rhs}`;
-}
 
 export default AutomatonVisualization;

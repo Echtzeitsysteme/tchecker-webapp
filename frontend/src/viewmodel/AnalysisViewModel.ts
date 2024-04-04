@@ -10,7 +10,12 @@ import { useMathUtils } from '../utils/mathUtils';
 export interface AnalysisViewModel {
   state: AnalysisState;
   ta: TimedAutomaton;
-  addLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
+  addLocation: (
+    viewModel: AnalysisViewModel,
+    locationName: string,
+    isInitial?: boolean,
+    invariant?: ClockConstraint
+  ) => void;
   removeLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
   setInitialLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
   updateLocationCoordinates: (
@@ -82,18 +87,31 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   }, []);
 
   const addLocation = useCallback(
-    (viewModel: AnalysisViewModel, locationName: string) => {
+    (viewModel: AnalysisViewModel, locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
       const ta = viewModel.ta;
       const locations = ta.locations;
       let newLoc: Location;
       if (locations) {
         const xCoordAvg = avgRounded(locations.map((l) => l.xCoordinate));
         const yCoordAvg = avgRounded(locations.map((l) => l.yCoordinate));
-        newLoc = { name: locationName, xCoordinate: xCoordAvg, yCoordinate: yCoordAvg };
+        newLoc = {
+          name: locationName,
+          isInitial: isInitial,
+          invariant: invariant,
+          xCoordinate: xCoordAvg,
+          yCoordinate: yCoordAvg,
+        };
       } else {
-        newLoc = { name: locationName, xCoordinate: 0, yCoordinate: 0, isInitial: true };
+        newLoc = { name: locationName, isInitial: true, invariant: invariant, xCoordinate: 0, yCoordinate: 0 };
       }
       const updatedLocs = [...locations, newLoc];
+      if (isInitial) {
+        updatedLocs.forEach((loc) => {
+          if (loc.name !== locationName) {
+            loc.isInitial = false;
+          }
+        });
+      }
       const updatedTa = { ...ta, locations: updatedLocs };
       setViewModel({ ...viewModel, ta: updatedTa });
     },

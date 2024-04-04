@@ -3,6 +3,7 @@ import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { Button, TextField } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
+import { useFormattingUtils } from '../utils/formattingUtils';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -13,6 +14,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { ta } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
+  const { formatSwitchTable } = useFormattingUtils();
 
   const handleLocationAdd = () => {
     // TODO implement the add logic
@@ -59,16 +61,10 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   };
 
   const switchTable: JSX.Element = useMemo(() => {
-    const switchRows: ElementRowData[] = switches.map((sw, index) => {
-      // TODO: move to formatting util
-      const guard = sw.guard;
-      const guardStr = guard ? `${guard.lhs.name} ${guard.op} ${guard.rhs}` : undefined;
-      const resetStr = sw.reset.length > 0 ? `{ ${sw.reset.map((r) => r.name).join(', ')} }` : undefined;
-      const switchStr = [sw.source.name, sw.actionLabel, guardStr, resetStr, sw.target.name]
-        .filter((e) => e !== undefined)
-        .join(', ');
-      return { id: index, displayName: `(${switchStr})` };
-    });
+    const switchRows: ElementRowData[] = switches.map((sw, index) => ({
+      id: index,
+      displayName: formatSwitchTable(sw),
+    }));
     return (
       <ElementTable
         rows={switchRows}
@@ -79,7 +75,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         onDelete={handleSwitchDelete}
       />
     );
-  }, [switches, t]);
+  }, [switches, t, formatSwitchTable]);
 
   const handleClockAdd = () => {
     // TODO implement the add logic
