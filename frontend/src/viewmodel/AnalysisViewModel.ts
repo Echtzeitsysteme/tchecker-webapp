@@ -85,9 +85,14 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     (viewModel: AnalysisViewModel, locationName: string) => {
       const ta = viewModel.ta;
       const locations = ta.locations;
-      const xCoordAvg = avgRounded(locations.map((l) => l.xCoordinate));
-      const yCoordAvg = avgRounded(locations.map((l) => l.yCoordinate));
-      const newLoc: Location = { name: locationName, xCoordinate: xCoordAvg, yCoordinate: yCoordAvg };
+      let newLoc: Location;
+      if (locations) {
+        const xCoordAvg = avgRounded(locations.map((l) => l.xCoordinate));
+        const yCoordAvg = avgRounded(locations.map((l) => l.yCoordinate));
+        newLoc = { name: locationName, xCoordinate: xCoordAvg, yCoordinate: yCoordAvg };
+      } else {
+        newLoc = { name: locationName, xCoordinate: 0, yCoordinate: 0, isInitial: true };
+      }
       const updatedLocs = [...locations, newLoc];
       const updatedTa = { ...ta, locations: updatedLocs };
       setViewModel({ ...viewModel, ta: updatedTa });
@@ -97,7 +102,11 @@ export function useAnalysisViewModel(): AnalysisViewModel {
 
   const removeLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
     const ta = viewModel.ta;
+    const wasInitial = ta.locations.filter((l) => l.name === locationName)[0].isInitial;
     const updatedLocs = ta.locations.filter((l) => l.name !== locationName);
+    if (wasInitial && updatedLocs) {
+      updatedLocs[0].isInitial = true;
+    }
     const updatedSwitches = ta.switches.filter((s) => s.source.name !== locationName && s.target.name !== locationName);
     const updatedTa = { ...ta, locations: updatedLocs, switches: updatedSwitches };
     setViewModel({ ...viewModel, ta: updatedTa });
@@ -121,7 +130,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     (viewModel: AnalysisViewModel, locationName: string, xCoordinate: number, yCoordinate: number) => {
       const ta = viewModel.ta;
       const updatedLocs = [...ta.locations];
-      const loc = updatedLocs.filter((l) => l.name === locationName)[0]; // locations are identified by name
+      const loc = updatedLocs.filter((l) => l.name === locationName)[0];
       loc.xCoordinate = xCoordinate;
       loc.yCoordinate = yCoordinate;
       const updatedTa = { ...ta, locations: updatedLocs };
@@ -138,6 +147,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   }, []);
 
   const removeClock = useCallback((viewModel: AnalysisViewModel, clockName: string) => {
+    // TODO: delete all constraints using the clock?
     const ta = viewModel.ta;
     const updatedClocks = ta.clocks.filter((c) => c.name !== clockName);
     const updatedTa = { ...ta, clocks: updatedClocks };

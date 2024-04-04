@@ -37,7 +37,8 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
           `\n{ ${sw.reset.map((clock) => clock.name).join(', ')} }`;
 
         edges.add({
-          id: `FROM${sw.source.name}TO${sw.target.name}`,
+          // TODO: add guard and resets to ID (to make ID unique)
+          id: `FROM${sw.source.name}TO${sw.target.name}ACTION${sw.actionLabel}`,
           from: `${sw.source.name}`,
           to: `${sw.target.name}`,
           label,
@@ -79,7 +80,7 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
       network.on('dragEnd', (params) => {
         // Check if nodes are dragged
         if (params.nodes.length > 0) {
-          const nodeId = params.nodes[0]; // Assuming single node drag (can extend this for multiple nodes)
+          const nodeId = params.nodes[0]; // Assuming single node drag (can be extended for multiple nodes)
           const nodePosition = network.getPositions([nodeId]);
 
           // Update TA model
