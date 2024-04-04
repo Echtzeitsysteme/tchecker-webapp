@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { Button, TextField } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
 import { useFormattingUtils } from '../utils/formattingUtils';
+import AddLocationDialog from './AddLocationDialog';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -15,6 +16,10 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
+  const [locationAddOpen, setlocationAddOpen] = useState(false);
+
+  const handleLocationAddOpen = () => setlocationAddOpen(true);
+  const handleLocationAddClose = () => setlocationAddOpen(false);
 
   const handleLocationAdd = () => {
     // TODO implement the add logic
@@ -38,7 +43,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         rows={locationRows}
         contentSingular={t('manipulation.table.locSingular')}
         contentPlural={t('manipulation.table.locPlural')}
-        onAdd={handleLocationAdd}
+        onAdd={handleLocationAddOpen}
         onEdit={handleLocationEdit}
         onDelete={handleLocationDelete}
       />
@@ -118,6 +123,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   return (
     <>
       {allTables}
+      <AddLocationDialog open={locationAddOpen} handleClose={handleLocationAddClose} handleSubmit={handleLocationAdd} />
 
       <Button variant="contained">Button 1</Button>
       <TextField label="Input 1" variant="outlined" />
