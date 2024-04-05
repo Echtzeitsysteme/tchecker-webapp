@@ -24,6 +24,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleLocationAdd = () => {
     // TODO implement the add logic
     console.log('Add location'); // TODO delete
+    setlocationAddOpen(false);
   };
 
   const handleLocationEdit = (id: number) => {
@@ -123,7 +124,13 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   return (
     <>
       {allTables}
-      <AddLocationDialog open={locationAddOpen} handleClose={handleLocationAddClose} handleSubmit={handleLocationAdd} />
+      <AddLocationDialog
+        open={locationAddOpen}
+        locations={locations}
+        clocks={clocks}
+        handleClose={handleLocationAddClose}
+        handleSubmit={handleLocationAdd}
+      />
 
       <Button variant="contained">Button 1</Button>
       <TextField label="Input 1" variant="outlined" />
