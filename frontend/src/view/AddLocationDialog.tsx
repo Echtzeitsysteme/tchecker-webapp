@@ -34,6 +34,9 @@ export interface ClauseData {
   clockValue: string;
   comparisonValue: string;
   numberInput: number;
+  isClockInvalid: boolean;
+  isComparisonInvalid: boolean;
+  isNumberInvalid: boolean;
 }
 
 export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
@@ -44,11 +47,19 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [initialLocationChecked, setInitialLocationChecked] = useState(false);
   const [invariantChecked, setInvariantChecked] = useState(false);
-  const emptyClauses = [{ id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 }];
-  const [clauses, setClauses] = useState<ClauseData[]>(emptyClauses);
+  const emptyClause = {
+    id: Date.now(),
+    clockValue: '',
+    comparisonValue: '',
+    numberInput: 0,
+    isClockInvalid: true,
+    isComparisonInvalid: true,
+    isNumberInvalid: false,
+  };
+  const [clauses, setClauses] = useState<ClauseData[]>([emptyClause]);
 
   const handleAddClause = () => {
-    setClauses([...clauses, { id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 }]);
+    setClauses([...clauses, emptyClause]);
   };
 
   const handleDeleteClause = (id: number) => {
@@ -58,7 +69,25 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   };
 
   const handleClauseChange = (id: number, field: keyof ClauseData, value: string | number) => {
-    setClauses(clauses.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
+    setClauses(
+      clauses.map((row) => {
+        if (row.id === id) {
+          const updatedRow = { ...row, [field]: value };
+          // Update validation flags based on the new value
+          if (field === 'clockValue') {
+            updatedRow.isClockInvalid = !value;
+          }
+          if (field === 'comparisonValue') {
+            updatedRow.isComparisonInvalid = !value;
+          }
+          if (field === 'numberInput') {
+            updatedRow.isNumberInvalid = !(typeof value === 'number' && value >= 0);
+          }
+          return updatedRow;
+        }
+        return row;
+      })
+    );
   };
 
   useEffect(() => {
@@ -68,14 +97,25 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
     isNameDuplicate && setNameErrorMessage('Name already exists');
   }, [name, locations, isNameEmpty, isNameDuplicate]);
 
+  const isValidationError: boolean = useMemo(
+    () =>
+      isNameEmpty ||
+      isNameDuplicate ||
+      (invariantChecked &&
+        clauses
+          .map((c) => c.isClockInvalid || c.isComparisonInvalid || c.isNumberInvalid)
+          .reduce((result, current) => result || current, false)),
+    [isNameEmpty, isNameDuplicate, invariantChecked, clauses]
+  );
+
   const handleFormSubmit = () => {
-    if (isNameEmpty || isNameDuplicate) {
+    if (isValidationError) {
       return;
     }
     handleSubmit(); // TODO adjust what is submitted
     setName('');
     setInvariantChecked(false);
-    setClauses(emptyClauses);
+    setClauses([emptyClause]);
   };
 
   const clockDropdownItems = useMemo(
@@ -146,6 +186,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
                     value={row.clockValue}
                     label="Clock"
                     onChange={(e) => handleClauseChange(row.id, 'clockValue', e.target.value)}
+                    error={row.isClockInvalid}
                   >
                     {clockDropdownItems}
                   </Select>
@@ -158,6 +199,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
                     value={row.comparisonValue}
                     label="Comparison"
                     onChange={(e) => handleClauseChange(row.id, 'comparisonValue', e.target.value)}
+                    error={row.isComparisonInvalid}
                   >
                     {comparisonDropdownItems}
                   </Select>
@@ -173,6 +215,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
                   value={row.numberInput}
                   onChange={(e) => handleClauseChange(row.id, 'numberInput', Math.max(0, parseInt(e.target.value, 10)))}
                   InputProps={{ inputProps: { min: 0 } }}
+                  error={row.isNumberInvalid}
                 />
               </Grid>
             </Grid>
@@ -187,7 +230,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
         <Button onClick={handleClose} variant="contained" color="error">
           Cancel
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" disabled={isNameEmpty || isNameDuplicate}>
+        <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
           Submit
         </Button>
       </DialogActions>
