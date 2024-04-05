@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -29,7 +29,7 @@ export interface AddLocationDialogProps {
   handleSubmit: () => void;
 }
 
-export interface RowData {
+export interface ClauseData {
   id: number;
   clockValue: string;
   comparisonValue: string;
@@ -37,35 +37,45 @@ export interface RowData {
 }
 
 export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
-  const { open, clocks, handleClose, handleSubmit } = props;
+  const { open, locations, clocks, handleClose, handleSubmit } = props;
   const [name, setName] = useState('');
-  const [isNameError, setIsNameError] = useState(false);
+  const [isNameEmpty, setIsNameEmpty] = useState(false);
+  const [isNameDuplicate, setIsNameDuplicate] = useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [initialLocationChecked, setInitialLocationChecked] = useState(false);
   const [invariantChecked, setInvariantChecked] = useState(false);
-  const [rows, setRows] = useState<RowData[]>([
-    { id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 },
-  ]);
+  const emptyClauses = [{ id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 }];
+  const [clauses, setClauses] = useState<ClauseData[]>(emptyClauses);
 
   const handleAddClause = () => {
-    setRows([...rows, { id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 }]);
+    setClauses([...clauses, { id: Date.now(), clockValue: '', comparisonValue: '', numberInput: 0 }]);
   };
 
   const handleDeleteClause = (id: number) => {
-    if (rows.length > 1) {
-      setRows(rows.filter((row) => row.id !== id));
+    if (clauses.length > 1) {
+      setClauses(clauses.filter((row) => row.id !== id));
     }
   };
 
-  const handleClauseChange = (id: number, field: keyof RowData, value: string | number) => {
-    setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
+  const handleClauseChange = (id: number, field: keyof ClauseData, value: string | number) => {
+    setClauses(clauses.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 
+  useEffect(() => {
+    setIsNameEmpty(name.trim() === '');
+    setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
+    isNameEmpty && setNameErrorMessage('Name cannot be empty');
+    isNameDuplicate && setNameErrorMessage('Name already exists');
+  }, [name, locations, isNameEmpty, isNameDuplicate]);
+
   const handleFormSubmit = () => {
-    if (name.trim() === '') {
-      setIsNameError(true);
+    if (isNameEmpty || isNameDuplicate) {
       return;
     }
     handleSubmit(); // TODO adjust what is submitted
+    setName('');
+    setInvariantChecked(false);
+    setClauses(emptyClauses);
   };
 
   const clockDropdownItems = useMemo(
@@ -108,8 +118,8 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
           variant="outlined"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          error={isNameError}
-          helperText={isNameError && 'Name cannot be empty'}
+          error={isNameEmpty || isNameDuplicate}
+          helperText={isNameEmpty || isNameDuplicate ? nameErrorMessage : ''}
         />
         <FormControlLabel
           control={
@@ -122,10 +132,10 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
           label="Add Invariant"
         />
         {invariantChecked &&
-          rows.map((row) => (
+          clauses.map((row) => (
             <Grid key={row.id} container spacing={2} alignItems="center">
               <Grid item xs={1}>
-                <IconButton disabled={rows.length <= 1} onClick={() => handleDeleteClause(row.id)}>
+                <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
                   <DeleteIcon />
                 </IconButton>
               </Grid>
@@ -177,7 +187,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
         <Button onClick={handleClose} variant="contained" color="error">
           Cancel
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" disabled={isNameError}>
+        <Button onClick={handleFormSubmit} variant="contained" disabled={isNameEmpty || isNameDuplicate}>
           Submit
         </Button>
       </DialogActions>
