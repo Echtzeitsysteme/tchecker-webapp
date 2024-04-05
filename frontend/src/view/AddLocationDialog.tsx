@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -62,33 +62,39 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
     setClauses([...clauses, emptyClause]);
   };
 
-  const handleDeleteClause = (id: number) => {
-    if (clauses.length > 1) {
-      setClauses(clauses.filter((row) => row.id !== id));
-    }
-  };
+  const handleDeleteClause = useCallback(
+    (id: number) => {
+      if (clauses.length > 1) {
+        setClauses(clauses.filter((row) => row.id !== id));
+      }
+    },
+    [clauses]
+  );
 
-  const handleClauseChange = (id: number, field: keyof ClauseData, value: string | number) => {
-    setClauses(
-      clauses.map((row) => {
-        if (row.id === id) {
-          const updatedRow = { ...row, [field]: value };
-          // Update validation flags based on the new value
-          if (field === 'clockValue') {
-            updatedRow.isClockInvalid = !value;
+  const handleClauseChange = useCallback(
+    (id: number, field: keyof ClauseData, value: string | number) => {
+      setClauses(
+        clauses.map((row) => {
+          if (row.id === id) {
+            const updatedRow = { ...row, [field]: value };
+            // Update validation flags based on the new value
+            if (field === 'clockValue') {
+              updatedRow.isClockInvalid = !value;
+            }
+            if (field === 'comparisonValue') {
+              updatedRow.isComparisonInvalid = !value;
+            }
+            if (field === 'numberInput') {
+              updatedRow.isNumberInvalid = !(typeof value === 'number' && value >= 0);
+            }
+            return updatedRow;
           }
-          if (field === 'comparisonValue') {
-            updatedRow.isComparisonInvalid = !value;
-          }
-          if (field === 'numberInput') {
-            updatedRow.isNumberInvalid = !(typeof value === 'number' && value >= 0);
-          }
-          return updatedRow;
-        }
-        return row;
-      })
-    );
-  };
+          return row;
+        })
+      );
+    },
+    [clauses]
+  );
 
   useEffect(() => {
     setIsNameEmpty(name.trim() === '');
@@ -138,6 +144,59 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
     []
   );
 
+  const clauseRows: JSX.Element[] = useMemo(
+    () =>
+      clauses.map((row) => (
+        <Grid key={row.id} container spacing={2} alignItems="center">
+          <Grid item xs={1}>
+            <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
+              <DeleteIcon />
+            </IconButton>
+          </Grid>
+          <Grid item xs={4}>
+            <FormControl fullWidth>
+              <InputLabel>Clock</InputLabel>
+              <Select
+                value={row.clockValue}
+                label="Clock"
+                onChange={(e) => handleClauseChange(row.id, 'clockValue', e.target.value)}
+                error={row.isClockInvalid}
+              >
+                {clockDropdownItems}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={4}>
+            <FormControl fullWidth>
+              <InputLabel>Comparison</InputLabel>
+              <Select
+                value={row.comparisonValue}
+                label="Comparison"
+                onChange={(e) => handleClauseChange(row.id, 'comparisonValue', e.target.value)}
+                error={row.isComparisonInvalid}
+              >
+                {comparisonDropdownItems}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              margin="dense"
+              label="Value"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={row.numberInput}
+              onChange={(e) => handleClauseChange(row.id, 'numberInput', Math.max(0, parseInt(e.target.value, 10)))}
+              InputProps={{ inputProps: { min: 0 } }}
+              error={row.isNumberInvalid}
+            />
+          </Grid>
+        </Grid>
+      )),
+    [clauses, clockDropdownItems, comparisonDropdownItems, handleClauseChange, handleDeleteClause]
+  );
+
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>
@@ -171,55 +230,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
           label="Add Invariant"
         />
-        {invariantChecked &&
-          clauses.map((row) => (
-            <Grid key={row.id} container spacing={2} alignItems="center">
-              <Grid item xs={1}>
-                <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </Grid>
-              <Grid item xs={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Clock</InputLabel>
-                  <Select
-                    value={row.clockValue}
-                    label="Clock"
-                    onChange={(e) => handleClauseChange(row.id, 'clockValue', e.target.value)}
-                    error={row.isClockInvalid}
-                  >
-                    {clockDropdownItems}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Comparison</InputLabel>
-                  <Select
-                    value={row.comparisonValue}
-                    label="Comparison"
-                    onChange={(e) => handleClauseChange(row.id, 'comparisonValue', e.target.value)}
-                    error={row.isComparisonInvalid}
-                  >
-                    {comparisonDropdownItems}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={3}>
-                <TextField
-                  margin="dense"
-                  label="Value"
-                  type="number"
-                  fullWidth
-                  variant="outlined"
-                  value={row.numberInput}
-                  onChange={(e) => handleClauseChange(row.id, 'numberInput', Math.max(0, parseInt(e.target.value, 10)))}
-                  InputProps={{ inputProps: { min: 0 } }}
-                  error={row.isNumberInvalid}
-                />
-              </Grid>
-            </Grid>
-          ))}
+        {invariantChecked && clauseRows}
         {invariantChecked && (
           <Button variant="outlined" onClick={handleAddClause} sx={{ marginTop: 2 }}>
             Add Clause
