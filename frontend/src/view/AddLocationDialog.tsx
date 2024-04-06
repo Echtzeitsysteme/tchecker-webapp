@@ -29,11 +29,11 @@ export interface AddLocationDialogProps {
   handleSubmit: () => void;
 }
 
-export interface ClauseData {
+interface ClauseData {
   id: number;
   clockValue: string;
   comparisonValue: string;
-  numberInput: number;
+  numberInput: string;
   isClockInvalid: boolean;
   isComparisonInvalid: boolean;
   isNumberInvalid: boolean;
@@ -51,7 +51,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
     id: Date.now(),
     clockValue: '',
     comparisonValue: '',
-    numberInput: 0,
+    numberInput: '0',
     isClockInvalid: true,
     isComparisonInvalid: true,
     isNumberInvalid: false,
@@ -72,11 +72,11 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   );
 
   const handleClauseChange = useCallback(
-    (id: number, field: keyof ClauseData, value: string | number) => {
+    (id: number, field: keyof ClauseData, value: string) => {
       setClauses(
         clauses.map((row) => {
           if (row.id === id) {
-            const updatedRow = { ...row, [field]: value };
+            let updatedRow = { ...row, [field]: value };
             // Update validation flags based on the new value
             if (field === 'clockValue') {
               updatedRow.isClockInvalid = !value;
@@ -85,7 +85,10 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
               updatedRow.isComparisonInvalid = !value;
             }
             if (field === 'numberInput') {
-              updatedRow.isNumberInvalid = !(typeof value === 'number' && value >= 0);
+              updatedRow.isNumberInvalid = !value;
+            }
+            if (field === 'numberInput' && value) {
+              updatedRow = { ...updatedRow, [field]: '' + Math.max(0, parseInt(value, 10)) };
             }
             return updatedRow;
           }
@@ -187,7 +190,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
               fullWidth
               variant="outlined"
               value={row.numberInput}
-              onChange={(e) => handleClauseChange(row.id, 'numberInput', Math.max(0, parseInt(e.target.value, 10)))}
+              onChange={(e) => handleClauseChange(row.id, 'numberInput', e.target.value)}
               InputProps={{ inputProps: { min: 0 } }}
               error={row.isNumberInvalid}
             />
