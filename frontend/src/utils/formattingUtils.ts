@@ -21,11 +21,14 @@ export function useFormattingUtils(): FormattingUtils {
     return cc.clauses.map((c) => `${c.lhs.name} ${c.op} ${c.rhs}`).join(clauseJoinStr);
   }, []);
 
-  const formatReset = useCallback((clocks?: Clock[]) => {
+  const formatReset = useCallback((clocks?: Clock[], compact: boolean = false) => {
     if (!clocks || clocks.length === 0) {
       return undefined;
     }
-    return `{${clocks.map((c) => c.name).join(', ')}}`;
+    if (compact) {
+      return `{${clocks.map((c) => c.name).join(',')}}`;
+    }
+    return `{ ${clocks.map((c) => c.name).join(', ')} }`;
   }, []);
 
   const formatLocationLabelVisual = useCallback(
@@ -39,7 +42,7 @@ export function useFormattingUtils(): FormattingUtils {
   const formatSwitchTable = useCallback(
     (sw: Switch) => {
       const guard = formatClockConstraint(sw.guard);
-      const reset = formatReset(sw.reset);
+      const reset = formatReset(sw.reset, true);
       return [sw.source.name, sw.actionLabel, guard, reset, sw.target.name].filter((e) => e !== undefined).join(', ');
     },
     [formatClockConstraint, formatReset]

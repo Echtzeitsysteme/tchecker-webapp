@@ -33,7 +33,7 @@ interface ClauseData {
   id: number;
   clockValue: string;
   comparisonValue: string;
-  numberInput: string;
+  numberInput: string; // string so that input field can be empty
   isClockInvalid: boolean;
   isComparisonInvalid: boolean;
   isNumberInvalid: boolean;
@@ -87,6 +87,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
             if (field === 'numberInput') {
               updatedRow.isNumberInvalid = !value;
             }
+            // Update for number value if it changed
             if (field === 'numberInput' && value) {
               updatedRow = { ...updatedRow, [field]: '' + Math.max(0, parseInt(value, 10)) };
             }
