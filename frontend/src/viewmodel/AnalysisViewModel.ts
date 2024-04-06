@@ -6,6 +6,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { Switch } from '../model/ta/switch';
 import { useMathUtils } from '../utils/mathUtils';
+import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -46,19 +47,33 @@ export enum AnalysisState {
 
 export function useAnalysisViewModel(): AnalysisViewModel {
   const { avgRounded } = useMathUtils();
+  const { clockConstraintsEqual } = useClockConstraintUtils();
 
   const initAutomaton: TimedAutomaton = useMemo(() => {
     const clock1: Clock = { name: 'x' };
     const clock2: Clock = { name: 'y' };
     const clockConstraint1: ClockConstraint = {
-      lhs: clock1,
-      op: ClockComparator.LESSER,
-      rhs: 5,
+      clauses: [
+        {
+          lhs: clock1,
+          op: ClockComparator.LESSER,
+          rhs: 5,
+        },
+      ],
     };
     const clockConstraint2: ClockConstraint = {
-      lhs: clock2,
-      op: ClockComparator.GEQ,
-      rhs: 3,
+      clauses: [
+        {
+          lhs: clock1,
+          op: ClockComparator.GREATER,
+          rhs: 1,
+        },
+        {
+          lhs: clock2,
+          op: ClockComparator.GEQ,
+          rhs: 3,
+        },
+      ],
     };
     const loc1: Location = {
       name: 'init',
@@ -196,31 +211,32 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     []
   );
 
-  const removeSwitch = useCallback((viewModel: AnalysisViewModel, switchToRemove: Switch) => {
-    const ta = viewModel.ta;
-    const { source, guard, actionLabel, reset, target } = switchToRemove;
-    const resetNames = reset.map((c) => c.name);
-    const updatedSwitches: Switch[] = [];
+  const removeSwitch = useCallback(
+    (viewModel: AnalysisViewModel, switchToRemove: Switch) => {
+      const ta = viewModel.ta;
+      const { source, guard, actionLabel, reset, target } = switchToRemove;
+      const resetNames = reset.map((c) => c.name);
+      const updatedSwitches: Switch[] = [];
 
-    for (const sw of ta.switches) {
-      const hasEqualSource = sw.source.name === source.name;
-      const hasEqualTarget = sw.target.name === target.name;
-      const swGuard = sw.guard;
-      const hasEqualGuard =
-        (!guard && !swGuard) ||
-        (swGuard?.lhs.name === guard?.lhs.name && swGuard?.op === guard?.op && swGuard?.rhs === guard?.rhs);
-      const hasEqualLabel = sw.actionLabel === actionLabel;
-      const hasEqualReset =
-        sw.reset.length === reset.length && sw.reset.filter((r) => !resetNames.includes(r.name)).length === 0;
+      for (const sw of ta.switches) {
+        const hasEqualSource = sw.source.name === source.name;
+        const hasEqualTarget = sw.target.name === target.name;
+        const swGuard = sw.guard;
+        const hasEqualGuard = clockConstraintsEqual(guard, swGuard);
+        const hasEqualLabel = sw.actionLabel === actionLabel;
+        const hasEqualReset =
+          sw.reset.length === reset.length && sw.reset.filter((r) => !resetNames.includes(r.name)).length === 0;
 
-      if (!hasEqualSource || !hasEqualTarget || !hasEqualGuard || !hasEqualLabel || !hasEqualReset) {
-        updatedSwitches.push(sw);
+        if (!hasEqualSource || !hasEqualTarget || !hasEqualGuard || !hasEqualLabel || !hasEqualReset) {
+          updatedSwitches.push(sw);
+        }
       }
-    }
 
-    const updatedTa = { ...ta, switches: updatedSwitches };
-    setViewModel({ ...viewModel, ta: updatedTa });
-  }, []);
+      const updatedTa = { ...ta, switches: updatedSwitches };
+      setViewModel({ ...viewModel, ta: updatedTa });
+    },
+    [clockConstraintsEqual]
+  );
 
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({
     state: AnalysisState.INIT,

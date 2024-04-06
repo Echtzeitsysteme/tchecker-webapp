@@ -1,8 +1,5 @@
-import { Clock } from './clock';
-import { ClockComparator } from './clockComparator.ts';
+import { Clause } from './clause.ts';
 
 export interface ClockConstraint {
-  lhs: Clock; // lhs == left-hand side
-  op: ClockComparator;
-  rhs: number; // rhs == ride-hand side
+  clauses: Clause[];
 }

@@ -13,19 +13,19 @@ export interface FormattingUtils {
 }
 
 export function useFormattingUtils(): FormattingUtils {
-  const formatClockConstraint = useCallback((clockConstraint?: ClockConstraint) => {
+  const formatClockConstraint = useCallback((clockConstraint?: ClockConstraint, clauseJoinStr: string = ' ∧ ') => {
     const cc = clockConstraint;
-    if (!cc) {
+    if (!cc || !cc.clauses) {
       return undefined;
     }
-    return `${cc.lhs.name} ${cc.op} ${cc.rhs}`;
+    return cc.clauses.map((c) => `${c.lhs.name} ${c.op} ${c.rhs}`).join(clauseJoinStr);
   }, []);
 
   const formatReset = useCallback((clocks?: Clock[]) => {
     if (!clocks || clocks.length === 0) {
       return undefined;
     }
-    return `{ ${clocks.map((c) => c.name).join(', ')} }`;
+    return `{${clocks.map((c) => c.name).join(', ')}}`;
   }, []);
 
   const formatLocationLabelVisual = useCallback(
@@ -47,7 +47,7 @@ export function useFormattingUtils(): FormattingUtils {
 
   const formatSwitchLabelVisual = useCallback(
     (sw: Switch) => {
-      const guard = formatClockConstraint(sw.guard);
+      const guard = formatClockConstraint(sw.guard, ' ∧\n');
       const reset = formatReset(sw.reset);
       return [sw.actionLabel, guard, reset].filter((e) => e !== undefined).join('\n');
     },
