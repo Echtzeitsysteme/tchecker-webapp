@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { Button, TextField } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
@@ -13,7 +13,7 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation } = viewModel;
+  const { ta, addLocation, removeLocation } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
@@ -32,10 +32,13 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     console.log('Editing location with id', id); // TODO delete
   };
 
-  const handleLocationDelete = (id: number) => {
-    // TODO implement the delete logic
-    console.log('Deleting location with id', id); // TODO delete
-  };
+  const handleLocationDelete = useCallback(
+    (id: number) => {
+      const locationName = locations[id].name; // array access is save due to construction of location table
+      removeLocation(viewModel, locationName);
+    },
+    [locations, viewModel, removeLocation]
+  );
 
   const locationTable: JSX.Element = useMemo(() => {
     const locationRows = locations.map((loc, index) => ({ id: index, displayName: loc.name }));
@@ -49,7 +52,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         onDelete={handleLocationDelete}
       />
     );
-  }, [locations, t]);
+  }, [locations, t, handleLocationDelete]);
 
   const handleSwitchAdd = () => {
     // TODO implement the add logic
