@@ -146,6 +146,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   }, []);
 
   const setInitialLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
+    // TODO: Do I need this? Or include in location edit?
     const ta = viewModel.ta;
     const updatedLocs = [...ta.locations];
     updatedLocs.forEach((l) => {

@@ -5,6 +5,7 @@ import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
 import { useFormattingUtils } from '../utils/formattingUtils';
 import AddLocationDialog from './AddLocationDialog';
+import { ClockConstraint } from '../model/ta/clockConstraint';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -12,7 +13,7 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta } = viewModel;
+  const { ta, addLocation } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
@@ -21,9 +22,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleLocationAddOpen = () => setlocationAddOpen(true);
   const handleLocationAddClose = () => setlocationAddOpen(false);
 
-  const handleLocationAdd = () => {
-    // TODO implement the add logic
-    console.log('Add location'); // TODO delete
+  const handleLocationAdd = (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
+    addLocation(viewModel, locationName, isInitial, invariant);
     setlocationAddOpen(false);
   };
 

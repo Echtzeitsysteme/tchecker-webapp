@@ -20,13 +20,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Clock } from '../model/ta/clock';
 import { Location } from '../model/ta/location';
 import { ClockComparator } from '../model/ta/clockComparator';
+import { ClockConstraint } from '../model/ta/clockConstraint';
+import { Clause } from '../model/ta/clause';
 
 export interface AddLocationDialogProps {
   open: boolean;
   locations: Location[];
   clocks: Clock[];
   handleClose: () => void;
-  handleSubmit: () => void;
+  handleSubmit: (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => void;
 }
 
 interface ClauseData {
@@ -47,7 +49,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [initialLocationChecked, setInitialLocationChecked] = useState(false);
   const [invariantChecked, setInvariantChecked] = useState(false);
-  const emptyClause = {
+  const emptyClause: ClauseData = {
     id: Date.now(),
     clockValue: '',
     comparisonValue: '',
@@ -122,7 +124,30 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
     if (isValidationError) {
       return;
     }
-    handleSubmit(); // TODO adjust what is submitted
+    const invariant: ClockConstraint | undefined = invariantChecked
+      ? clauses
+          .map<Clause>((c) => {
+            const lhs: Clock = { name: c.clockValue };
+            const op: ClockComparator | undefined = Object.values(ClockComparator).find(
+              (value) => value === c.comparisonValue
+            );
+            if (op === undefined) {
+              throw new Error(`Invalid comparison value: ${c.comparisonValue}`);
+            }
+            const rhs: number = parseInt(c.numberInput);
+            const clause: Clause = { lhs, op, rhs };
+            return clause;
+          })
+          .reduce<ClockConstraint>(
+            (accumulator, current) => {
+              accumulator.clauses.push(current);
+              return accumulator;
+            },
+            { clauses: [] }
+          )
+      : undefined;
+    handleSubmit(name, initialLocationChecked, invariant);
+    // reset values for next opening of dialog
     setName('');
     setInvariantChecked(false);
     setClauses([emptyClause]);
