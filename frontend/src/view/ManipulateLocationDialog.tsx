@@ -23,7 +23,7 @@ import { ClockComparator } from '../model/ta/clockComparator';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
 
-export interface AddLocationDialogProps {
+export interface ManipulateLocationDialogProps {
   open: boolean;
   locations: Location[];
   clocks: Clock[];
@@ -47,7 +47,7 @@ interface ClauseData {
   isNumberInvalid: boolean;
 }
 
-export const ManipulateLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
+export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> = (props) => {
   const { open, locations, clocks, locPrevVersion, handleClose, handleSubmit } = props;
   const [name, setName] = useState('');
   const [isNameEmpty, setIsNameEmpty] = useState(false);

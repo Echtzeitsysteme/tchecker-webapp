@@ -4,7 +4,7 @@ import { Button, TextField, Tooltip, Typography } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
 import { useFormattingUtils } from '../utils/formattingUtils';
-import ManipulateLocationDialog from './AddLocationDialog';
+import ManipulateLocationDialog from './ManipulateLocationDialog';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Location } from '../model/ta/location';
 import { Home } from '@mui/icons-material';
