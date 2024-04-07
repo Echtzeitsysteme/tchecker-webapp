@@ -6,8 +6,11 @@
   "manipulation.table.actions": "Actions",
   "manipulation.table.locSingular": "Location",
   "manipulation.table.locPlural": "Locations",
+  "manipulation.table.initLocLabel": "Initial Location",
   "manipulation.table.switchSingular": "Switch",
   "manipulation.table.switchPlural": "Switches",
   "manipulation.table.clockSingular": "Clock",
-  "manipulation.table.clockPlural": "Clocks"
+  "manipulation.table.clockPlural": "Clocks",
+  "manipulation.table.editLabel": "Edit {{type}}",
+  "manipulation.table.deleteLabel": "Delete {{type}}"
 }

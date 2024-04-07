@@ -27,8 +27,14 @@ export interface AddLocationDialogProps {
   open: boolean;
   locations: Location[];
   clocks: Clock[];
+  locPrevVersion?: Location; // only for editing locations
   handleClose: () => void;
-  handleSubmit: (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => void;
+  handleSubmit: (
+    locationName: string,
+    isInitial?: boolean,
+    invariant?: ClockConstraint,
+    prevLocationName?: string // only for editing locations
+  ) => void;
 }
 
 interface ClauseData {
@@ -41,24 +47,57 @@ interface ClauseData {
   isNumberInvalid: boolean;
 }
 
-export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
-  const { open, locations, clocks, handleClose, handleSubmit } = props;
+export const ManipulateLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
+  const { open, locations, clocks, locPrevVersion, handleClose, handleSubmit } = props;
   const [name, setName] = useState('');
   const [isNameEmpty, setIsNameEmpty] = useState(false);
   const [isNameDuplicate, setIsNameDuplicate] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [initialLocationChecked, setInitialLocationChecked] = useState(false);
   const [invariantChecked, setInvariantChecked] = useState(false);
-  const emptyClause: ClauseData = {
-    id: Date.now(),
-    clockValue: '',
-    comparisonValue: '',
-    numberInput: '0',
-    isClockInvalid: true,
-    isComparisonInvalid: true,
-    isNumberInvalid: false,
-  };
+  const emptyClause: ClauseData = useMemo(
+    () => ({
+      id: Date.now(),
+      clockValue: '',
+      comparisonValue: '',
+      numberInput: '0',
+      isClockInvalid: true,
+      isComparisonInvalid: true,
+      isNumberInvalid: false,
+    }),
+    []
+  );
   const [clauses, setClauses] = useState<ClauseData[]>([emptyClause]);
+
+  useEffect(() => {
+    if (locPrevVersion !== undefined) {
+      // load existing location if editing (for adding, "if" prevents entering this)
+      setName(locPrevVersion.name);
+      setInitialLocationChecked(!!locPrevVersion.isInitial);
+      if (locPrevVersion.invariant) {
+        setInvariantChecked(true);
+        // don't just call Date.now() for every clause because generation is too fast
+        let idCounter: number = Date.now();
+        setClauses(
+          locPrevVersion.invariant.clauses.map<ClauseData>((c) => {
+            const clauseData: ClauseData = {
+              id: idCounter++,
+              clockValue: c.lhs.name,
+              comparisonValue: c.op,
+              numberInput: '' + c.rhs,
+              isClockInvalid: false,
+              isComparisonInvalid: false,
+              isNumberInvalid: false,
+            };
+            return clauseData;
+          })
+        );
+      } else {
+        setInvariantChecked(false);
+        setClauses([emptyClause]);
+      }
+    }
+  }, [locPrevVersion, emptyClause]);
 
   const handleAddClause = () => {
     setClauses([...clauses, emptyClause]);
@@ -103,11 +142,20 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   );
 
   useEffect(() => {
+    // check validity of name field
     setIsNameEmpty(name.trim() === '');
-    setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
+    if (locPrevVersion) {
+      // previous name is allowed
+      const prevName = locPrevVersion.name;
+      setIsNameDuplicate(
+        locations.filter((loc) => loc.name !== prevName).some((loc) => loc.name.toLowerCase() === name.toLowerCase())
+      );
+    } else {
+      setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
+    }
     isNameEmpty && setNameErrorMessage('Name cannot be empty');
     isNameDuplicate && setNameErrorMessage('Name already exists');
-  }, [name, locations, isNameEmpty, isNameDuplicate]);
+  }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion]);
 
   const isValidationError: boolean = useMemo(
     () =>
@@ -146,11 +194,16 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
             { clauses: [] }
           )
       : undefined;
-    handleSubmit(name, initialLocationChecked, invariant);
-    // reset values for next opening of dialog
-    setName('');
-    setInvariantChecked(false);
-    setClauses([emptyClause]);
+    if (locPrevVersion) {
+      handleSubmit(name, initialLocationChecked, invariant, locPrevVersion.name);
+      // value reset not needed for editing because values are loaded from existing version
+    } else {
+      handleSubmit(name, initialLocationChecked, invariant);
+      // reset values for next opening of dialog
+      setName('');
+      setInvariantChecked(false);
+      setClauses([emptyClause]);
+    }
   };
 
   const clockDropdownItems = useMemo(
@@ -229,7 +282,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>
-        Add Location
+        {locPrevVersion ? 'Edit Location' : 'Add Location'}
         <IconButton
           onClick={handleClose}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
@@ -257,7 +310,7 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
         />
         <FormControlLabel
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
-          label="Add Invariant"
+          label="Has Invariant"
         />
         {invariantChecked && clauseRows}
         {invariantChecked && (
@@ -271,11 +324,11 @@ export const AddLocationDialog: React.FC<AddLocationDialogProps> = (props) => {
           Cancel
         </Button>
         <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
-          Submit
+          {locPrevVersion ? 'Edit' : 'Add'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AddLocationDialog;
+export default ManipulateLocationDialog;

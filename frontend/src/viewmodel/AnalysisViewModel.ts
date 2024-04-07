@@ -17,6 +17,13 @@ export interface AnalysisViewModel {
     isInitial?: boolean,
     invariant?: ClockConstraint
   ) => void;
+  editLocation: (
+    viewModel: AnalysisViewModel,
+    locationName: string,
+    prevLocationName: string,
+    isInitial?: boolean,
+    invariant?: ClockConstraint
+  ) => void;
   removeLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
   setInitialLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
   updateLocationCoordinates: (
@@ -101,6 +108,20 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     };
   }, []);
 
+  const setInitialLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
+    const ta = viewModel.ta;
+    const updatedLocs = [...ta.locations];
+    updatedLocs.forEach((l) => {
+      if (l.name === locationName) {
+        l.isInitial = true;
+      } else {
+        l.isInitial = false;
+      }
+    });
+    const updatedTa = { ...ta, locations: updatedLocs };
+    setViewModel({ ...viewModel, ta: updatedTa });
+  }, []);
+
   const addLocation = useCallback(
     (viewModel: AnalysisViewModel, locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
       const ta = viewModel.ta;
@@ -133,6 +154,35 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     [avgRounded]
   );
 
+  const editLocation = useCallback(
+    (
+      viewModel: AnalysisViewModel,
+      locationName: string,
+      prevLocationName: string,
+      isInitial?: boolean,
+      invariant?: ClockConstraint
+    ) => {
+      const ta = viewModel.ta;
+      const locations = [...ta.locations];
+      const loc = locations.filter((l) => l.name === prevLocationName)[0];
+      loc.name = locationName;
+      loc.invariant = invariant;
+      const updatedTa = { ...ta, locations: locations };
+      const updatedViewModel = { ...viewModel, ta: updatedTa };
+      setViewModel(updatedViewModel);
+
+      // make sure to set initial location correctly
+      if (isInitial) {
+        setInitialLocation(updatedViewModel, locationName);
+      } else if (locations.filter((l) => !!l.isInitial).length !== 1) {
+        // if not exactly one initial location: set first in array to initial
+        // (when editing, there is at least one location)
+        setInitialLocation(updatedViewModel, locations[0].name);
+      }
+    },
+    [setInitialLocation]
+  );
+
   const removeLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
     const ta = viewModel.ta;
     const wasInitial = ta.locations.filter((l) => l.name === locationName)[0].isInitial;
@@ -142,21 +192,6 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     }
     const updatedSwitches = ta.switches.filter((s) => s.source.name !== locationName && s.target.name !== locationName);
     const updatedTa = { ...ta, locations: updatedLocs, switches: updatedSwitches };
-    setViewModel({ ...viewModel, ta: updatedTa });
-  }, []);
-
-  const setInitialLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
-    // TODO: Do I need this? Or include in location edit?
-    const ta = viewModel.ta;
-    const updatedLocs = [...ta.locations];
-    updatedLocs.forEach((l) => {
-      if (l.name === locationName) {
-        l.isInitial = true;
-      } else {
-        l.isInitial = false;
-      }
-    });
-    const updatedTa = { ...ta, locations: updatedLocs };
     setViewModel({ ...viewModel, ta: updatedTa });
   }, []);
 
@@ -243,6 +278,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     state: AnalysisState.INIT,
     ta: initAutomaton,
     addLocation: addLocation,
+    editLocation: editLocation,
     removeLocation: removeLocation,
     setInitialLocation: setInitialLocation,
     updateLocationCoordinates: updateLocationCoordinates,

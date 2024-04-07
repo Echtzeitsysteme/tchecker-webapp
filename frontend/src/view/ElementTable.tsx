@@ -14,10 +14,11 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTranslation } from 'react-i18next';
 import { Add } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
 
 export interface ElementRowData {
   id: number;
-  displayName: string;
+  displayName: string | JSX.Element;
 }
 
 interface ElementTableProps {
@@ -52,16 +53,20 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
       <TableRow key={row.id}>
         <TableCell style={styleActionsColumn}>
           <IconButton onClick={() => onEdit(row.id)} size="small">
-            <EditIcon />
+            <Tooltip title={t('manipulation.table.editLabel', { type: contentSingular })}>
+              <EditIcon />
+            </Tooltip>
           </IconButton>
           <IconButton onClick={() => onDelete(row.id)} size="small">
-            <DeleteIcon />
+            <Tooltip title={t('manipulation.table.deleteLabel', { type: contentSingular })}>
+              <DeleteIcon />
+            </Tooltip>
           </IconButton>
         </TableCell>
         <TableCell>{row.displayName}</TableCell>
       </TableRow>
     ));
-  }, [rows, styleActionsColumn, onEdit, onDelete]);
+  }, [rows, styleActionsColumn, contentSingular, t, onEdit, onDelete]);
 
   return (
     <>

@@ -1,11 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Tooltip, Typography } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
 import { useFormattingUtils } from '../utils/formattingUtils';
-import AddLocationDialog from './AddLocationDialog';
+import ManipulateLocationDialog from './AddLocationDialog';
 import { ClockConstraint } from '../model/ta/clockConstraint';
+import { Location } from '../model/ta/location';
+import { Home } from '@mui/icons-material';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -13,23 +15,41 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation, removeLocation } = viewModel;
+  const { ta, addLocation, editLocation, removeLocation } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
   const [locationAddOpen, setlocationAddOpen] = useState(false);
+  const [locationEditOpen, setlocationEditOpen] = useState(false);
+  const [locationToEdit, setLocationToEdit] = useState<Location | undefined>(undefined);
 
   const handleLocationAddOpen = () => setlocationAddOpen(true);
   const handleLocationAddClose = () => setlocationAddOpen(false);
+  const handleLocationEditOpen = useCallback(
+    (id: number) => {
+      setLocationToEdit(locations[id]);
+      setlocationEditOpen(true);
+    },
+    [locations]
+  );
+  const handleLocationEditClose = () => setlocationEditOpen(false);
 
   const handleLocationAdd = (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
     addLocation(viewModel, locationName, isInitial, invariant);
     setlocationAddOpen(false);
   };
 
-  const handleLocationEdit = (id: number) => {
-    // TODO implement the edit logic
-    console.log('Editing location with id', id); // TODO delete
+  const handleLocationEdit = (
+    locationName: string,
+    isInitial?: boolean,
+    invariant?: ClockConstraint,
+    prevLocationName?: string
+  ) => {
+    if (!prevLocationName) {
+      throw Error('handleLocationEdit: prevLocationName is empty or undefined');
+    }
+    editLocation(viewModel, locationName, prevLocationName, isInitial, invariant);
+    setlocationEditOpen(false);
   };
 
   const handleLocationDelete = useCallback(
@@ -41,18 +61,36 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   );
 
   const locationTable: JSX.Element = useMemo(() => {
-    const locationRows = locations.map((loc, index) => ({ id: index, displayName: loc.name }));
+    const locationRows = locations.map<ElementRowData>((loc, index) => {
+      let displayName: JSX.Element | string;
+      if (loc.isInitial) {
+        displayName = (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip title={t('manipulation.table.initLocLabel')}>
+              <Home fontSize="small" />
+            </Tooltip>
+            <Typography variant="body1" style={{ marginLeft: 4 }}>
+              {loc.name}
+            </Typography>
+          </div>
+        );
+      } else {
+        displayName = loc.name;
+      }
+      const rowData: ElementRowData = { id: index, displayName: displayName };
+      return rowData;
+    });
     return (
       <ElementTable
         rows={locationRows}
         contentSingular={t('manipulation.table.locSingular')}
         contentPlural={t('manipulation.table.locPlural')}
         onAdd={handleLocationAddOpen}
-        onEdit={handleLocationEdit}
+        onEdit={handleLocationEditOpen}
         onDelete={handleLocationDelete}
       />
     );
-  }, [locations, t, handleLocationDelete]);
+  }, [locations, t, handleLocationEditOpen, handleLocationDelete]);
 
   const handleSwitchAdd = () => {
     // TODO implement the add logic
@@ -127,12 +165,21 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   return (
     <>
       {allTables}
-      <AddLocationDialog
+      <ManipulateLocationDialog
         open={locationAddOpen}
         locations={locations}
         clocks={clocks}
         handleClose={handleLocationAddClose}
         handleSubmit={handleLocationAdd}
+        locPrevVersion={undefined}
+      />
+      <ManipulateLocationDialog
+        open={locationEditOpen}
+        locations={locations}
+        clocks={clocks}
+        handleClose={handleLocationEditClose}
+        handleSubmit={handleLocationEdit}
+        locPrevVersion={locationToEdit}
       />
 
       <Button variant="contained">Button 1</Button>
