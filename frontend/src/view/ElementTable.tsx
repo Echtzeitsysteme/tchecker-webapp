@@ -32,7 +32,7 @@ interface ElementTableProps {
 
 export const ElementTable: React.FC<ElementTableProps> = (props) => {
   const { rows, contentSingular, contentPlural, onAdd, onEdit, onDelete } = props;
-  const { t } = useTranslation();
+  const { t } = useTranslation('element-table');
 
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
@@ -41,8 +41,8 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
   };
 
   const collapseLabel = isCollapsed
-    ? t('manipulation.table.showContent', { content: contentPlural })
-    : t('manipulation.table.hideContent', { content: contentPlural });
+    ? t('showContent', { content: contentPlural })
+    : t('hideContent', { content: contentPlural });
 
   const styleActionsColumn: React.CSSProperties = useMemo(() => {
     return { width: '1%', whiteSpace: 'nowrap' };
@@ -53,12 +53,12 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
       <TableRow key={row.id}>
         <TableCell style={styleActionsColumn}>
           <IconButton onClick={() => onEdit(row.id)} size="small">
-            <Tooltip title={t('manipulation.table.editLabel', { type: contentSingular })}>
+            <Tooltip title={t('editLabel', { type: contentSingular })}>
               <EditIcon />
             </Tooltip>
           </IconButton>
           <IconButton onClick={() => onDelete(row.id)} size="small">
-            <Tooltip title={t('manipulation.table.deleteLabel', { type: contentSingular })}>
+            <Tooltip title={t('deleteLabel', { type: contentSingular })}>
               <DeleteIcon />
             </Tooltip>
           </IconButton>
@@ -79,7 +79,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
       </Button>
       <div style={{ marginBottom: '4px' }}>
         <Button startIcon={<Add />} variant="contained" size="small" onClick={() => onAdd()}>
-          {t('manipulation.table.addElement', { content: contentSingular })}
+          {t('addElement', { content: contentSingular })}
         </Button>
       </div>
       {!isCollapsed && (
@@ -87,7 +87,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell style={styleActionsColumn}>{t('manipulation.table.actions')}</TableCell>
+                <TableCell style={styleActionsColumn}>{t('actions')}</TableCell>
                 <TableCell>{contentSingular}</TableCell>
               </TableRow>
             </TableHead>

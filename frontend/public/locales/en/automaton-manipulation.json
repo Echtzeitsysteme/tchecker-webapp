@@ -1,0 +1,9 @@
+{
+  "locSingular": "Location",
+  "locPlural": "Locations",
+  "initLocLabel": "Initial Location",
+  "switchSingular": "Switch",
+  "switchPlural": "Switches",
+  "clockSingular": "Clock",
+  "clockPlural": "Clocks"
+}

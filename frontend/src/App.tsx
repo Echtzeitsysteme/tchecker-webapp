@@ -8,7 +8,7 @@ import { AutomatonManipulation } from './view/AutomatonManipulation';
 
 function App() {
   const viewModel = useAnalysisViewModel();
-  const { t } = useTranslation();
+  const { t } = useTranslation('app');
 
   // calculate size of content elements so that content always fits the window size
   const headerRef = useRef<HTMLHeadingElement>(null);
@@ -35,7 +35,7 @@ function App() {
   return (
     <>
       <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
-        ⏰ {t('app.title')}
+        ⏰ {t('title')}
       </h1>
       <Box sx={{ display: 'flex', height: `${contentHeight - 1}px`, overflow: 'hidden' }}>
         <Box sx={{ width: 300, borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}>
