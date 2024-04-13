@@ -172,9 +172,11 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       setViewModel(updatedViewModel);
 
       // make sure to set initial location correctly
+      const isOtherLocInitial =
+        locations.filter((l) => l.name !== locationName).filter((l) => !!l.isInitial).length === 1;
       if (isInitial) {
         setInitialLocation(updatedViewModel, locationName);
-      } else if (locations.filter((l) => !!l.isInitial).length !== 1) {
+      } else if (!isOtherLocInitial) {
         // if not exactly one initial location: set first in array to initial
         // (when editing, there is at least one location)
         setInitialLocation(updatedViewModel, locations[0].name);

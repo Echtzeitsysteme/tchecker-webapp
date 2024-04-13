@@ -7,37 +7,33 @@ import {
   DialogTitle,
   TextField,
   Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  Grid,
   FormControlLabel,
   IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { Clock } from '../model/ta/clock';
 import { Location } from '../model/ta/location';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
+import { ClausesManipulation } from './ClausesManipulation';
 
 export interface ManipulateLocationDialogProps {
   open: boolean;
   locations: Location[];
   clocks: Clock[];
-  locPrevVersion?: Location; // only for editing locations
+  locPrevVersion?: Location; // only for editing (not for adding)
   handleClose: () => void;
   handleSubmit: (
     locationName: string,
     isInitial?: boolean,
     invariant?: ClockConstraint,
-    prevLocationName?: string // only for editing locations
+    prevLocationName?: string // only for editing (not for adding)
   ) => void;
 }
 
-interface ClauseData {
+export interface ClauseData {
   id: number;
   clockValue: string;
   comparisonValue: string;
@@ -69,7 +65,12 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
   );
   const [clauses, setClauses] = useState<ClauseData[]>([emptyClause]);
 
+  // effect for setting initial values upon opening the dialog
   useEffect(() => {
+    // include "open" to ensure that values in dialog are correctly loaded upon opening
+    if (!open) {
+      return;
+    }
     if (locPrevVersion !== undefined) {
       // load existing location if editing (for adding, "if" prevents entering this)
       setName(locPrevVersion.name);
@@ -97,10 +98,58 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         setClauses([emptyClause]);
       }
     }
-  }, [locPrevVersion, emptyClause]);
+  }, [open, locPrevVersion, emptyClause]);
+
+  // effect to update validation checks
+  useEffect(() => {
+    // check validity of name field
+    setIsNameEmpty(name.trim() === '');
+    if (locPrevVersion) {
+      // previous name is allowed
+      const prevName = locPrevVersion.name;
+      setIsNameDuplicate(
+        locations.filter((loc) => loc.name !== prevName).some((loc) => loc.name.toLowerCase() === name.toLowerCase())
+      );
+    } else {
+      setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
+    }
+    isNameEmpty && setNameErrorMessage('Name cannot be empty');
+    isNameDuplicate && setNameErrorMessage('Name already exists');
+  }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion]);
+
+  const isValidationError: boolean = useMemo(
+    () =>
+      isNameEmpty ||
+      isNameDuplicate ||
+      (invariantChecked &&
+        clauses
+          .map((c) => c.isClockInvalid || c.isComparisonInvalid || c.isNumberInvalid)
+          .reduce((result, current) => result || current, false)),
+    [isNameEmpty, isNameDuplicate, invariantChecked, clauses]
+  );
+
+  const clockDropdownItems = useMemo(
+    () =>
+      clocks.map((c) => (
+        <MenuItem key={c.name} value={c.name}>
+          {c.name}
+        </MenuItem>
+      )),
+    [clocks]
+  );
+
+  const comparisonDropdownItems = useMemo(
+    () =>
+      Object.values(ClockComparator).map((v) => (
+        <MenuItem key={v} value={v}>
+          {v}
+        </MenuItem>
+      )),
+    []
+  );
 
   const handleAddClause = () => {
-    setClauses([...clauses, emptyClause]);
+    setClauses([...clauses, { ...emptyClause, id: Date.now() }]);
   };
 
   const handleDeleteClause = useCallback(
@@ -141,33 +190,6 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     [clauses]
   );
 
-  useEffect(() => {
-    // check validity of name field
-    setIsNameEmpty(name.trim() === '');
-    if (locPrevVersion) {
-      // previous name is allowed
-      const prevName = locPrevVersion.name;
-      setIsNameDuplicate(
-        locations.filter((loc) => loc.name !== prevName).some((loc) => loc.name.toLowerCase() === name.toLowerCase())
-      );
-    } else {
-      setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
-    }
-    isNameEmpty && setNameErrorMessage('Name cannot be empty');
-    isNameDuplicate && setNameErrorMessage('Name already exists');
-  }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion]);
-
-  const isValidationError: boolean = useMemo(
-    () =>
-      isNameEmpty ||
-      isNameDuplicate ||
-      (invariantChecked &&
-        clauses
-          .map((c) => c.isClockInvalid || c.isComparisonInvalid || c.isNumberInvalid)
-          .reduce((result, current) => result || current, false)),
-    [isNameEmpty, isNameDuplicate, invariantChecked, clauses]
-  );
-
   const handleFormSubmit = () => {
     if (isValidationError) {
       return;
@@ -206,79 +228,6 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     }
   };
 
-  const clockDropdownItems = useMemo(
-    () =>
-      clocks.map((c) => (
-        <MenuItem key={c.name} value={c.name}>
-          {c.name}
-        </MenuItem>
-      )),
-    [clocks]
-  );
-
-  const comparisonDropdownItems = useMemo(
-    () =>
-      Object.values(ClockComparator).map((v) => (
-        <MenuItem key={v} value={v}>
-          {v}
-        </MenuItem>
-      )),
-    []
-  );
-
-  const clauseRows: JSX.Element[] = useMemo(
-    () =>
-      clauses.map((row) => (
-        <Grid key={row.id} container spacing={2} alignItems="center">
-          <Grid item xs={1}>
-            <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-          <Grid item xs={4}>
-            <FormControl fullWidth>
-              <InputLabel>Clock</InputLabel>
-              <Select
-                value={row.clockValue}
-                label="Clock"
-                onChange={(e) => handleClauseChange(row.id, 'clockValue', e.target.value)}
-                error={row.isClockInvalid}
-              >
-                {clockDropdownItems}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={4}>
-            <FormControl fullWidth>
-              <InputLabel>Comparison</InputLabel>
-              <Select
-                value={row.comparisonValue}
-                label="Comparison"
-                onChange={(e) => handleClauseChange(row.id, 'comparisonValue', e.target.value)}
-                error={row.isComparisonInvalid}
-              >
-                {comparisonDropdownItems}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={3}>
-            <TextField
-              margin="dense"
-              label="Value"
-              type="number"
-              fullWidth
-              variant="outlined"
-              value={row.numberInput}
-              onChange={(e) => handleClauseChange(row.id, 'numberInput', e.target.value)}
-              InputProps={{ inputProps: { min: 0 } }}
-              error={row.isNumberInvalid}
-            />
-          </Grid>
-        </Grid>
-      )),
-    [clauses, clockDropdownItems, comparisonDropdownItems, handleClauseChange, handleDeleteClause]
-  );
-
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>
@@ -312,7 +261,15 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
           label="Has Invariant"
         />
-        {invariantChecked && clauseRows}
+        {invariantChecked && (
+          <ClausesManipulation
+            clauses={clauses}
+            clockDropdownItems={clockDropdownItems}
+            comparisonDropdownItems={comparisonDropdownItems}
+            handleClauseChange={handleClauseChange}
+            handleDeleteClause={handleDeleteClause}
+          />
+        )}
         {invariantChecked && (
           <Button variant="outlined" onClick={handleAddClause} sx={{ marginTop: 2 }}>
             Add Clause
