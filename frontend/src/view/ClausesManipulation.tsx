@@ -2,7 +2,7 @@ import { Grid, IconButton, FormControl, InputLabel, Select, TextField } from '@m
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ClauseData } from './ManipulateLocationDialog';
 
-export interface ClausesManipulationProps {
+interface ClausesManipulationProps {
   clauses: ClauseData[];
   clockDropdownItems: JSX.Element[];
   comparisonDropdownItems: JSX.Element[];
@@ -12,6 +12,7 @@ export interface ClausesManipulationProps {
 
 export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) => {
   const { clauses, clockDropdownItems, comparisonDropdownItems, handleClauseChange, handleDeleteClause } = props;
+
   return (
     <>
       {clauses.map((row) => (

@@ -19,7 +19,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
 import { ClausesManipulation } from './ClausesManipulation';
 
-export interface ManipulateLocationDialogProps {
+interface ManipulateLocationDialogProps {
   open: boolean;
   locations: Location[];
   clocks: Clock[];

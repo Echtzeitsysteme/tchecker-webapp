@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
-import { Button, TextField, Tooltip, Typography } from '@mui/material';
+import { Tooltip, Typography } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
 import { useTranslation } from 'react-i18next';
 import { useFormattingUtils } from '../utils/formattingUtils';
@@ -181,40 +181,6 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         handleSubmit={handleLocationEdit}
         locPrevVersion={locationToEdit}
       />
-
-      <Button variant="contained">Button 1</Button>
-      <TextField label="Input 1" variant="outlined" />
-
-      <Button variant="contained">Large Button!!! 1</Button>
-      <Button variant="contained">Large Button!!! 2</Button>
-      <Button variant="contained">Large Button!!! 3</Button>
-      <Button variant="contained">Large Button!!! 4</Button>
-      <Button variant="contained">Large Button!!! 5</Button>
-      <Button variant="contained">Large Button!!! 6</Button>
-      <Button variant="contained">Large Button!!! 7</Button>
-      <Button variant="contained">Large Button!!! 8</Button>
-      <Button variant="contained">Large Button!!! 9</Button>
-      <Button variant="contained">Large Button!!! 10</Button>
-      <Button variant="contained">Large Button!!! 11</Button>
-      <Button variant="contained">Large Button!!! 12</Button>
-      <Button variant="contained">Large Button!!! 13</Button>
-      <Button variant="contained">Large Button!!! 14</Button>
-      <Button variant="contained">Large Button!!! 15</Button>
-      <Button variant="contained">Large Button!!! 16</Button>
-      <Button variant="contained">Large Button!!! 17</Button>
-      <Button variant="contained">Large Button!!! 18</Button>
-      <Button variant="contained">Large Button!!! 19</Button>
-      <Button variant="contained">Large Button!!! 20</Button>
-      <Button variant="contained">Large Button!!! 11</Button>
-      <Button variant="contained">Large Button!!! 12</Button>
-      <Button variant="contained">Large Button!!! 13</Button>
-      <Button variant="contained">Large Button!!! 14</Button>
-      <Button variant="contained">Large Button!!! 15</Button>
-      <Button variant="contained">Large Button!!! 16</Button>
-      <Button variant="contained">Large Button!!! 17</Button>
-      <Button variant="contained">Large Button!!! 18</Button>
-      <Button variant="contained">Large Button!!! 19</Button>
-      <Button variant="contained">Large Button!!! 20</Button>
     </>
   );
 };
