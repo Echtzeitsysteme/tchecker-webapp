@@ -1,10 +1,14 @@
 import { useCallback } from 'react';
 import { Clause } from '../model/ta/clause';
 import { ClockConstraint } from '../model/ta/clockConstraint';
+import { ClauseViewData } from '../viewmodel/ClausesViewModel';
+import { Clock } from '../model/ta/clock';
+import { ClockComparator } from '../model/ta/clockComparator';
 
 export interface ClockConstraintUtils {
   clausesEqual: (clause1?: Clause, clause2?: Clause) => boolean;
   clockConstraintsEqual: (cc1?: ClockConstraint, cc2?: ClockConstraint) => boolean;
+  transformToClockConstraint: (clauseData: ClauseViewData[]) => ClockConstraint | undefined;
 }
 
 export function useClockConstraintUtils(): ClockConstraintUtils {
@@ -67,5 +71,36 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
     },
     [clausesEqual]
   );
-  return { clausesEqual: clausesEqual, clockConstraintsEqual: clockConstraintsEqual };
+
+  const transformToClockConstraint = useCallback((clauseData: ClauseViewData[]): ClockConstraint | undefined => {
+    if (!clauseData || clauseData.length === 0) {
+      return undefined;
+    }
+    return clauseData
+      .map<Clause>((c) => {
+        const lhs: Clock = { name: c.clockValue };
+        const op: ClockComparator | undefined = Object.values(ClockComparator).find(
+          (value) => value === c.comparisonValue
+        );
+        if (op === undefined) {
+          throw new Error(`Invalid comparison value: ${c.comparisonValue}`);
+        }
+        const rhs: number = parseInt(c.numberInput);
+        const clause: Clause = { lhs, op, rhs };
+        return clause;
+      })
+      .reduce<ClockConstraint>(
+        (accumulator, current) => {
+          accumulator.clauses.push(current);
+          return accumulator;
+        },
+        { clauses: [] }
+      );
+  }, []);
+
+  return {
+    clausesEqual: clausesEqual,
+    clockConstraintsEqual: clockConstraintsEqual,
+    transformToClockConstraint: transformToClockConstraint,
+  };
 }

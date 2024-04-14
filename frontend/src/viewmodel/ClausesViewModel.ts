@@ -3,13 +3,13 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 
 export interface ClausesViewModel {
   state: ClausesState;
-  clauses: ClauseData[];
+  clauses: ClauseViewData[];
   isValidationError: boolean;
   resetClauses: (viewModel: ClausesViewModel) => void;
   setClausesFromClockConstraint: (viewModel: ClausesViewModel, clockConstraint?: ClockConstraint) => void;
   addClause: (viewModel: ClausesViewModel) => void;
   deleteClause: (viewModel: ClausesViewModel, id: number) => void;
-  changeClause: (viewModel: ClausesViewModel, id: number, field: keyof ClauseData, value: string) => void;
+  changeClause: (viewModel: ClausesViewModel, id: number, field: keyof ClauseViewData, value: string) => void;
 }
 
 export enum ClausesState {
@@ -17,7 +17,7 @@ export enum ClausesState {
   READY = 'READY',
 }
 
-export interface ClauseData {
+export interface ClauseViewData {
   id: number;
   clockValue: string;
   comparisonValue: string;
@@ -28,7 +28,7 @@ export interface ClauseData {
 }
 
 export function useClausesViewModel(): ClausesViewModel {
-  const emptyClause: ClauseData = useMemo(
+  const emptyClause: ClauseViewData = useMemo(
     () => ({
       id: Date.now(),
       clockValue: '',
@@ -56,8 +56,8 @@ export function useClausesViewModel(): ClausesViewModel {
       }
       // don't just call Date.now() for every clause because generation is too fast
       let idCounter: number = Date.now();
-      const clauseData = clockConstraint.clauses.map<ClauseData>((c) => {
-        const clauseData: ClauseData = {
+      const clauseData = clockConstraint.clauses.map<ClauseViewData>((c) => {
+        const clauseData: ClauseViewData = {
           id: idCounter++,
           clockValue: c.lhs.name,
           comparisonValue: c.op,
@@ -90,7 +90,7 @@ export function useClausesViewModel(): ClausesViewModel {
   }, []);
 
   const changeClause = useCallback(
-    (viewModel: ClausesViewModel, id: number, field: keyof ClauseData, value: string) => {
+    (viewModel: ClausesViewModel, id: number, field: keyof ClauseViewData, value: string) => {
       const updatedClauses = viewModel.clauses.map((row) => {
         if (row.id === id) {
           let updatedRow = { ...row, [field]: value };

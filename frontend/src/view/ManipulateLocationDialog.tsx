@@ -16,10 +16,10 @@ import { Clock } from '../model/ta/clock';
 import { Location } from '../model/ta/location';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { ClockConstraint } from '../model/ta/clockConstraint';
-import { Clause } from '../model/ta/clause';
 import { ClausesManipulation } from './ClausesManipulation';
 import { useTranslation } from 'react-i18next';
 import { useClausesViewModel } from '../viewmodel/ClausesViewModel';
+import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 
 interface ManipulateLocationDialogProps {
   open: boolean;
@@ -40,6 +40,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
   const clausesViewModel = useClausesViewModel();
   const { clauses, setClausesFromClockConstraint } = clausesViewModel;
   const { t } = useTranslation();
+  const { transformToClockConstraint } = useClockConstraintUtils();
   const [justOpened, setJustOpened] = useState(true);
   const [name, setName] = useState('');
   const [isNameEmpty, setIsNameEmpty] = useState(false);
@@ -124,28 +125,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     if (isValidationError) {
       return;
     }
-    const invariant: ClockConstraint | undefined = invariantChecked
-      ? clauses
-          .map<Clause>((c) => {
-            const lhs: Clock = { name: c.clockValue };
-            const op: ClockComparator | undefined = Object.values(ClockComparator).find(
-              (value) => value === c.comparisonValue
-            );
-            if (op === undefined) {
-              throw new Error(`Invalid comparison value: ${c.comparisonValue}`);
-            }
-            const rhs: number = parseInt(c.numberInput);
-            const clause: Clause = { lhs, op, rhs };
-            return clause;
-          })
-          .reduce<ClockConstraint>(
-            (accumulator, current) => {
-              accumulator.clauses.push(current);
-              return accumulator;
-            },
-            { clauses: [] }
-          )
-      : undefined;
+    const invariant: ClockConstraint | undefined = invariantChecked ? transformToClockConstraint(clauses) : undefined;
     if (locPrevVersion) {
       handleSubmit(name, initialLocationChecked, invariant, locPrevVersion.name);
       // value reset not needed for editing because values are loaded from existing version
