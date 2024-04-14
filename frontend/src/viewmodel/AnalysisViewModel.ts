@@ -186,6 +186,9 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   );
 
   const removeLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
+    if (viewModel.ta.locations.length <= 1) {
+      return;
+    }
     const ta = viewModel.ta;
     const wasInitial = ta.locations.filter((l) => l.name === locationName)[0].isInitial;
     const updatedLocs = ta.locations.filter((l) => l.name !== locationName);

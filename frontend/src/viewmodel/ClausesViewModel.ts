@@ -5,7 +5,7 @@ export interface ClausesViewModel {
   state: ClausesState;
   clauses: ClauseData[];
   isValidationError: boolean;
-  reset: (viewModel: ClausesViewModel) => void;
+  resetClauses: (viewModel: ClausesViewModel) => void;
   setClausesFromClockConstraint: (viewModel: ClausesViewModel, clockConstraint?: ClockConstraint) => void;
   addClause: (viewModel: ClausesViewModel) => void;
   deleteClause: (viewModel: ClausesViewModel, id: number) => void;
@@ -15,7 +15,6 @@ export interface ClausesViewModel {
 export enum ClausesState {
   INIT = 'INIT',
   READY = 'READY',
-  RESET = 'RESET',
 }
 
 export interface ClauseData {
@@ -42,9 +41,12 @@ export function useClausesViewModel(): ClausesViewModel {
     []
   );
 
-  const reset = useCallback((viewModel: ClausesViewModel) => {
-    setViewModel({ ...viewModel, state: ClausesState.RESET });
-  }, []);
+  const resetClauses = useCallback(
+    (viewModel: ClausesViewModel) => {
+      setViewModel({ ...viewModel, clauses: [emptyClause] });
+    },
+    [emptyClause]
+  );
 
   const setClausesFromClockConstraint = useCallback(
     (viewModel: ClausesViewModel, clockConstraint?: ClockConstraint) => {
@@ -119,7 +121,7 @@ export function useClausesViewModel(): ClausesViewModel {
     state: ClausesState.INIT,
     clauses: [emptyClause],
     isValidationError: true,
-    reset: reset,
+    resetClauses: resetClauses,
     setClausesFromClockConstraint: setClausesFromClockConstraint,
     addClause: addClause,
     deleteClause: deleteClause,
@@ -134,12 +136,6 @@ export function useClausesViewModel(): ClausesViewModel {
       setViewModel({ ...viewModel, state: ClausesState.READY });
     }
   }, [viewModel]);
-
-  useEffect(() => {
-    if (viewModel.state === ClausesState.RESET) {
-      setViewModel({ ...viewModel, clauses: [emptyClause], isValidationError: true, state: ClausesState.READY });
-    }
-  }, [viewModel, emptyClause]);
 
   useEffect(() => {
     // update clause validation when clauses change

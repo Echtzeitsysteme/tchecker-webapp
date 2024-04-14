@@ -1,18 +1,17 @@
 import { Grid, IconButton, FormControl, InputLabel, Select, TextField, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTranslation } from 'react-i18next';
-import { ClauseData } from '../viewmodel/ClausesViewModel';
+import { ClausesViewModel } from '../viewmodel/ClausesViewModel';
 
 interface ClausesManipulationProps {
-  clauses: ClauseData[];
+  viewModel: ClausesViewModel;
   clockDropdownItems: JSX.Element[];
   comparisonDropdownItems: JSX.Element[];
-  handleClauseChange: (id: number, field: keyof ClauseData, value: string) => void;
-  handleDeleteClause: (id: number) => void;
 }
 
 export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) => {
-  const { clauses, clockDropdownItems, comparisonDropdownItems, handleClauseChange, handleDeleteClause } = props;
+  const { viewModel, clockDropdownItems, comparisonDropdownItems } = props;
+  const { clauses, deleteClause, changeClause } = viewModel;
   const { t } = useTranslation();
 
   return (
@@ -20,7 +19,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
       {clauses.map((row) => (
         <Grid key={row.id} container spacing={2} alignItems="center">
           <Grid item xs={1}>
-            <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
+            <IconButton disabled={clauses.length <= 1} onClick={() => deleteClause(viewModel, row.id)}>
               <Tooltip title={t('clauses.delete')}>
                 <DeleteIcon />
               </Tooltip>
@@ -32,7 +31,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
               <Select
                 value={row.clockValue}
                 label="Clock"
-                onChange={(e) => handleClauseChange(row.id, 'clockValue', e.target.value)}
+                onChange={(e) => changeClause(viewModel, row.id, 'clockValue', e.target.value)}
                 error={row.isClockInvalid}
               >
                 {clockDropdownItems}
@@ -45,7 +44,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
               <Select
                 value={row.comparisonValue}
                 label="Comparison"
-                onChange={(e) => handleClauseChange(row.id, 'comparisonValue', e.target.value)}
+                onChange={(e) => changeClause(viewModel, row.id, 'comparisonValue', e.target.value)}
                 error={row.isComparisonInvalid}
               >
                 {comparisonDropdownItems}
@@ -60,7 +59,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
               fullWidth
               variant="outlined"
               value={row.numberInput}
-              onChange={(e) => handleClauseChange(row.id, 'numberInput', e.target.value)}
+              onChange={(e) => changeClause(viewModel, row.id, 'numberInput', e.target.value)}
               InputProps={{ inputProps: { min: 0 } }}
               error={row.isNumberInvalid}
             />

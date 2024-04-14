@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -19,7 +19,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
 import { ClausesManipulation } from './ClausesManipulation';
 import { useTranslation } from 'react-i18next';
-import { ClauseData } from '../viewmodel/ClausesViewModel';
+import { useClausesViewModel } from '../viewmodel/ClausesViewModel';
 
 interface ManipulateLocationDialogProps {
   open: boolean;
@@ -37,31 +37,21 @@ interface ManipulateLocationDialogProps {
 
 export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> = (props) => {
   const { open, locations, clocks, locPrevVersion, handleClose, handleSubmit } = props;
-  const [t] = useTranslation();
+  const clausesViewModel = useClausesViewModel();
+  const { clauses, setClausesFromClockConstraint } = clausesViewModel;
+  const { t } = useTranslation();
+  const [justOpened, setJustOpened] = useState(true);
   const [name, setName] = useState('');
   const [isNameEmpty, setIsNameEmpty] = useState(false);
   const [isNameDuplicate, setIsNameDuplicate] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [initialLocationChecked, setInitialLocationChecked] = useState(false);
   const [invariantChecked, setInvariantChecked] = useState(false);
-  const emptyClause: ClauseData = useMemo(
-    () => ({
-      id: Date.now(),
-      clockValue: '',
-      comparisonValue: '',
-      numberInput: '0',
-      isClockInvalid: true,
-      isComparisonInvalid: true,
-      isNumberInvalid: false,
-    }),
-    []
-  );
-  const [clauses, setClauses] = useState<ClauseData[]>([emptyClause]);
 
   // effect for setting initial values upon opening the dialog
   useEffect(() => {
     // include "open" to ensure that values in dialog are correctly loaded upon opening
-    if (!open) {
+    if (!open || !justOpened) {
       return;
     }
     if (locPrevVersion !== undefined) {
@@ -70,32 +60,14 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
       setInitialLocationChecked(!!locPrevVersion.isInitial);
       if (locPrevVersion.invariant) {
         setInvariantChecked(true);
-        // don't just call Date.now() for every clause because generation is too fast
-        let idCounter: number = Date.now();
-        setClauses(
-          locPrevVersion.invariant.clauses.map<ClauseData>((c) => {
-            const clauseData: ClauseData = {
-              id: idCounter++,
-              clockValue: c.lhs.name,
-              comparisonValue: c.op,
-              numberInput: '' + c.rhs,
-              isClockInvalid: false,
-              isComparisonInvalid: false,
-              isNumberInvalid: false,
-            };
-            return clauseData;
-          })
-        );
+        setClausesFromClockConstraint(clausesViewModel, locPrevVersion.invariant);
       } else {
         setInvariantChecked(false);
-        setClauses([emptyClause]);
+        clausesViewModel.resetClauses(clausesViewModel);
       }
-    } else {
-      setInitialLocationChecked(false);
-      setInvariantChecked(false);
-      setClauses([emptyClause]);
     }
-  }, [open, locPrevVersion, emptyClause]);
+    setJustOpened(false);
+  }, [open, justOpened, locPrevVersion, clausesViewModel, setClausesFromClockConstraint]);
 
   // effect to update validation checks
   useEffect(() => {
@@ -115,14 +87,8 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
   }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion, t]);
 
   const isValidationError: boolean = useMemo(
-    () =>
-      isNameEmpty ||
-      isNameDuplicate ||
-      (invariantChecked &&
-        clauses
-          .map((c) => c.isClockInvalid || c.isComparisonInvalid || c.isNumberInvalid)
-          .reduce((result, current) => result || current, false)),
-    [isNameEmpty, isNameDuplicate, invariantChecked, clauses]
+    () => isNameEmpty || isNameDuplicate || (invariantChecked && clausesViewModel.isValidationError),
+    [isNameEmpty, isNameDuplicate, invariantChecked, clausesViewModel.isValidationError]
   );
 
   const clockDropdownItems = useMemo(
@@ -145,47 +111,14 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     []
   );
 
-  const handleAddClause = () => {
-    setClauses([...clauses, { ...emptyClause, id: Date.now() }]);
+  const handleCloseDialog = () => {
+    // reset entries when dialog is closed
+    setName('');
+    setInvariantChecked(false);
+    clausesViewModel.resetClauses(clausesViewModel);
+    setJustOpened(true); // for next opening of the dialog
+    handleClose();
   };
-
-  const handleDeleteClause = useCallback(
-    (id: number) => {
-      if (clauses.length > 1) {
-        setClauses(clauses.filter((row) => row.id !== id));
-      }
-    },
-    [clauses]
-  );
-
-  const handleClauseChange = useCallback(
-    (id: number, field: keyof ClauseData, value: string) => {
-      setClauses(
-        clauses.map((row) => {
-          if (row.id === id) {
-            let updatedRow = { ...row, [field]: value };
-            // Update validation flags based on the new value
-            if (field === 'clockValue') {
-              updatedRow.isClockInvalid = !value;
-            }
-            if (field === 'comparisonValue') {
-              updatedRow.isComparisonInvalid = !value;
-            }
-            if (field === 'numberInput') {
-              updatedRow.isNumberInvalid = !value;
-            }
-            // Update for number value if it changed
-            if (field === 'numberInput' && value) {
-              updatedRow = { ...updatedRow, [field]: '' + Math.max(0, parseInt(value, 10)) };
-            }
-            return updatedRow;
-          }
-          return row;
-        })
-      );
-    },
-    [clauses]
-  );
 
   const handleFormSubmit = () => {
     if (isValidationError) {
@@ -221,16 +154,17 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
       // reset values for next opening of dialog
       setName('');
       setInvariantChecked(false);
-      setClauses([emptyClause]);
+      clausesViewModel.resetClauses(clausesViewModel);
     }
+    setJustOpened(true); // for next opening of dialog
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={handleCloseDialog}>
       <DialogTitle>
         {locPrevVersion ? t('locDialog.editLoc') : t('locDialog.addLoc')}
         <IconButton
-          onClick={handleClose}
+          onClick={handleCloseDialog}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
         >
           <CloseIcon />
@@ -260,21 +194,19 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         />
         {invariantChecked && (
           <ClausesManipulation
-            clauses={clauses}
+            viewModel={clausesViewModel}
             clockDropdownItems={clockDropdownItems}
             comparisonDropdownItems={comparisonDropdownItems}
-            handleClauseChange={handleClauseChange}
-            handleDeleteClause={handleDeleteClause}
           />
         )}
         {invariantChecked && (
-          <Button variant="outlined" onClick={handleAddClause} sx={{ marginTop: 2 }}>
+          <Button variant="outlined" onClick={() => clausesViewModel.addClause(clausesViewModel)} sx={{ marginTop: 2 }}>
             {t('locDialog.button.addClause')}
           </Button>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} variant="contained" color="error">
+        <Button onClick={handleCloseDialog} variant="contained" color="error">
           {t('locDialog.button.cancel')}
         </Button>
         <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
