@@ -7,14 +7,12 @@ import {
   DialogTitle,
   TextField,
   Checkbox,
-  MenuItem,
   FormControlLabel,
   IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Clock } from '../model/ta/clock';
 import { Location } from '../model/ta/location';
-import { ClockComparator } from '../model/ta/clockComparator';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { ClausesManipulation } from './ClausesManipulation';
 import { useTranslation } from 'react-i18next';
@@ -92,26 +90,6 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     [isNameEmpty, isNameDuplicate, invariantChecked, clausesViewModel.isValidationError]
   );
 
-  const clockDropdownItems = useMemo(
-    () =>
-      clocks.map((c) => (
-        <MenuItem key={c.name} value={c.name}>
-          {c.name}
-        </MenuItem>
-      )),
-    [clocks]
-  );
-
-  const comparisonDropdownItems = useMemo(
-    () =>
-      Object.values(ClockComparator).map((v) => (
-        <MenuItem key={v} value={v}>
-          {v}
-        </MenuItem>
-      )),
-    []
-  );
-
   const handleCloseDialog = () => {
     // reset entries when dialog is closed
     setName('');
@@ -172,13 +150,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
           label={t('locDialog.hasInvariant')}
         />
-        {invariantChecked && (
-          <ClausesManipulation
-            viewModel={clausesViewModel}
-            clockDropdownItems={clockDropdownItems}
-            comparisonDropdownItems={comparisonDropdownItems}
-          />
-        )}
+        {invariantChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
         {invariantChecked && (
           <Button variant="outlined" onClick={() => clausesViewModel.addClause(clausesViewModel)} sx={{ marginTop: 2 }}>
             {t('locDialog.button.addClause')}

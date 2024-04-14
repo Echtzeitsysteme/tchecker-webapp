@@ -25,13 +25,13 @@ interface ElementTableProps {
   rows: ElementRowData[];
   contentSingular: string;
   contentPlural: string;
-  onAdd: () => void;
+  onAddOpen: () => void;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
 export const ElementTable: React.FC<ElementTableProps> = (props) => {
-  const { rows, contentSingular, contentPlural, onAdd, onEdit, onDelete } = props;
+  const { rows, contentSingular, contentPlural, onAddOpen, onEdit, onDelete } = props;
   const { t } = useTranslation();
 
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -77,23 +77,25 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
       >
         {collapseLabel}
       </Button>
-      <div style={{ marginBottom: '4px' }}>
-        <Button startIcon={<Add />} variant="contained" size="small" onClick={() => onAdd()}>
-          {t('manipulation.table.addElement', { content: contentSingular })}
-        </Button>
-      </div>
       {!isCollapsed && (
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell style={styleActionsColumn}>{t('manipulation.table.actions')}</TableCell>
-                <TableCell>{contentSingular}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>{contentRows}</TableBody>
-          </Table>
-        </TableContainer>
+        <>
+          <div style={{ marginBottom: '4px' }}>
+            <Button startIcon={<Add />} variant="contained" size="small" onClick={onAddOpen}>
+              {t('manipulation.table.addElement', { content: contentSingular })}
+            </Button>
+          </div>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell style={styleActionsColumn}>{t('manipulation.table.actions')}</TableCell>
+                  <TableCell>{contentSingular}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>{contentRows}</TableBody>
+            </Table>
+          </TableContainer>
+        </>
       )}
     </>
   );

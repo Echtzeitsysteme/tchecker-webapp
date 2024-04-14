@@ -1,18 +1,40 @@
-import { Grid, IconButton, FormControl, InputLabel, Select, TextField, Tooltip } from '@mui/material';
+import { Grid, IconButton, FormControl, InputLabel, Select, TextField, Tooltip, MenuItem } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTranslation } from 'react-i18next';
 import { ClausesViewModel } from '../viewmodel/ClausesViewModel';
+import { useMemo } from 'react';
+import { ClockComparator } from '../model/ta/clockComparator';
+import { Clock } from '../model/ta/clock';
 
 interface ClausesManipulationProps {
   viewModel: ClausesViewModel;
-  clockDropdownItems: JSX.Element[];
-  comparisonDropdownItems: JSX.Element[];
+  clocks: Clock[];
 }
 
 export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) => {
-  const { viewModel, clockDropdownItems, comparisonDropdownItems } = props;
+  const { viewModel, clocks } = props;
   const { clauses, deleteClause, changeClause } = viewModel;
   const { t } = useTranslation();
+
+  const clockDropdownItems = useMemo(
+    () =>
+      clocks.map((c) => (
+        <MenuItem key={c.name} value={c.name}>
+          {c.name}
+        </MenuItem>
+      )),
+    [clocks]
+  );
+
+  const comparisonDropdownItems = useMemo(
+    () =>
+      Object.values(ClockComparator).map((v) => (
+        <MenuItem key={v} value={v}>
+          {v}
+        </MenuItem>
+      )),
+    []
+  );
 
   return (
     <>

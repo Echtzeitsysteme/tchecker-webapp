@@ -8,6 +8,7 @@ import ManipulateLocationDialog from './ManipulateLocationDialog';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Location } from '../model/ta/location';
 import { Home } from '@mui/icons-material';
+import ManipulateSwitchDialog from './ManipulateSwitchDialog';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -15,28 +16,29 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation, editLocation, removeLocation } = viewModel;
+  const { ta, addLocation, editLocation, removeLocation, addSwitch } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
-  const [locationAddOpen, setlocationAddOpen] = useState(false);
-  const [locationEditOpen, setlocationEditOpen] = useState(false);
+  const [locationAddOpen, setLocationAddOpen] = useState(false);
+  const [locationEditOpen, setLocationEditOpen] = useState(false);
   const [locationToEdit, setLocationToEdit] = useState<Location | undefined>(undefined);
+  const [switchAddOpen, setSwitchAddOpen] = useState(false);
 
-  const handleLocationAddOpen = () => setlocationAddOpen(true);
-  const handleLocationAddClose = () => setlocationAddOpen(false);
+  const handleLocationAddOpen = () => setLocationAddOpen(true);
+  const handleLocationAddClose = () => setLocationAddOpen(false);
   const handleLocationEditOpen = useCallback(
     (id: number) => {
       setLocationToEdit(locations[id]);
-      setlocationEditOpen(true);
+      setLocationEditOpen(true);
     },
     [locations]
   );
-  const handleLocationEditClose = () => setlocationEditOpen(false);
+  const handleLocationEditClose = () => setLocationEditOpen(false);
 
   const handleLocationAdd = (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
     addLocation(viewModel, locationName, isInitial, invariant);
-    setlocationAddOpen(false);
+    setLocationAddOpen(false);
   };
 
   const handleLocationEdit = (
@@ -49,7 +51,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
       throw Error('handleLocationEdit: prevLocationName is empty or undefined');
     }
     editLocation(viewModel, locationName, prevLocationName, isInitial, invariant);
-    setlocationEditOpen(false);
+    setLocationEditOpen(false);
   };
 
   const handleLocationDelete = useCallback(
@@ -85,16 +87,25 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         rows={locationRows}
         contentSingular={t('manipulation.table.locSingular')}
         contentPlural={t('manipulation.table.locPlural')}
-        onAdd={handleLocationAddOpen}
+        onAddOpen={handleLocationAddOpen}
         onEdit={handleLocationEditOpen}
         onDelete={handleLocationDelete}
       />
     );
   }, [locations, t, handleLocationEditOpen, handleLocationDelete]);
 
-  const handleSwitchAdd = () => {
-    // TODO implement the add logic
-    console.log('Add switch'); // TODO delete
+  const handleSwitchAddOpen = () => setSwitchAddOpen(true);
+  const handleSwitchAddClose = () => setSwitchAddOpen(false);
+
+  const handleSwitchAdd = (
+    sourceName: string,
+    action: string,
+    resetNames: string[],
+    targetName: string,
+    guard?: ClockConstraint
+  ) => {
+    addSwitch(viewModel, sourceName, action, resetNames, targetName, guard);
+    setSwitchAddOpen(false);
   };
 
   const handleSwitchEdit = (id: number) => {
@@ -117,7 +128,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         rows={switchRows}
         contentSingular={t('manipulation.table.switchSingular')}
         contentPlural={t('manipulation.table.switchPlural')}
-        onAdd={handleSwitchAdd}
+        onAddOpen={handleSwitchAddOpen}
         onEdit={handleSwitchEdit}
         onDelete={handleSwitchDelete}
       />
@@ -146,7 +157,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         rows={clockRows}
         contentSingular={t('manipulation.table.clockSingular')}
         contentPlural={t('manipulation.table.clockPlural')}
-        onAdd={handleClockAdd}
+        onAddOpen={handleClockAdd}
         onEdit={handleClockEdit}
         onDelete={handleClockDelete}
       />
@@ -180,6 +191,14 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         handleClose={handleLocationEditClose}
         handleSubmit={handleLocationEdit}
         locPrevVersion={locationToEdit}
+      />
+      <ManipulateSwitchDialog
+        open={switchAddOpen}
+        locations={locations}
+        clocks={clocks}
+        handleClose={handleSwitchAddClose}
+        handleSubmit={handleSwitchAdd}
+        switchPrevVersion={undefined}
       />
     </>
   );
