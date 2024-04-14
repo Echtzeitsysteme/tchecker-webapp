@@ -1,6 +1,7 @@
-import { Grid, IconButton, FormControl, InputLabel, Select, TextField } from '@mui/material';
+import { Grid, IconButton, FormControl, InputLabel, Select, TextField, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ClauseData } from './ManipulateLocationDialog';
+import { useTranslation } from 'react-i18next';
 
 interface ClausesManipulationProps {
   clauses: ClauseData[];
@@ -12,6 +13,7 @@ interface ClausesManipulationProps {
 
 export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) => {
   const { clauses, clockDropdownItems, comparisonDropdownItems, handleClauseChange, handleDeleteClause } = props;
+  const { t } = useTranslation();
 
   return (
     <>
@@ -19,12 +21,14 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
         <Grid key={row.id} container spacing={2} alignItems="center">
           <Grid item xs={1}>
             <IconButton disabled={clauses.length <= 1} onClick={() => handleDeleteClause(row.id)}>
-              <DeleteIcon />
+              <Tooltip title={t('clauses.delete')}>
+                <DeleteIcon />
+              </Tooltip>
             </IconButton>
           </Grid>
           <Grid item xs={4}>
             <FormControl fullWidth>
-              <InputLabel>Clock</InputLabel>
+              <InputLabel>{t('clauses.input.clock')}</InputLabel>
               <Select
                 value={row.clockValue}
                 label="Clock"
@@ -37,7 +41,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
           </Grid>
           <Grid item xs={4}>
             <FormControl fullWidth>
-              <InputLabel>Comparison</InputLabel>
+              <InputLabel>{t('clauses.input.comparison')}</InputLabel>
               <Select
                 value={row.comparisonValue}
                 label="Comparison"
@@ -51,7 +55,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
           <Grid item xs={3}>
             <TextField
               margin="dense"
-              label="Value"
+              label={t('clauses.input.value')}
               type="number"
               fullWidth
               variant="outlined"

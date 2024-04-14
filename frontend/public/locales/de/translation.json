@@ -12,5 +12,20 @@
   "manipulation.table.clockSingular": "Uhr",
   "manipulation.table.clockPlural": "Uhren",
   "manipulation.table.editLabel": "{{type}} bearbeiten",
-  "manipulation.table.deleteLabel": "{{type}} löschen"
+  "manipulation.table.deleteLabel": "{{type}} löschen",
+  "locDialog.errorNameEmpty": "Name darf nicht leer sein",
+  "locDialog.errorNameExists": "Name wird bereits verwendet",
+  "locDialog.editLoc": "Ort bearbeiten",
+  "locDialog.addLoc": "Ort hinzufügen",
+  "locDialog.name": "Name",
+  "locDialog.isInitial": "Initialer Ort",
+  "locDialog.hasInvariant": "Invariante",
+  "locDialog.button.addClause": "Klausel hinzufügen",
+  "locDialog.button.cancel": "Abbrechen",
+  "locDialog.button.edit": "Speichern",
+  "locDialog.button.add": "Hinzufügen",
+  "clauses.input.clock": "Uhr",
+  "clauses.input.comparison": "Vergleich",
+  "clauses.input.value": "Wert",
+  "clauses.delete": "Klausel löschen"
 }

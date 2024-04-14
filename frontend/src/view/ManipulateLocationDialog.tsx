@@ -18,6 +18,7 @@ import { ClockComparator } from '../model/ta/clockComparator';
 import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
 import { ClausesManipulation } from './ClausesManipulation';
+import { useTranslation } from 'react-i18next';
 
 interface ManipulateLocationDialogProps {
   open: boolean;
@@ -45,6 +46,7 @@ export interface ClauseData {
 
 export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> = (props) => {
   const { open, locations, clocks, locPrevVersion, handleClose, handleSubmit } = props;
+  const [t] = useTranslation();
   const [name, setName] = useState('');
   const [isNameEmpty, setIsNameEmpty] = useState(false);
   const [isNameDuplicate, setIsNameDuplicate] = useState(false);
@@ -97,6 +99,10 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         setInvariantChecked(false);
         setClauses([emptyClause]);
       }
+    } else {
+      setInitialLocationChecked(false);
+      setInvariantChecked(false);
+      setClauses([emptyClause]);
     }
   }, [open, locPrevVersion, emptyClause]);
 
@@ -113,9 +119,9 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
     } else {
       setIsNameDuplicate(locations.some((loc) => loc.name.toLowerCase() === name.toLowerCase()));
     }
-    isNameEmpty && setNameErrorMessage('Name cannot be empty');
-    isNameDuplicate && setNameErrorMessage('Name already exists');
-  }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion]);
+    isNameEmpty && setNameErrorMessage(t('locDialog.errorNameEmpty'));
+    isNameDuplicate && setNameErrorMessage(t('locDialog.errorNameExists'));
+  }, [name, locations, isNameEmpty, isNameDuplicate, locPrevVersion, t]);
 
   const isValidationError: boolean = useMemo(
     () =>
@@ -231,7 +237,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>
-        {locPrevVersion ? 'Edit Location' : 'Add Location'}
+        {locPrevVersion ? t('locDialog.editLoc') : t('locDialog.addLoc')}
         <IconButton
           onClick={handleClose}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
@@ -242,7 +248,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
       <DialogContent>
         <TextField
           margin="dense"
-          label="Name"
+          label={t('locDialog.name')}
           type="text"
           fullWidth
           variant="outlined"
@@ -255,11 +261,11 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
           control={
             <Checkbox checked={initialLocationChecked} onChange={(e) => setInitialLocationChecked(e.target.checked)} />
           }
-          label="Initial Location"
+          label={t('locDialog.isInitial')}
         />
         <FormControlLabel
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
-          label="Has Invariant"
+          label={t('locDialog.hasInvariant')}
         />
         {invariantChecked && (
           <ClausesManipulation
@@ -272,16 +278,16 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         )}
         {invariantChecked && (
           <Button variant="outlined" onClick={handleAddClause} sx={{ marginTop: 2 }}>
-            Add Clause
+            {t('locDialog.button.addClause')}
           </Button>
         )}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} variant="contained" color="error">
-          Cancel
+          {t('locDialog.button.cancel')}
         </Button>
         <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
-          {locPrevVersion ? 'Edit' : 'Add'}
+          {locPrevVersion ? t('locDialog.button.edit') : t('locDialog.button.add')}
         </Button>
       </DialogActions>
     </Dialog>
