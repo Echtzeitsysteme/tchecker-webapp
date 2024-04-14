@@ -1,7 +1,7 @@
 import { Grid, IconButton, FormControl, InputLabel, Select, TextField, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ClauseData } from './ManipulateLocationDialog';
 import { useTranslation } from 'react-i18next';
+import { ClauseData } from '../viewmodel/ClausesViewModel';
 
 interface ClausesManipulationProps {
   clauses: ClauseData[];

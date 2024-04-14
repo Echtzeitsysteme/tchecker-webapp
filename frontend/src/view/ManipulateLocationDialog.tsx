@@ -19,6 +19,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Clause } from '../model/ta/clause';
 import { ClausesManipulation } from './ClausesManipulation';
 import { useTranslation } from 'react-i18next';
+import { ClauseData } from '../viewmodel/ClausesViewModel';
 
 interface ManipulateLocationDialogProps {
   open: boolean;
@@ -32,16 +33,6 @@ interface ManipulateLocationDialogProps {
     invariant?: ClockConstraint,
     prevLocationName?: string // only for editing (not for adding)
   ) => void;
-}
-
-export interface ClauseData {
-  id: number;
-  clockValue: string;
-  comparisonValue: string;
-  numberInput: string; // string so that input field can be empty
-  isClockInvalid: boolean;
-  isComparisonInvalid: boolean;
-  isNumberInvalid: boolean;
 }
 
 export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> = (props) => {
