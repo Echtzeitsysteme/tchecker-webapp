@@ -17,7 +17,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
   const { ta, addLocation, editLocation, removeLocation } = viewModel;
   const { locations, switches, clocks } = ta;
-  const { t } = useTranslation('automaton-manipulation');
+  const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
   const [locationAddOpen, setlocationAddOpen] = useState(false);
   const [locationEditOpen, setlocationEditOpen] = useState(false);
@@ -66,7 +66,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
       if (loc.isInitial) {
         displayName = (
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title={t('initLocLabel')}>
+            <Tooltip title={t('manipulation.table.initLocLabel')}>
               <Home fontSize="small" />
             </Tooltip>
             <Typography variant="body1" style={{ marginLeft: 4 }}>
@@ -83,8 +83,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     return (
       <ElementTable
         rows={locationRows}
-        contentSingular={t('locSingular')}
-        contentPlural={t('locPlural')}
+        contentSingular={t('manipulation.table.locSingular')}
+        contentPlural={t('manipulation.table.locPlural')}
         onAdd={handleLocationAddOpen}
         onEdit={handleLocationEditOpen}
         onDelete={handleLocationDelete}
@@ -115,8 +115,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     return (
       <ElementTable
         rows={switchRows}
-        contentSingular={t('switchSingular')}
-        contentPlural={t('switchPlural')}
+        contentSingular={t('manipulation.table.switchSingular')}
+        contentPlural={t('manipulation.table.switchPlural')}
         onAdd={handleSwitchAdd}
         onEdit={handleSwitchEdit}
         onDelete={handleSwitchDelete}
@@ -144,8 +144,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     return (
       <ElementTable
         rows={clockRows}
-        contentSingular={t('clockSingular')}
-        contentPlural={t('clockPlural')}
+        contentSingular={t('manipulation.table.clockSingular')}
+        contentPlural={t('manipulation.table.clockPlural')}
         onAdd={handleClockAdd}
         onEdit={handleClockEdit}
         onDelete={handleClockDelete}

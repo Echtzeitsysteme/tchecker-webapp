@@ -1,8 +1,0 @@
-{
-  "showContent": "Show {{content}}",
-  "hideContent": "Hide {{content}}",
-  "editLabel": "Edit {{type}}",
-  "deleteLabel": "Delete {{type}}",
-  "addElement": "Add {{content}}",
-  "actions": "Actions"
-}

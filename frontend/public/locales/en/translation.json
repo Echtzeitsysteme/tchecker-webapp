@@ -1,0 +1,16 @@
+{
+  "app.title": "Timed Automata Analysis",
+  "manipulation.table.showContent": "Show {{content}}",
+  "manipulation.table.hideContent": "Hide {{content}}",
+  "manipulation.table.addElement": "Add {{content}}",
+  "manipulation.table.actions": "Actions",
+  "manipulation.table.locSingular": "Location",
+  "manipulation.table.locPlural": "Locations",
+  "manipulation.table.initLocLabel": "Initial Location",
+  "manipulation.table.switchSingular": "Switch",
+  "manipulation.table.switchPlural": "Switches",
+  "manipulation.table.clockSingular": "Clock",
+  "manipulation.table.clockPlural": "Clocks",
+  "manipulation.table.editLabel": "Edit {{type}}",
+  "manipulation.table.deleteLabel": "Delete {{type}}"
+}

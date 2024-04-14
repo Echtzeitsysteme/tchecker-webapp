@@ -1,8 +1,0 @@
-{
-  "showContent": "{{content}} ausklappen",
-  "hideContent": "{{content}} einklappen",
-  "editLabel": "{{type}} bearbeiten",
-  "deleteLabel": "{{type}} löschen",
-  "addElement": "{{content}} hinzufügen",
-  "actions": "Aktionen"
-}
