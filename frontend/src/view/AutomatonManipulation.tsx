@@ -88,7 +88,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         contentSingular={t('manipulation.table.locSingular')}
         contentPlural={t('manipulation.table.locPlural')}
         onAddOpen={handleLocationAddOpen}
-        onEdit={handleLocationEditOpen}
+        onEditOpen={handleLocationEditOpen}
         onDelete={handleLocationDelete}
       />
     );
@@ -108,7 +108,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     setSwitchAddOpen(false);
   };
 
-  const handleSwitchEdit = (id: number) => {
+  const handleSwitchEditOpen = (id: number) => {
     // TODO implement the edit logic
     console.log('Editing switch with id', id); // TODO delete
   };
@@ -131,18 +131,18 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         contentSingular={t('manipulation.table.switchSingular')}
         contentPlural={t('manipulation.table.switchPlural')}
         onAddOpen={handleSwitchAddOpen}
-        onEdit={handleSwitchEdit}
+        onEditOpen={handleSwitchEditOpen}
         onDelete={handleSwitchDelete}
       />
     );
   }, [switches, t, formatSwitchTable, handleSwitchDelete]);
 
-  const handleClockAdd = () => {
+  const handleClockAddOpen = () => {
     // TODO implement the add logic
     console.log('Add clock'); // TODO delete
   };
 
-  const handleClockEdit = (id: number) => {
+  const handleClockEditOpen = (id: number) => {
     // TODO implement the edit logic
     console.log('Editing clock with id', id); // TODO delete
   };
@@ -159,8 +159,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         rows={clockRows}
         contentSingular={t('manipulation.table.clockSingular')}
         contentPlural={t('manipulation.table.clockPlural')}
-        onAddOpen={handleClockAdd}
-        onEdit={handleClockEdit}
+        onAddOpen={handleClockAddOpen}
+        onEditOpen={handleClockEditOpen}
         onDelete={handleClockDelete}
       />
     );

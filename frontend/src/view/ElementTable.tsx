@@ -26,12 +26,12 @@ interface ElementTableProps {
   contentSingular: string;
   contentPlural: string;
   onAddOpen: () => void;
-  onEdit: (id: number) => void;
+  onEditOpen: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
 export const ElementTable: React.FC<ElementTableProps> = (props) => {
-  const { rows, contentSingular, contentPlural, onAddOpen, onEdit, onDelete } = props;
+  const { rows, contentSingular, contentPlural, onAddOpen, onEditOpen, onDelete } = props;
   const { t } = useTranslation();
 
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -52,7 +52,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
     return rows.map((row) => (
       <TableRow key={row.id}>
         <TableCell style={styleActionsColumn}>
-          <IconButton onClick={() => onEdit(row.id)} size="small">
+          <IconButton onClick={() => onEditOpen(row.id)} size="small">
             <Tooltip title={t('manipulation.table.editLabel', { type: contentSingular })}>
               <EditIcon />
             </Tooltip>
@@ -66,7 +66,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
         <TableCell>{row.displayName}</TableCell>
       </TableRow>
     ));
-  }, [rows, styleActionsColumn, contentSingular, t, onEdit, onDelete]);
+  }, [rows, styleActionsColumn, contentSingular, t, onEditOpen, onDelete]);
 
   return (
     <>
