@@ -6,7 +6,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { Switch } from '../model/ta/switch';
 import { useMathUtils } from '../utils/mathUtils';
-import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
+import { useSwitchUtils } from '../utils/switchUtils';
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -54,7 +54,7 @@ export enum AnalysisState {
 
 export function useAnalysisViewModel(): AnalysisViewModel {
   const { avgRounded } = useMathUtils();
-  const { clockConstraintsEqual } = useClockConstraintUtils();
+  const { switchesEqual } = useSwitchUtils();
 
   const initAutomaton: TimedAutomaton = useMemo(() => {
     const clock1: Clock = { name: 'x' };
@@ -255,20 +255,10 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   const removeSwitch = useCallback(
     (viewModel: AnalysisViewModel, switchToRemove: Switch) => {
       const ta = viewModel.ta;
-      const { source, guard, actionLabel, reset, target } = switchToRemove;
-      const resetNames = reset.map((c) => c.name);
       const updatedSwitches: Switch[] = [];
 
       for (const sw of ta.switches) {
-        const hasEqualSource = sw.source.name === source.name;
-        const hasEqualTarget = sw.target.name === target.name;
-        const swGuard = sw.guard;
-        const hasEqualGuard = clockConstraintsEqual(guard, swGuard);
-        const hasEqualLabel = sw.actionLabel === actionLabel;
-        const hasEqualReset =
-          sw.reset.length === reset.length && sw.reset.filter((r) => !resetNames.includes(r.name)).length === 0;
-
-        if (!hasEqualSource || !hasEqualTarget || !hasEqualGuard || !hasEqualLabel || !hasEqualReset) {
+        if (!switchesEqual(sw, switchToRemove)) {
           updatedSwitches.push(sw);
         }
       }
@@ -276,7 +266,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       const updatedTa = { ...ta, switches: updatedSwitches };
       setViewModel({ ...viewModel, ta: updatedTa });
     },
-    [clockConstraintsEqual]
+    [switchesEqual]
   );
 
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({

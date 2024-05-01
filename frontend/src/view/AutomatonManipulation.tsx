@@ -16,7 +16,7 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation, editLocation, removeLocation, addSwitch } = viewModel;
+  const { ta, addLocation, editLocation, removeLocation, addSwitch, removeSwitch } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
@@ -113,10 +113,12 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     console.log('Editing switch with id', id); // TODO delete
   };
 
-  const handleSwitchDelete = (id: number) => {
-    // TODO implement the delete logic
-    console.log('Deleting switch with id', id); // TODO delete
-  };
+  const handleSwitchDelete = useCallback(
+    (id: number) => {
+      removeSwitch(viewModel, switches[id]);
+    },
+    [viewModel, switches, removeSwitch]
+  );
 
   const switchTable: JSX.Element = useMemo(() => {
     const switchRows: ElementRowData[] = switches.map((sw, index) => ({
@@ -133,7 +135,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         onDelete={handleSwitchDelete}
       />
     );
-  }, [switches, t, formatSwitchTable]);
+  }, [switches, t, formatSwitchTable, handleSwitchDelete]);
 
   const handleClockAdd = () => {
     // TODO implement the add logic
