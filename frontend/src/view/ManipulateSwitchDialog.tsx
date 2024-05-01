@@ -15,6 +15,7 @@ import {
   Select,
   TextField,
   Divider,
+  Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Clock } from '../model/ta/clock';
@@ -25,10 +26,12 @@ import { useTranslation } from 'react-i18next';
 import { useClausesViewModel } from '../viewmodel/ClausesViewModel';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import { Switch } from '../model/ta/switch';
+import { useSwitchUtils } from '../utils/switchUtils';
 
 interface ManipulateSwitchDialogProps {
   open: boolean;
   locations: Location[];
+  switches: Switch[];
   clocks: Clock[];
   switchPrevVersion?: Switch; // only for editing (not for adding)
   handleClose: () => void;
@@ -43,14 +46,15 @@ interface ManipulateSwitchDialogProps {
 }
 
 export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (props) => {
-  const { open, locations, clocks, switchPrevVersion, handleClose, handleSubmit } = props;
+  const { open, locations, switches, clocks, switchPrevVersion, handleClose, handleSubmit } = props;
   const clausesViewModel = useClausesViewModel();
   const { clauses, setClausesFromClockConstraint } = clausesViewModel;
   const { t } = useTranslation();
   const { transformToClockConstraint } = useClockConstraintUtils();
-  const [action, setAction] = useState('');
-  const [source, setSource] = useState('');
-  const [target, setTarget] = useState('');
+  const { switchesEqual } = useSwitchUtils();
+  const [action, setAction] = useState<string>('');
+  const [source, setSource] = useState<string>('');
+  const [target, setTarget] = useState<string>('');
   const [isActionEmpty, setActionEmpty] = useState<boolean>(false);
   const [isSourceEmpty, setSourceEmpty] = useState<boolean>(false);
   const [isTargetEmpty, setTargetEmpty] = useState<boolean>(false);
@@ -104,9 +108,63 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     setTargetEmpty(target.trim() === '');
   }, [action, source, target]);
 
+  const isEqualToExistingSwitch = useMemo(() => {
+    let existingSwitches: Switch[];
+    if (switchPrevVersion) {
+      existingSwitches = switches.filter((sw) => !switchesEqual(sw, switchPrevVersion));
+    } else {
+      existingSwitches = switches;
+    }
+
+    const sourceLoc: Location = { name: source, xCoordinate: 0, yCoordinate: 0 };
+    const targetLoc: Location = { name: target, xCoordinate: 0, yCoordinate: 0 };
+    const guard: ClockConstraint | undefined =
+      guardChecked && clauses.length > 0 ? transformToClockConstraint(clauses) : undefined;
+    const reset: Clock[] = clocks.filter((c) => resets[c.name]);
+    const newSwitch: Switch = { source: sourceLoc, guard: guard, actionLabel: action, reset: reset, target: targetLoc };
+
+    // Does switch already exist? Do not allow another switch being equal to an existing switch
+    return existingSwitches.filter((sw) => switchesEqual(sw, newSwitch)).length > 0;
+  }, [
+    switchPrevVersion,
+    switches,
+    source,
+    target,
+    guardChecked,
+    clauses,
+    resets,
+    action,
+    clocks,
+    transformToClockConstraint,
+    switchesEqual,
+  ]);
+
+  const equalToExistingErrorMsg: JSX.Element | undefined = useMemo(() => {
+    if (!isEqualToExistingSwitch) {
+      return undefined;
+    }
+    return (
+      <Typography variant="body2" color="error">
+        {t('switchDialog.switchAlreadyExists')}
+      </Typography>
+    );
+  }, [isEqualToExistingSwitch, t]);
+
   const isValidationError: boolean = useMemo(
-    () => isActionEmpty || isSourceEmpty || isTargetEmpty || (guardChecked && clausesViewModel.isValidationError),
-    [isActionEmpty, isSourceEmpty, isTargetEmpty, guardChecked, clausesViewModel.isValidationError]
+    () =>
+      isActionEmpty ||
+      isSourceEmpty ||
+      isTargetEmpty ||
+      isEqualToExistingSwitch ||
+      (guardChecked && clausesViewModel.isValidationError),
+    [
+      isActionEmpty,
+      isSourceEmpty,
+      isTargetEmpty,
+      guardChecked,
+      isEqualToExistingSwitch,
+      clausesViewModel.isValidationError,
+    ]
   );
 
   const handleResetClockChange = (clockName: string, isChecked: boolean) => {
@@ -237,6 +295,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
         <Grid container spacing={1} alignItems="center">
           {resetGrid}
         </Grid>
+        {equalToExistingErrorMsg}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseDialog} variant="contained" color="error">

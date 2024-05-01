@@ -36,6 +36,7 @@
   "switchDialog.button.cancel": "Abbrechen",
   "switchDialog.button.edit": "Speichern",
   "switchDialog.button.add": "Hinzufügen",
+  "switchDialog.switchAlreadyExists": "Es existiert bereits ein äquivalenter Switch.",
   "clauses.input.clock": "Uhr",
   "clauses.input.comparison": "Vergleich",
   "clauses.input.value": "Wert",

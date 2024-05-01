@@ -21,7 +21,7 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
       // if one clause is undefined
       return false;
     }
-    return clause1.lhs === clause2.lhs && clause1.op === clause2.op && clause1.rhs === clause2.rhs;
+    return clause1.lhs.name === clause2.lhs.name && clause1.op === clause2.op && clause1.rhs === clause2.rhs;
   }, []);
 
   const clockConstraintsEqual = useCallback(
@@ -73,9 +73,17 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
   );
 
   const transformToClockConstraint = useCallback((clauseData: ClauseViewData[]): ClockConstraint | undefined => {
+    // clauseData array should be defined
     if (!clauseData || clauseData.length === 0) {
       return undefined;
     }
+    // every element of array should be defined
+    for (const element of clauseData) {
+      if (!element.clockValue || !element.comparisonValue || !element.numberInput) {
+        return undefined;
+      }
+    }
+
     return clauseData
       .map<Clause>((c) => {
         const lhs: Clock = { name: c.clockValue };

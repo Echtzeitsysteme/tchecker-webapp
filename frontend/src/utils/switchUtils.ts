@@ -36,11 +36,11 @@ export function useSwitchUtils(): SwitchUtils {
       const resets1 = switch1.reset.map((c) => c.name);
       const resets2 = switch2.reset.map((c) => c.name);
       if (resets1.filter((r1) => !resets2.includes(r1)).length > 0) {
-        // some resets of switch1 are not included in switch1
+        // some resets of switch1 are not included in switch1´
         return false;
       }
       if (resets2.filter((r2) => !resets1.includes(r2)).length > 0) {
-        // some resets of switch2 are not included in switch1
+        // some resets of switch2 are not included in switch1´
         return false;
       }
 

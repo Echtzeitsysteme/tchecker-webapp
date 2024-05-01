@@ -197,6 +197,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
       <ManipulateSwitchDialog
         open={switchAddOpen}
         locations={locations}
+        switches={switches}
         clocks={clocks}
         handleClose={handleSwitchAddClose}
         handleSubmit={handleSwitchAdd}
