@@ -9,6 +9,7 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { Location } from '../model/ta/location';
 import { Home } from '@mui/icons-material';
 import ManipulateSwitchDialog from './ManipulateSwitchDialog';
+import { Switch } from '../model/ta/switch';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -16,7 +17,7 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation, editLocation, removeLocation, addSwitch, removeSwitch } = viewModel;
+  const { ta, addLocation, editLocation, removeLocation, addSwitch, editSwitch, removeSwitch } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
@@ -24,6 +25,8 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const [locationEditOpen, setLocationEditOpen] = useState(false);
   const [locationToEdit, setLocationToEdit] = useState<Location | undefined>(undefined);
   const [switchAddOpen, setSwitchAddOpen] = useState(false);
+  const [switchEditOpen, setSwitchEditOpen] = useState(false);
+  const [switchToEdit, setSwitchToEdit] = useState<Switch | undefined>(undefined);
 
   const handleLocationAddOpen = () => setLocationAddOpen(true);
   const handleLocationAddClose = () => setLocationAddOpen(false);
@@ -96,6 +99,14 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
 
   const handleSwitchAddOpen = () => setSwitchAddOpen(true);
   const handleSwitchAddClose = () => setSwitchAddOpen(false);
+  const handleSwitchEditOpen = useCallback(
+    (id: number) => {
+      setSwitchToEdit(switches[id]);
+      setSwitchEditOpen(true);
+    },
+    [switches]
+  );
+  const handleSwitchEditClose = () => setSwitchEditOpen(false);
 
   const handleSwitchAdd = (
     sourceName: string,
@@ -108,9 +119,19 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     setSwitchAddOpen(false);
   };
 
-  const handleSwitchEditOpen = (id: number) => {
-    // TODO implement the edit logic
-    console.log('Editing switch with id', id); // TODO delete
+  const handleSwitchEdit = (
+    sourceName: string,
+    action: string,
+    resetNames: string[],
+    targetName: string,
+    guard?: ClockConstraint,
+    prevSwitch?: Switch
+  ) => {
+    if (!prevSwitch) {
+      throw Error('handleSwitchEdit: prevSwitch is null or undefined');
+    }
+    editSwitch(viewModel, prevSwitch, sourceName, action, resetNames, targetName, guard);
+    setSwitchEditOpen(false);
   };
 
   const handleSwitchDelete = useCallback(
@@ -135,7 +156,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         onDelete={handleSwitchDelete}
       />
     );
-  }, [switches, t, formatSwitchTable, handleSwitchDelete]);
+  }, [switches, t, formatSwitchTable, handleSwitchEditOpen, handleSwitchDelete]);
 
   const handleClockAddOpen = () => {
     // TODO implement the add logic
@@ -202,6 +223,15 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         handleClose={handleSwitchAddClose}
         handleSubmit={handleSwitchAdd}
         switchPrevVersion={undefined}
+      />
+      <ManipulateSwitchDialog
+        open={switchEditOpen}
+        locations={locations}
+        switches={switches}
+        clocks={clocks}
+        handleClose={handleSwitchEditClose}
+        handleSubmit={handleSwitchEdit}
+        switchPrevVersion={switchToEdit}
       />
     </>
   );

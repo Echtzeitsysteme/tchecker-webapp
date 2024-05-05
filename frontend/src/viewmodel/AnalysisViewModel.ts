@@ -42,6 +42,15 @@ export interface AnalysisViewModel {
     targetName: string,
     guard?: ClockConstraint
   ) => void;
+  editSwitch: (
+    viewModel: AnalysisViewModel,
+    prevSwitch: Switch,
+    sourceName: string,
+    action: string,
+    resetNames: string[],
+    targetName: string,
+    guard?: ClockConstraint
+  ) => void;
   removeSwitch: (viewModel: AnalysisViewModel, switchToRemove: Switch) => void;
 }
 
@@ -252,6 +261,31 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     []
   );
 
+  const editSwitch = useCallback(
+    (
+      viewModel: AnalysisViewModel,
+      prevSwitch: Switch,
+      sourceName: string,
+      action: string,
+      resetNames: string[],
+      targetName: string,
+      guard?: ClockConstraint
+    ) => {
+      const ta = viewModel.ta;
+      const switches = [...ta.switches];
+      const switchToEdit = switches.filter((sw) => switchesEqual(sw, prevSwitch))[0];
+      switchToEdit.source = ta.locations.filter((l) => l.name === sourceName)[0];
+      switchToEdit.target = ta.locations.filter((l) => l.name === targetName)[0];
+      switchToEdit.actionLabel = action;
+      switchToEdit.reset = ta.clocks.filter((c) => resetNames.includes(c.name));
+      switchToEdit.guard = guard;
+      const updatedTa = { ...ta, switches: switches };
+      const updatedViewModel = { ...viewModel, ta: updatedTa };
+      setViewModel(updatedViewModel);
+    },
+    [switchesEqual]
+  );
+
   const removeSwitch = useCallback(
     (viewModel: AnalysisViewModel, switchToRemove: Switch) => {
       const ta = viewModel.ta;
@@ -280,6 +314,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     addClock: addClock,
     removeClock: removeClock,
     addSwitch: addSwitch,
+    editSwitch: editSwitch,
     removeSwitch: removeSwitch,
   });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -70,6 +70,21 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
   const [justOpened, setJustOpened] = useState(true);
   const [guardChecked, setGuardChecked] = useState(false);
 
+  const setResetsFromClockArray = useCallback(
+    (clocksToReset: Clock[]) => {
+      const resetNames = clocksToReset.map((c) => c.name);
+      const updatedResetClocks = clocks.reduce(
+        (acc, clock) => {
+          acc[clock.name] = resetNames.includes(clock.name);
+          return acc;
+        },
+        {} as { [key: string]: boolean }
+      );
+      setResets(updatedResetClocks);
+    },
+    [clocks]
+  );
+
   // effect for setting initial values upon opening the dialog
   useEffect(() => {
     // include "open" to ensure that values in dialog are correctly loaded upon opening
@@ -79,7 +94,9 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     if (switchPrevVersion !== undefined) {
       // load existing switch if editing (for adding, "if" prevents entering this)
       setAction(switchPrevVersion.actionLabel);
-      // TODO: set source, target, reset
+      setSource(switchPrevVersion.source.name);
+      setTarget(switchPrevVersion.target.name);
+      setResetsFromClockArray(switchPrevVersion.reset);
       if (switchPrevVersion.guard) {
         setGuardChecked(true);
         setClausesFromClockConstraint(clausesViewModel, switchPrevVersion.guard);
@@ -89,17 +106,18 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
       }
     } else {
       // when adding switch: set reset intially to none
-      const initialResetClocks = clocks.reduce(
-        (acc, clock) => {
-          acc[clock.name] = false;
-          return acc;
-        },
-        {} as { [key: string]: boolean }
-      );
-      setResets(initialResetClocks);
+      setResetsFromClockArray([]);
     }
     setJustOpened(false);
-  }, [open, justOpened, clocks, switchPrevVersion, clausesViewModel, setClausesFromClockConstraint]);
+  }, [
+    open,
+    justOpened,
+    clocks,
+    switchPrevVersion,
+    clausesViewModel,
+    setClausesFromClockConstraint,
+    setResetsFromClockArray,
+  ]);
 
   // update validation checks
   useEffect(() => {
@@ -200,7 +218,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     const guard: ClockConstraint | undefined = guardChecked ? transformToClockConstraint(clauses) : undefined;
     const resetNames: string[] = clocks.filter((c) => resets[c.name]).map((c) => c.name);
     if (switchPrevVersion) {
-      // TODO: handle submit
+      handleSubmit(source, action, resetNames, target, guard, switchPrevVersion);
       // value reset not needed for editing because values are loaded from existing version
     } else {
       handleSubmit(source, action, resetNames, target, guard);
