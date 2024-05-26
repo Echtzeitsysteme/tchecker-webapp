@@ -10,6 +10,9 @@ import { Location } from '../model/ta/location';
 import { Home } from '@mui/icons-material';
 import ManipulateSwitchDialog from './ManipulateSwitchDialog';
 import { Switch } from '../model/ta/switch';
+import { Clock } from '../model/ta/clock';
+import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
+import ClockDeleteConfirmDialog from './ClockDeleteConfirmDialog';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
@@ -17,16 +20,19 @@ interface ManipulationProps {
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const { viewModel } = props;
-  const { ta, addLocation, editLocation, removeLocation, addSwitch, editSwitch, removeSwitch } = viewModel;
+  const { ta, addLocation, editLocation, removeLocation, addSwitch, editSwitch, removeSwitch, removeClock } = viewModel;
   const { locations, switches, clocks } = ta;
   const { t } = useTranslation();
   const { formatSwitchTable } = useFormattingUtils();
+  const { taUsesClockInAnyConstraint } = useClockConstraintUtils();
   const [locationAddOpen, setLocationAddOpen] = useState(false);
   const [locationEditOpen, setLocationEditOpen] = useState(false);
   const [locationToEdit, setLocationToEdit] = useState<Location | undefined>(undefined);
   const [switchAddOpen, setSwitchAddOpen] = useState(false);
   const [switchEditOpen, setSwitchEditOpen] = useState(false);
   const [switchToEdit, setSwitchToEdit] = useState<Switch | undefined>(undefined);
+  const [clockDeleteConfirmOpen, setClockDeleteConfirmOpen] = useState(false);
+  const [clockToDelete, setClockToDelete] = useState<Clock | undefined>(undefined);
 
   const handleLocationAddOpen = () => setLocationAddOpen(true);
   const handleLocationAddClose = () => setLocationAddOpen(false);
@@ -168,10 +174,29 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     console.log('Editing clock with id', id); // TODO delete
   };
 
-  const handleClockDelete = (id: number) => {
-    // TODO implement the delete logic
-    console.log('Deleting clock with id', id); // TODO delete
-  };
+  const handleClockDeleteOpen = () => setClockDeleteConfirmOpen(true);
+  const handleClockDeleteClose = () => setClockDeleteConfirmOpen(false);
+
+  const deleteClock = useCallback(
+    (clock: Clock) => {
+      handleClockDeleteClose();
+      removeClock(viewModel, clock);
+    },
+    [removeClock, viewModel]
+  );
+
+  const handleClockDelete = useCallback(
+    (id: number) => {
+      const clockToDelete = clocks[id];
+      if (!taUsesClockInAnyConstraint(ta, clockToDelete)) {
+        deleteClock(clockToDelete);
+      } else {
+        setClockToDelete(clockToDelete);
+        handleClockDeleteOpen();
+      }
+    },
+    [clocks, ta, deleteClock, taUsesClockInAnyConstraint]
+  );
 
   const clockTable: JSX.Element = useMemo(() => {
     const clockRows = clocks.map((clock, index) => ({ id: index, displayName: clock.name }));
@@ -185,7 +210,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         onDelete={handleClockDelete}
       />
     );
-  }, [clocks, t]);
+  }, [clocks, t, handleClockDelete]);
 
   const allTables: JSX.Element[] = useMemo(() => {
     const tables = [locationTable, switchTable, clockTable];
@@ -232,6 +257,12 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         handleClose={handleSwitchEditClose}
         handleSubmit={handleSwitchEdit}
         switchPrevVersion={switchToEdit}
+      />
+      <ClockDeleteConfirmDialog
+        clock={clockToDelete}
+        open={clockDeleteConfirmOpen}
+        onClose={handleClockDeleteClose}
+        onDelete={deleteClock}
       />
     </>
   );

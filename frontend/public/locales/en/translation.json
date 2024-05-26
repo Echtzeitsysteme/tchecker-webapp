@@ -40,5 +40,10 @@
   "clauses.input.clock": "Clock",
   "clauses.input.comparison": "Comparison",
   "clauses.input.value": "Value",
-  "clauses.delete": "Delete Clause"
+  "clauses.delete": "Delete Clause",
+  "deleteClockConfirmDialog.title": "Confirm Clock Deletion",
+  "deleteClockConfirmDialog.contentText": "Clock {{clockName}} is still being used in at least one clock constraint. Are you sure you want to delete clock {{clockName}}?",
+  "deleteClockConfirmDialog.contentTextWarning": "All clauses using this clock will be deleted!",
+  "deleteClockConfirmDialog.button.cancel": "Cancel",
+  "deleteClockConfirmDialog.button.confirm": "Delete"
 }

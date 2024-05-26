@@ -161,7 +161,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         <Button onClick={handleCloseDialog} variant="contained" color="error">
           {t('locDialog.button.cancel')}
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
+        <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={isValidationError}>
           {locPrevVersion ? t('locDialog.button.edit') : t('locDialog.button.add')}
         </Button>
       </DialogActions>

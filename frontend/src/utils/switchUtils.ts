@@ -1,9 +1,12 @@
 import { useCallback } from 'react';
 import { Switch } from '../model/ta/switch';
 import { useClockConstraintUtils } from './clockConstraintUtils';
+import { TimedAutomaton } from '../model/ta/timedAutomaton';
+import { Clock } from '../model/ta/clock';
 
 export interface SwitchUtils {
   switchesEqual: (switch1?: Switch, switch2?: Switch) => boolean;
+  removeClockFromAllResets: (clock: Clock, ta: TimedAutomaton) => void;
 }
 
 export function useSwitchUtils(): SwitchUtils {
@@ -50,5 +53,11 @@ export function useSwitchUtils(): SwitchUtils {
     [clockConstraintsEqual]
   );
 
-  return { switchesEqual: switchesEqual };
+  const removeClockFromAllResets = useCallback((clock: Clock, ta: TimedAutomaton): void => {
+    for (const sw of ta.switches) {
+      sw.reset = sw.reset.filter((c) => c.name !== clock.name);
+    }
+  }, []);
+
+  return { switchesEqual: switchesEqual, removeClockFromAllResets: removeClockFromAllResets };
 }

@@ -4,11 +4,15 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { ClauseViewData } from '../viewmodel/ClausesViewModel';
 import { Clock } from '../model/ta/clock';
 import { ClockComparator } from '../model/ta/clockComparator';
+import { TimedAutomaton } from '../model/ta/timedAutomaton';
 
 export interface ClockConstraintUtils {
   clausesEqual: (clause1?: Clause, clause2?: Clause) => boolean;
   clockConstraintsEqual: (cc1?: ClockConstraint, cc2?: ClockConstraint) => boolean;
   transformToClockConstraint: (clauseData: ClauseViewData[]) => ClockConstraint | undefined;
+  constraintUsesClock: (clock: Clock, clockConstraint?: ClockConstraint) => boolean;
+  taUsesClockInAnyConstraint: (ta?: TimedAutomaton, clock?: Clock) => boolean;
+  removeAllClausesUsingClock: (clock: Clock, ta: TimedAutomaton) => void;
 }
 
 export function useClockConstraintUtils(): ClockConstraintUtils {
@@ -106,9 +110,65 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
       );
   }, []);
 
+  const constraintUsesClock = useCallback((clock: Clock, clockConstraint?: ClockConstraint): boolean => {
+    if (!clockConstraint) {
+      return false;
+    }
+
+    const includedClockNames = clockConstraint.clauses.map<string>((clause) => clause.lhs.name);
+    return includedClockNames.includes(clock.name);
+  }, []);
+
+  const taUsesClockInAnyConstraint = useCallback(
+    (ta?: TimedAutomaton, clock?: Clock): boolean => {
+      if (!clock || !ta) {
+        return false;
+      }
+
+      const allInvariants = ta.locations.map<ClockConstraint | undefined>((loc) => loc.invariant);
+      const allGuards = ta.switches.map<ClockConstraint | undefined>((sw) => sw.guard);
+      return [...allInvariants, ...allGuards].filter((cc) => constraintUsesClock(clock, cc)).length > 0;
+    },
+    [constraintUsesClock]
+  );
+
+  const removeAllClausesUsingClock = useCallback(
+    (clock: Clock, ta: TimedAutomaton): void => {
+      if (!taUsesClockInAnyConstraint(ta, clock)) {
+        return;
+      }
+
+      for (const loc of ta.locations) {
+        if (loc.invariant && constraintUsesClock(clock, loc.invariant)) {
+          const updatedClauses = loc.invariant.clauses.filter((clause) => clause.lhs.name !== clock.name);
+          if (updatedClauses.length > 0) {
+            loc.invariant.clauses = updatedClauses;
+          } else {
+            loc.invariant = undefined;
+          }
+        }
+      }
+
+      for (const sw of ta.switches) {
+        if (sw.guard && constraintUsesClock(clock, sw.guard)) {
+          const updatedClauses = sw.guard.clauses.filter((clause) => clause.lhs.name !== clock.name);
+          if (updatedClauses.length > 0) {
+            sw.guard.clauses = updatedClauses;
+          } else {
+            sw.guard = undefined;
+          }
+        }
+      }
+    },
+    [constraintUsesClock, taUsesClockInAnyConstraint]
+  );
+
   return {
     clausesEqual: clausesEqual,
     clockConstraintsEqual: clockConstraintsEqual,
     transformToClockConstraint: transformToClockConstraint,
+    constraintUsesClock: constraintUsesClock,
+    taUsesClockInAnyConstraint: taUsesClockInAnyConstraint,
+    removeAllClausesUsingClock: removeAllClausesUsingClock,
   };
 }

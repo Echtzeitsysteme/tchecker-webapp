@@ -7,6 +7,7 @@ import { ClockComparator } from '../model/ta/clockComparator';
 import { Switch } from '../model/ta/switch';
 import { useMathUtils } from '../utils/mathUtils';
 import { useSwitchUtils } from '../utils/switchUtils';
+import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -33,7 +34,7 @@ export interface AnalysisViewModel {
     yCoordinate: number
   ) => void;
   addClock: (viewModel: AnalysisViewModel, clockName: string) => void;
-  removeClock: (viewModel: AnalysisViewModel, clockName: string) => void;
+  removeClock: (viewModel: AnalysisViewModel, clock: Clock) => void;
   addSwitch: (
     viewModel: AnalysisViewModel,
     sourceName: string,
@@ -64,6 +65,8 @@ export enum AnalysisState {
 export function useAnalysisViewModel(): AnalysisViewModel {
   const { avgRounded } = useMathUtils();
   const { switchesEqual } = useSwitchUtils();
+  const { removeAllClausesUsingClock } = useClockConstraintUtils();
+  const { removeClockFromAllResets } = useSwitchUtils();
 
   const initAutomaton: TimedAutomaton = useMemo(() => {
     const clock1: Clock = { name: 'x' };
@@ -229,13 +232,17 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     setViewModel({ ...viewModel, ta: updatedTa });
   }, []);
 
-  const removeClock = useCallback((viewModel: AnalysisViewModel, clockName: string) => {
-    // TODO: delete all constraints using the clock?
-    const ta = viewModel.ta;
-    const updatedClocks = ta.clocks.filter((c) => c.name !== clockName);
-    const updatedTa = { ...ta, clocks: updatedClocks };
-    setViewModel({ ...viewModel, ta: updatedTa });
-  }, []);
+  const removeClock = useCallback(
+    (viewModel: AnalysisViewModel, clock: Clock) => {
+      let updatedTa = { ...viewModel.ta };
+      removeAllClausesUsingClock(clock, updatedTa);
+      removeClockFromAllResets(clock, updatedTa);
+      const updatedClocks = updatedTa.clocks.filter((c) => c.name !== clock.name);
+      updatedTa = { ...updatedTa, clocks: updatedClocks };
+      setViewModel({ ...viewModel, ta: updatedTa });
+    },
+    [removeAllClausesUsingClock, removeClockFromAllResets]
+  );
 
   const addSwitch = useCallback(
     (

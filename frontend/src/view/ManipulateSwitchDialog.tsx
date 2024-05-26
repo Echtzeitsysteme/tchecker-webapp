@@ -319,7 +319,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
         <Button onClick={handleCloseDialog} variant="contained" color="error">
           {t('switchDialog.button.cancel')}
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" disabled={isValidationError}>
+        <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={isValidationError}>
           {switchPrevVersion ? t('switchDialog.button.edit') : t('switchDialog.button.add')}
         </Button>
       </DialogActions>
