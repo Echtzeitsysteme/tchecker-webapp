@@ -45,5 +45,12 @@
   "deleteClockConfirmDialog.contentText": "Clock {{clockName}} is still being used in at least one clock constraint. Are you sure you want to delete clock {{clockName}}?",
   "deleteClockConfirmDialog.contentTextWarning": "All clauses using this clock will be deleted!",
   "deleteClockConfirmDialog.button.cancel": "Cancel",
-  "deleteClockConfirmDialog.button.confirm": "Delete"
+  "deleteClockConfirmDialog.button.confirm": "Delete",
+  "clockDialog.title.editClock": "Edit Clock",
+  "clockDialog.title.addClock": "Add Clock",
+  "clockDialog.errorNameEmpty": "Name cannot be empty",
+  "clockDialog.errorNameExists": "Name already exists",
+  "clockDialog.button.cancel": "Cancel",
+  "clockDialog.button.edit": "Save",
+  "clockDialog.button.add": "Add"
 }

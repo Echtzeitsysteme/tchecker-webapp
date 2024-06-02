@@ -8,6 +8,7 @@ import { Switch } from '../model/ta/switch';
 import { useMathUtils } from '../utils/mathUtils';
 import { useSwitchUtils } from '../utils/switchUtils';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
+import { useClockUtils } from '../utils/clockUtils';
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -33,8 +34,6 @@ export interface AnalysisViewModel {
     xCoordinate: number,
     yCoordinate: number
   ) => void;
-  addClock: (viewModel: AnalysisViewModel, clockName: string) => void;
-  removeClock: (viewModel: AnalysisViewModel, clock: Clock) => void;
   addSwitch: (
     viewModel: AnalysisViewModel,
     sourceName: string,
@@ -53,6 +52,9 @@ export interface AnalysisViewModel {
     guard?: ClockConstraint
   ) => void;
   removeSwitch: (viewModel: AnalysisViewModel, switchToRemove: Switch) => void;
+  addClock: (viewModel: AnalysisViewModel, clockName: string) => void;
+  editClock: (viewModel: AnalysisViewModel, clockName: string, prevClockName: string) => void;
+  removeClock: (viewModel: AnalysisViewModel, clock: Clock) => void;
 }
 
 export enum AnalysisState {
@@ -67,6 +69,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   const { switchesEqual } = useSwitchUtils();
   const { removeAllClausesUsingClock } = useClockConstraintUtils();
   const { removeClockFromAllResets } = useSwitchUtils();
+  const { renameClock } = useClockUtils();
 
   const initAutomaton: TimedAutomaton = useMemo(() => {
     const clock1: Clock = { name: 'x' };
@@ -119,6 +122,8 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       switches: [switch1],
     };
   }, []);
+
+  // ===== manipulate locations ================================================
 
   const setInitialLocation = useCallback((viewModel: AnalysisViewModel, locationName: string) => {
     const ta = viewModel.ta;
@@ -225,24 +230,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     []
   );
 
-  const addClock = useCallback((viewModel: AnalysisViewModel, clockName: string) => {
-    const ta = viewModel.ta;
-    const updatedClocks = [...ta.clocks, { name: clockName }];
-    const updatedTa = { ...ta, clocks: updatedClocks };
-    setViewModel({ ...viewModel, ta: updatedTa });
-  }, []);
-
-  const removeClock = useCallback(
-    (viewModel: AnalysisViewModel, clock: Clock) => {
-      let updatedTa = { ...viewModel.ta };
-      removeAllClausesUsingClock(clock, updatedTa);
-      removeClockFromAllResets(clock, updatedTa);
-      const updatedClocks = updatedTa.clocks.filter((c) => c.name !== clock.name);
-      updatedTa = { ...updatedTa, clocks: updatedClocks };
-      setViewModel({ ...viewModel, ta: updatedTa });
-    },
-    [removeAllClausesUsingClock, removeClockFromAllResets]
-  );
+  // ===== manipulate switches =================================================
 
   const addSwitch = useCallback(
     (
@@ -310,6 +298,37 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     [switchesEqual]
   );
 
+  // ===== manipulate clocks ===================================================
+
+  const addClock = useCallback((viewModel: AnalysisViewModel, clockName: string) => {
+    const ta = viewModel.ta;
+    const updatedClocks = [...ta.clocks, { name: clockName }];
+    const updatedTa = { ...ta, clocks: updatedClocks };
+    setViewModel({ ...viewModel, ta: updatedTa });
+  }, []);
+
+  const editClock = useCallback(
+    (viewModel: AnalysisViewModel, clockName: string, prevClockName: string) => {
+      const updatedTa = { ...viewModel.ta };
+      renameClock(prevClockName, clockName, updatedTa);
+      setViewModel({ ...viewModel, ta: updatedTa });
+      setViewModel({ ...viewModel, ta: updatedTa });
+    },
+    [renameClock]
+  );
+
+  const removeClock = useCallback(
+    (viewModel: AnalysisViewModel, clock: Clock) => {
+      let updatedTa = { ...viewModel.ta };
+      removeAllClausesUsingClock(clock, updatedTa);
+      removeClockFromAllResets(clock, updatedTa);
+      const updatedClocks = updatedTa.clocks.filter((c) => c.name !== clock.name);
+      updatedTa = { ...updatedTa, clocks: updatedClocks };
+      setViewModel({ ...viewModel, ta: updatedTa });
+    },
+    [removeAllClausesUsingClock, removeClockFromAllResets]
+  );
+
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({
     state: AnalysisState.INIT,
     ta: initAutomaton,
@@ -318,11 +337,12 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     removeLocation: removeLocation,
     setInitialLocation: setInitialLocation,
     updateLocationCoordinates: updateLocationCoordinates,
-    addClock: addClock,
-    removeClock: removeClock,
     addSwitch: addSwitch,
     editSwitch: editSwitch,
     removeSwitch: removeSwitch,
+    addClock: addClock,
+    editClock: editClock,
+    removeClock: removeClock,
   });
 
   // ===================================================================================================================

@@ -10,7 +10,7 @@ export interface ClockConstraintUtils {
   clausesEqual: (clause1?: Clause, clause2?: Clause) => boolean;
   clockConstraintsEqual: (cc1?: ClockConstraint, cc2?: ClockConstraint) => boolean;
   transformToClockConstraint: (clauseData: ClauseViewData[]) => ClockConstraint | undefined;
-  constraintUsesClock: (clock: Clock, clockConstraint?: ClockConstraint) => boolean;
+  constraintUsesClock: (clockName: string, clockConstraint?: ClockConstraint) => boolean;
   taUsesClockInAnyConstraint: (ta?: TimedAutomaton, clock?: Clock) => boolean;
   removeAllClausesUsingClock: (clock: Clock, ta: TimedAutomaton) => void;
 }
@@ -110,13 +110,13 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
       );
   }, []);
 
-  const constraintUsesClock = useCallback((clock: Clock, clockConstraint?: ClockConstraint): boolean => {
+  const constraintUsesClock = useCallback((clockName: string, clockConstraint?: ClockConstraint): boolean => {
     if (!clockConstraint) {
       return false;
     }
 
     const includedClockNames = clockConstraint.clauses.map<string>((clause) => clause.lhs.name);
-    return includedClockNames.includes(clock.name);
+    return includedClockNames.includes(clockName);
   }, []);
 
   const taUsesClockInAnyConstraint = useCallback(
@@ -127,7 +127,7 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
 
       const allInvariants = ta.locations.map<ClockConstraint | undefined>((loc) => loc.invariant);
       const allGuards = ta.switches.map<ClockConstraint | undefined>((sw) => sw.guard);
-      return [...allInvariants, ...allGuards].filter((cc) => constraintUsesClock(clock, cc)).length > 0;
+      return [...allInvariants, ...allGuards].filter((cc) => constraintUsesClock(clock.name, cc)).length > 0;
     },
     [constraintUsesClock]
   );
@@ -139,7 +139,7 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
       }
 
       for (const loc of ta.locations) {
-        if (loc.invariant && constraintUsesClock(clock, loc.invariant)) {
+        if (loc.invariant && constraintUsesClock(clock.name, loc.invariant)) {
           const updatedClauses = loc.invariant.clauses.filter((clause) => clause.lhs.name !== clock.name);
           if (updatedClauses.length > 0) {
             loc.invariant.clauses = updatedClauses;
@@ -150,7 +150,7 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
       }
 
       for (const sw of ta.switches) {
-        if (sw.guard && constraintUsesClock(clock, sw.guard)) {
+        if (sw.guard && constraintUsesClock(clock.name, sw.guard)) {
           const updatedClauses = sw.guard.clauses.filter((clause) => clause.lhs.name !== clock.name);
           if (updatedClauses.length > 0) {
             sw.guard.clauses = updatedClauses;

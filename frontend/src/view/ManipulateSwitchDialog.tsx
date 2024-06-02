@@ -240,7 +240,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
           <FormControlLabel
             control={
               <Checkbox
-                checked={resets[clock.name]}
+                checked={!!resets[clock.name]}
                 onChange={(e) => handleResetClockChange(clock.name, e.target.checked)}
               />
             }

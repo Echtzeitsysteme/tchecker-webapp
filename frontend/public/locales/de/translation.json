@@ -45,5 +45,12 @@
   "deleteClockConfirmDialog.contentText": "Uhr {{clockName}} wird noch in mindestens einem Clock Constraint genutzt. Bist du sicher, dass du Uhr {{clockName}} löschen möchtest?",
   "deleteClockConfirmDialog.contentTextWarning": "Alle Klauseln, die diese Uhr nutzen, werden entfernt!",
   "deleteClockConfirmDialog.button.cancel": "Abbrechen",
-  "deleteClockConfirmDialog.button.confirm": "Löschen"
+  "deleteClockConfirmDialog.button.confirm": "Löschen",
+  "clockDialog.title.editClock": "Uhr bearbeiten",
+  "clockDialog.title.addClock": "Uhr hinzufügen",
+  "clockDialog.errorNameEmpty": "Name darf nicht leer sein",
+  "clockDialog.errorNameExists": "Name wird bereits verwendet",
+  "clockDialog.button.cancel": "Abbrechen",
+  "clockDialog.button.edit": "Speichern",
+  "clockDialog.button.add": "Hinzufügen"
 }
