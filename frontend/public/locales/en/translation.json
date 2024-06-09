@@ -1,5 +1,5 @@
 {
-  "app.title": "Timed Automata Analysis",
+  "app.title": "Timed-Automata Analysis",
   "manipulation.table.showContent": "Show {{content}}",
   "manipulation.table.hideContent": "Hide {{content}}",
   "manipulation.table.addElement": "Add {{content}}",
