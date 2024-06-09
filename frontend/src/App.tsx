@@ -1,7 +1,7 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
 import AutomatonVisualization from './view/AutomatonVisualization';
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
 import { AutomatonManipulation } from './view/AutomatonManipulation';
@@ -38,12 +38,17 @@ function App() {
         ⏰ {t('app.title')}
       </h1>
       <Box sx={{ display: 'flex', height: `${contentHeight - 1}px`, overflow: 'hidden' }}>
-        <Box sx={{ width: 300, borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}>
-          <AutomatonManipulation viewModel={viewModel} />
-        </Box>
-        <Box sx={{ flexGrow: 1, overflowY: 'hidden', height: '100%' }}>
-          <AutomatonVisualization viewModel={viewModel} />
-        </Box>
+        <Grid container sx={{ height: '100%' }}>
+          <Grid
+            item
+            sx={{ width: 300, borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
+          >
+            <AutomatonManipulation viewModel={viewModel} />
+          </Grid>
+          <Grid item sx={{ flexGrow: 1, overflowY: 'hidden', height: '100%' }}>
+            <AutomatonVisualization viewModel={viewModel} />
+          </Grid>
+        </Grid>
       </Box>
     </>
   );
