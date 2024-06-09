@@ -41,11 +41,15 @@ function App() {
         <Grid container sx={{ height: '100%' }}>
           <Grid
             item
-            sx={{ width: 300, borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
+            xs={12}
+            sm={4}
+            md={3}
+            lg={3}
+            sx={{ borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
           >
             <AutomatonManipulation viewModel={viewModel} />
           </Grid>
-          <Grid item sx={{ flexGrow: 1, overflowY: 'hidden', height: '100%' }}>
+          <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
             <AutomatonVisualization viewModel={viewModel} />
           </Grid>
         </Grid>
