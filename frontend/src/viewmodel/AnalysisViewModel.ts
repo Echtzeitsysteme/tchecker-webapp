@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Location } from '../model/ta/location';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { Clock } from '../model/ta/clock';
 import { ClockConstraint } from '../model/ta/clockConstraint';
-import { ClockComparator } from '../model/ta/clockComparator';
 import { Switch } from '../model/ta/switch';
 import { useMathUtils } from '../utils/mathUtils';
 import { useSwitchUtils } from '../utils/switchUtils';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import { useClockUtils } from '../utils/clockUtils';
+import { INIT_AUTOMATON } from '../utils/initAutomaton';
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -70,58 +70,6 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   const { removeAllClausesUsingClock } = useClockConstraintUtils();
   const { removeClockFromAllResets } = useSwitchUtils();
   const { renameClock } = useClockUtils();
-
-  const initAutomaton: TimedAutomaton = useMemo(() => {
-    const clock1: Clock = { name: 'x' };
-    const clock2: Clock = { name: 'y' };
-    const clockConstraint1: ClockConstraint = {
-      clauses: [
-        {
-          lhs: clock1,
-          op: ClockComparator.LESSER,
-          rhs: 5,
-        },
-      ],
-    };
-    const clockConstraint2: ClockConstraint = {
-      clauses: [
-        {
-          lhs: clock1,
-          op: ClockComparator.GREATER,
-          rhs: 1,
-        },
-        {
-          lhs: clock2,
-          op: ClockComparator.GEQ,
-          rhs: 3,
-        },
-      ],
-    };
-    const loc1: Location = {
-      name: 'init',
-      isInitial: true,
-      invariant: clockConstraint1,
-      xCoordinate: -100,
-      yCoordinate: 100,
-    };
-    const loc2: Location = {
-      name: 'final',
-      xCoordinate: 100,
-      yCoordinate: 100,
-    };
-    const switch1: Switch = {
-      source: loc1,
-      guard: clockConstraint2,
-      actionLabel: 'start',
-      reset: [clock1],
-      target: loc2,
-    };
-    return {
-      locations: [loc1, loc2],
-      clocks: [clock1, clock2],
-      switches: [switch1],
-    };
-  }, []);
 
   // ===== manipulate locations ================================================
 
@@ -331,7 +279,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
 
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({
     state: AnalysisState.INIT,
-    ta: initAutomaton,
+    ta: INIT_AUTOMATON,
     addLocation: addLocation,
     editLocation: editLocation,
     removeLocation: removeLocation,
@@ -349,7 +297,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
 
   useEffect(() => {
     if (viewModel.state === AnalysisState.INIT) {
-      // nothing to initialize at the moment. just set state to READY
+      // nothing to initialize at the moment, just set state to READY
       setViewModel({ ...viewModel, state: AnalysisState.READY });
     }
   }, [viewModel]);
@@ -363,9 +311,10 @@ export function useAnalysisViewModel(): AnalysisViewModel {
 
   useEffect(() => {
     if (viewModel.state === AnalysisState.RESET) {
-      setViewModel({ ...viewModel, ta: initAutomaton, state: AnalysisState.READY });
+      // TODO: add a reset button to use this reset
+      setViewModel({ ...viewModel, ta: INIT_AUTOMATON, state: AnalysisState.READY });
     }
-  }, [viewModel, initAutomaton]);
+  }, [viewModel]);
 
   // ===================================================================================================================
 
