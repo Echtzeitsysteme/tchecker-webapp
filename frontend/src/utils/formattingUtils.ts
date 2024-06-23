@@ -15,7 +15,7 @@ export interface FormattingUtils {
 export function useFormattingUtils(): FormattingUtils {
   const formatClockConstraint = useCallback((clockConstraint?: ClockConstraint, clauseJoinStr: string = ' ∧ ') => {
     const cc = clockConstraint;
-    if (!cc || !cc.clauses) {
+    if (!cc || !cc.clauses || cc.clauses.length === 0) {
       return undefined;
     }
     return cc.clauses.map((c) => `${c.lhs.name} ${c.op} ${c.rhs}`).join(clauseJoinStr);
