@@ -5,7 +5,7 @@ import { TimedAutomaton } from '../../src/model/ta/timedAutomaton';
 import { useSwitchUtils } from '../../src/utils/switchUtils';
 import { switchFixtureASwitch, switchFixtureWithResetAndGuard } from '../fixture/switchFixture';
 import { clockConstraintFixtureWithClockNames } from '../fixture/clockConstraintFixture';
-import { taFixtureWithTwoLocationsAndTwoSwitches } from '../fixture/timedAutomatonFixture';
+import { taFixtureWithTwoLocationsAndTwoSwitchesAndClock } from '../fixture/timedAutomatonFixture';
 
 describe('switchUtils', () => {
   let switchesEqual: (switch1?: Switch, switch2?: Switch) => boolean;
@@ -114,9 +114,9 @@ describe('switchUtils', () => {
 
   test('removeClockFromAllResets removes correct clock from all resets when clock is in reset', () => {
     // given
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
-    const { clocks, switches } = ta;
-    const clock = clocks[0];
+    const clock: Clock = { name: 'c' };
+    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const { switches } = ta;
     const resetsInitial = switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(clock)).length;
 
     // when
@@ -130,22 +130,19 @@ describe('switchUtils', () => {
 
   test('removeClockFromAllResets does nothing when clock is not used in any reset', () => {
     // given
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
-    const { clocks, switches } = ta;
-    const unusedClock: Clock = { name: clocks.map((c) => c.name).join('') + 'test' };
+    const clock: Clock = { name: 'c' };
+    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const { switches } = ta;
+    const unusedClock: Clock = { name: clock.name + 'test' };
 
-    // count resets for each clock
-    const resetsInitial: number[] = clocks.map(
-      (c) => switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(c)).length
-    );
+    // count resets
+    const resetsInitial = switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(clock)).length;
 
     // when
     removeClockFromAllResets(unusedClock, ta);
 
     // then
-    const resetsAfter: number[] = clocks.map(
-      (c) => switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(c)).length
-    );
+    const resetsAfter = switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(clock)).length;
     expect(resetsAfter).toEqual(resetsInitial);
   });
 });

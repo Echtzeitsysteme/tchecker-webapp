@@ -6,10 +6,9 @@ import { clauseFixtureWithClockName } from './clauseFixture';
 import { locationFixtureWithName } from './locationFixture';
 import { switchFixtureWithResetAndGuard } from './switchFixture';
 
-export function taFixtureWithTwoLocationsAndTwoSwitches(): TimedAutomaton {
+export function taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock: Clock): TimedAutomaton {
   const nameLoc0 = 'loc0';
   const nameLoc1 = 'loc1';
-  const clock: Clock = { name: 'c' };
   const clause = clauseFixtureWithClockName(clock.name);
 
   const loc0: Location = { ...locationFixtureWithName(nameLoc0), invariant: { clauses: [clause] } };
@@ -23,4 +22,9 @@ export function taFixtureWithTwoLocationsAndTwoSwitches(): TimedAutomaton {
     clocks: [clock],
     switches: [sw0, sw1],
   };
+}
+
+export function taFixtureWithTwoLocationsAndTwoSwitches(): TimedAutomaton {
+  const clock: Clock = { name: 'c' };
+  return taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
 }
