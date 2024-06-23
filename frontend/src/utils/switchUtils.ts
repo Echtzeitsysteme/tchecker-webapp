@@ -5,7 +5,7 @@ import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { Clock } from '../model/ta/clock';
 
 export interface SwitchUtils {
-  switchesEqual: (switch1?: Switch, switch2?: Switch) => boolean;
+  switchesEqual: (switch1: Switch | undefined, switch2: Switch | undefined) => boolean;
   removeClockFromAllResets: (clock: Clock, ta: TimedAutomaton) => void;
 }
 
@@ -13,7 +13,7 @@ export function useSwitchUtils(): SwitchUtils {
   const { clockConstraintsEqual } = useClockConstraintUtils();
 
   const switchesEqual = useCallback(
-    (switch1?: Switch, switch2?: Switch): boolean => {
+    (switch1: Switch | undefined, switch2: Switch | undefined): boolean => {
       if (!switch1 && !switch2) {
         // if both switches are undefined
         return true;
