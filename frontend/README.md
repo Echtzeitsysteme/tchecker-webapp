@@ -6,13 +6,14 @@ If you want to see the tool in actions, just visit [this website](https://luth1u
 
 ## 🚀 Quick Start
 
-This project utilizes [Yarn Classic](https://github.com/yarnpkg/yarn) for package management.
+This project utilizes [Node](https://nodejs.org/) and [Yarn Classic](https://classic.yarnpkg.com/) for development.
 The usual commands for React projects also apply here.
 
 - `yarn install` to install all dependencies and setup the project locally
 - `yarn start` to run the app locally for development
 - `yarn format` to format all files
 - `yarn lint` for linting
+- `yarn test` for running unit tests
 - `yarn build` to build the app for production
 - `yarn deploy` for deployment on GitHub Pages
 
