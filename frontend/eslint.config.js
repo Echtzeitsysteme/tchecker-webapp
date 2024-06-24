@@ -1,6 +1,5 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import eslintConfigPrettier from 'eslint-config-prettier';
@@ -18,7 +17,6 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
     },
   },
-  eslintPluginPrettierRecommended,
   {
     // eslint-plugin-react-refresh
     plugins: {
