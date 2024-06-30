@@ -3,6 +3,7 @@ import { Location } from '../../src/model/ta/location';
 import { Switch } from '../../src/model/ta/switch';
 import { TimedAutomaton } from '../../src/model/ta/timedAutomaton';
 import { clauseFixtureWithClockName } from './clauseFixture';
+import { clockFixtureWithClockName } from './clockFixture';
 import { locationFixtureWithName } from './locationFixture';
 import { switchFixtureWithResetAndGuard } from './switchFixture';
 
@@ -25,6 +26,6 @@ export function taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock: Clock): T
 }
 
 export function taFixtureWithTwoLocationsAndTwoSwitches(): TimedAutomaton {
-  const clock: Clock = { name: 'c' };
+  const clock: Clock = clockFixtureWithClockName('c');
   return taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
 }

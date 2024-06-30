@@ -18,11 +18,11 @@ export interface ClockConstraintUtils {
 export function useClockConstraintUtils(): ClockConstraintUtils {
   const clausesEqual = useCallback((clause1?: Clause, clause2?: Clause): boolean => {
     if (!clause1 && !clause2) {
-      // if both clauses are undefined
+      // if both clauses are falsy
       return true;
     }
     if (!clause1 || !clause2) {
-      // if one clause is undefined
+      // if one clause is falsy
       return false;
     }
     return clause1.lhs.name === clause2.lhs.name && clause1.op === clause2.op && clause1.rhs === clause2.rhs;
@@ -31,11 +31,11 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
   const clockConstraintsEqual = useCallback(
     (cc1?: ClockConstraint, cc2?: ClockConstraint): boolean => {
       if (!cc1 && !cc2) {
-        // if both constraints are undefined
+        // if both constraints are falsy
         return true;
       }
       if (!cc1 || !cc2) {
-        // if one constraint is undefined
+        // if one constraint is falsy
         return false;
       }
 
