@@ -27,6 +27,7 @@ import { useClausesViewModel } from '../viewmodel/ClausesViewModel';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import { Switch } from '../model/ta/switch';
 import { useSwitchUtils } from '../utils/switchUtils';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 interface ManipulateSwitchDialogProps {
   open: boolean;
@@ -50,6 +51,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
   const clausesViewModel = useClausesViewModel();
   const { clauses, setClausesFromClockConstraint } = clausesViewModel;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
   const { transformToClockConstraint } = useClockConstraintUtils();
   const { switchesEqual } = useSwitchUtils();
   const [action, setAction] = useState<string>('');
@@ -262,7 +264,8 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
       <DialogTitle>
         {switchPrevVersion ? t('switchDialog.title.editSwitch') : t('switchDialog.title.addSwitch')}
         <IconButton
-          onClick={handleCloseDialog}
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
         >
           <CloseIcon />
@@ -305,7 +308,12 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
         />
         {guardChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
         {guardChecked && (
-          <Button variant="outlined" onClick={() => clausesViewModel.addClause(clausesViewModel)} sx={{ marginTop: 2 }}>
+          <Button
+            variant="outlined"
+            onMouseDown={() => clausesViewModel.addClause(clausesViewModel)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => clausesViewModel.addClause(clausesViewModel))}
+            sx={{ marginTop: 2 }}
+          >
             {t('switchDialog.button.addClause')}
           </Button>
         )}
@@ -316,10 +324,21 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
         {equalToExistingErrorMsg}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCloseDialog} variant="contained" color="error">
+        <Button
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
+          variant="contained"
+          color="error"
+        >
           {t('switchDialog.button.cancel')}
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={isValidationError}>
+        <Button
+          onMouseDown={handleFormSubmit}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleFormSubmit)}
+          variant="contained"
+          color="primary"
+          disabled={isValidationError}
+        >
           {switchPrevVersion ? t('switchDialog.button.edit') : t('switchDialog.button.add')}
         </Button>
       </DialogActions>

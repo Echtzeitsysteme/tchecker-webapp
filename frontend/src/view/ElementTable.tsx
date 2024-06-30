@@ -15,6 +15,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTranslation } from 'react-i18next';
 import { Add } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 export interface ElementRowData {
   id: number;
@@ -33,6 +34,7 @@ interface ElementTableProps {
 export const ElementTable: React.FC<ElementTableProps> = (props) => {
   const { rows, contentSingular, contentPlural, onAddOpen, onEditOpen, onDelete } = props;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
 
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
@@ -52,12 +54,20 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
     return rows.map((row) => (
       <TableRow key={row.id}>
         <TableCell style={styleActionsColumn}>
-          <IconButton onClick={() => onEditOpen(row.id)} size="small">
+          <IconButton
+            onMouseDown={() => onEditOpen(row.id)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onEditOpen(row.id))}
+            size="small"
+          >
             <Tooltip title={t('manipulation.table.editLabel', { type: contentSingular })}>
               <EditIcon />
             </Tooltip>
           </IconButton>
-          <IconButton onClick={() => onDelete(row.id)} size="small">
+          <IconButton
+            onMouseDown={() => onDelete(row.id)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onDelete(row.id))}
+            size="small"
+          >
             <Tooltip title={t('manipulation.table.deleteLabel', { type: contentSingular })}>
               <DeleteIcon />
             </Tooltip>
@@ -66,21 +76,28 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
         <TableCell>{row.displayName}</TableCell>
       </TableRow>
     ));
-  }, [rows, styleActionsColumn, contentSingular, t, onEditOpen, onDelete]);
+  }, [rows, styleActionsColumn, contentSingular, t, onEditOpen, onDelete, executeOnKeyboardClick]);
 
   return (
     <>
       <Button
         startIcon={isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
         variant="text"
-        onClick={toggleCollapse}
+        onMouseDown={toggleCollapse}
+        onKeyDown={(e) => executeOnKeyboardClick(e.key, toggleCollapse)}
       >
         {collapseLabel}
       </Button>
       {!isCollapsed && (
         <>
           <div style={{ marginBottom: '4px' }}>
-            <Button startIcon={<Add />} variant="contained" size="small" onClick={onAddOpen}>
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              size="small"
+              onMouseDown={onAddOpen}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, onAddOpen)}
+            >
               {t('manipulation.table.addElement', { content: contentSingular })}
             </Button>
           </div>

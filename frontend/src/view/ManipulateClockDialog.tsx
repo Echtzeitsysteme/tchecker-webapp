@@ -3,6 +3,7 @@ import { Clock } from '../model/ta/clock';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 interface ManipulateClockDialogProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface ManipulateClockDialogProps {
 export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (props) => {
   const { open, clocks, prevClockName, handleClose, handleSubmit } = props;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
 
   const [clockName, setClockName] = useState<string>('');
 
@@ -90,7 +92,8 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
       <DialogTitle>
         {prevClockName ? t('clockDialog.title.editClock') : t('clockDialog.title.addClock')}
         <IconButton
-          onClick={handleCloseDialog}
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
         >
           <CloseIcon />
@@ -111,10 +114,21 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCloseDialog} variant="contained" color="error">
+        <Button
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
+          variant="contained"
+          color="error"
+        >
           {t('clockDialog.button.cancel')}
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={isValidationError}>
+        <Button
+          onMouseDown={handleFormSubmit}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleFormSubmit)}
+          variant="contained"
+          color="primary"
+          disabled={isValidationError}
+        >
           {prevClockName ? t('clockDialog.button.edit') : t('clockDialog.button.add')}
         </Button>
       </DialogActions>

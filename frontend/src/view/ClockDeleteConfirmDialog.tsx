@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { Clock } from '../model/ta/clock';
 import { useTranslation } from 'react-i18next';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 interface ClockDeleteConfirmDialogProps {
   clock?: Clock;
@@ -13,6 +14,7 @@ interface ClockDeleteConfirmDialogProps {
 const ClockDeleteConfirmDialog: React.FC<ClockDeleteConfirmDialogProps> = (props) => {
   const { clock, open, onClose, onDelete } = props;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
 
   if (!open) {
     return <></>;
@@ -32,10 +34,20 @@ const ClockDeleteConfirmDialog: React.FC<ClockDeleteConfirmDialogProps> = (props
         </p>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="contained" color="primary">
+        <Button
+          onMouseDown={onClose}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, onClose)}
+          variant="contained"
+          color="primary"
+        >
           {t('deleteClockConfirmDialog.button.cancel')}
         </Button>
-        <Button onClick={() => onDelete(clock)} variant="contained" color="error">
+        <Button
+          onMouseDown={() => onDelete(clock)}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onDelete(clock))}
+          variant="contained"
+          color="error"
+        >
           {t('deleteClockConfirmDialog.button.confirm')}
         </Button>
       </DialogActions>

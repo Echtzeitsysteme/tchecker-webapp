@@ -18,6 +18,7 @@ import { ClausesManipulation } from './ClausesManipulation';
 import { useTranslation } from 'react-i18next';
 import { useClausesViewModel } from '../viewmodel/ClausesViewModel';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 interface ManipulateLocationDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
   const clausesViewModel = useClausesViewModel();
   const { clauses, setClausesFromClockConstraint } = clausesViewModel;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
   const { transformToClockConstraint } = useClockConstraintUtils();
   const [justOpened, setJustOpened] = useState(true);
   const [name, setName] = useState('');
@@ -122,7 +124,8 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
       <DialogTitle>
         {locPrevVersion ? t('locDialog.editLoc') : t('locDialog.addLoc')}
         <IconButton
-          onClick={handleCloseDialog}
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
           sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
         >
           <CloseIcon />
@@ -152,16 +155,32 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
         />
         {invariantChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
         {invariantChecked && (
-          <Button variant="outlined" onClick={() => clausesViewModel.addClause(clausesViewModel)} sx={{ marginTop: 2 }}>
+          <Button
+            variant="outlined"
+            onMouseDown={() => clausesViewModel.addClause(clausesViewModel)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => clausesViewModel.addClause(clausesViewModel))}
+            sx={{ marginTop: 2 }}
+          >
             {t('locDialog.button.addClause')}
           </Button>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCloseDialog} variant="contained" color="error">
+        <Button
+          onMouseDown={handleCloseDialog}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
+          variant="contained"
+          color="error"
+        >
           {t('locDialog.button.cancel')}
         </Button>
-        <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={isValidationError}>
+        <Button
+          onMouseDown={handleFormSubmit}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, handleFormSubmit)}
+          variant="contained"
+          color="primary"
+          disabled={isValidationError}
+        >
           {locPrevVersion ? t('locDialog.button.edit') : t('locDialog.button.add')}
         </Button>
       </DialogActions>

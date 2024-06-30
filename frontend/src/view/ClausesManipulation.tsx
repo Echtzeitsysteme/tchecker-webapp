@@ -5,6 +5,7 @@ import { ClausesViewModel } from '../viewmodel/ClausesViewModel';
 import { useMemo } from 'react';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { Clock } from '../model/ta/clock';
+import { useButtonUtils } from '../utils/buttonUtils';
 
 interface ClausesManipulationProps {
   viewModel: ClausesViewModel;
@@ -15,6 +16,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
   const { viewModel, clocks } = props;
   const { clauses, deleteClause, changeClause } = viewModel;
   const { t } = useTranslation();
+  const { executeOnKeyboardClick } = useButtonUtils();
 
   const clockDropdownItems = useMemo(
     () =>
@@ -41,7 +43,11 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
       {clauses.map((row) => (
         <Grid key={row.id} container spacing={2} alignItems="center">
           <Grid item xs={1}>
-            <IconButton disabled={clauses.length <= 1} onClick={() => deleteClause(viewModel, row.id)}>
+            <IconButton
+              disabled={clauses.length <= 1}
+              onMouseDown={() => deleteClause(viewModel, row.id)}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => deleteClause(viewModel, row.id))}
+            >
               <Tooltip title={t('clauses.delete')}>
                 <DeleteIcon />
               </Tooltip>
