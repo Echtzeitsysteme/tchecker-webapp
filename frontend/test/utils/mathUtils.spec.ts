@@ -20,23 +20,28 @@ describe('mathUtils', () => {
 
   test('avgRounded returns rounded average of numbers', () => {
     // given
-    const numbers = [2, 3, 5, 7, 11];
+    const number0 = 2;
+    const number1 = 3;
+    const number2 = 5;
+    const number3 = 7;
+    const expectedAvg = (number0 + number1 + number2 + number3) / 4;
+    const expectedRoundedAvg = Math.round(expectedAvg);
 
     // when
-    const avg = avgRounded(numbers);
+    const avg = avgRounded([number0, number1, number2, number3]);
 
     // then
-    expect(avg).toBe(6);
+    expect(avg).toBe(expectedRoundedAvg);
   });
 
   test('avgRounded returns input when input array consists of only one number', () => {
     // given
-    const numbers = [42];
+    const number = 42;
 
     // when
-    const avg = avgRounded(numbers);
+    const avg = avgRounded([number]);
 
     // then
-    expect(avg).toBe(42);
+    expect(avg).toBe(number);
   });
 });
