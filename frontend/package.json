@@ -19,8 +19,8 @@
   "dependencies": {
     "@emotion/react": "11.11.4",
     "@emotion/styled": "11.11.5",
-    "@mui/icons-material": "5.15.20",
-    "@mui/material": "5.15.20",
+    "@mui/icons-material": "5.15.21",
+    "@mui/material": "5.15.21",
     "i18next": "23.11.5",
     "i18next-browser-languagedetector": "8.0.0",
     "i18next-http-backend": "2.5.2",
@@ -52,8 +52,8 @@
     "rimraf": "5.0.7",
     "ts-jest": "29.1.5",
     "typescript": "5.5.2",
-    "typescript-eslint": "7.13.1",
-    "vite": "5.3.1"
+    "typescript-eslint": "7.14.1",
+    "vite": "5.3.2"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
