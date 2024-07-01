@@ -5,6 +5,7 @@ import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
 import { AutomatonManipulation } from './view/AutomatonManipulation';
+import UploadButton from './view/UploadButton.tsx';
 
 function App() {
   const viewModel = useAnalysisViewModel();
@@ -37,6 +38,7 @@ function App() {
       <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
         ⏰ {t('app.title')}
       </h1>
+      <UploadButton></UploadButton>
       <Box sx={{ display: 'flex', height: `${contentHeight - 1}px`, overflow: 'hidden' }}>
         <Grid container sx={{ height: '100%' }}>
           <Grid

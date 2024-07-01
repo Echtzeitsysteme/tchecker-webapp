@@ -54,6 +54,27 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+#uploadFile {
+  display: none;
+}
+
+.uploadButton {
+  display: inline-block;
+  color: #444;
+  border: 1px solid #ccc;
+  background: #ddd;
+  box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  vertical-align: middle;
+  max-width: 100px;
+  padding: 5px;
+  text-align: center;
+}
+.uploadButton:active {
+  color: red;
+  box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.6);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
