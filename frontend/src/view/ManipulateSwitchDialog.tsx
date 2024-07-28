@@ -194,7 +194,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
   const locationDropdownItems = useMemo(
     () =>
       locations.map((l) => (
-        <MenuItem key={l.name} value={l.name}>
+        <MenuItem key={l.name} value={l.name} data-testid={'menu-item-loc-' + l.name}>
           {l.name}
         </MenuItem>
       )),
@@ -244,6 +244,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
               <Checkbox
                 checked={!!resets[clock.name]}
                 onChange={(e) => handleResetClockChange(clock.name, e.target.checked)}
+                data-testid={'checkbox-switch-reset-' + clock.name}
               />
             }
             label={t('switchDialog.input.resetClock', { clockName: clock.name })}
@@ -283,12 +284,19 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
           error={isActionEmpty}
           helperText={isActionEmpty ? t('switchDialog.error.action') : ''}
           style={{ marginBottom: '16px' }}
+          data-testid={'input-switch-action'}
         />
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={6}>
             <FormControl fullWidth>
               <InputLabel>{t('switchDialog.input.source')}</InputLabel>
-              <Select value={source} onChange={(e) => setSource(e.target.value)} label="Source" error={isSourceEmpty}>
+              <Select
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                label="Source"
+                error={isSourceEmpty}
+                data-testid={'select-switch-source'}
+              >
                 {locationDropdownItems}
               </Select>
             </FormControl>
@@ -296,14 +304,26 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
           <Grid item xs={6}>
             <FormControl fullWidth>
               <InputLabel>{t('switchDialog.input.target')}</InputLabel>
-              <Select value={target} onChange={(e) => setTarget(e.target.value)} label="Target" error={isTargetEmpty}>
+              <Select
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                label="Target"
+                error={isTargetEmpty}
+                data-testid={'select-switch-target'}
+              >
                 {locationDropdownItems}
               </Select>
             </FormControl>
           </Grid>
         </Grid>
         <FormControlLabel
-          control={<Checkbox checked={guardChecked} onChange={(e) => setGuardChecked(e.target.checked)} />}
+          control={
+            <Checkbox
+              checked={guardChecked}
+              onChange={(e) => setGuardChecked(e.target.checked)}
+              data-testid={'checkbox-switch-hasGuard'}
+            />
+          }
           label={t('switchDialog.hasGuard')}
         />
         {guardChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
@@ -313,8 +333,9 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
             onMouseDown={() => clausesViewModel.addClause(clausesViewModel)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => clausesViewModel.addClause(clausesViewModel))}
             sx={{ marginTop: 2 }}
+            data-testid={'button-add-clause'}
           >
-            {t('switchDialog.button.addClause')}
+            {t('clauses.button.addClause')}
           </Button>
         )}
         <Divider sx={{ my: 1 }} />
@@ -338,6 +359,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
           variant="contained"
           color="primary"
           disabled={isValidationError}
+          data-testid={'button-add-switch-ok'}
         >
           {switchPrevVersion ? t('switchDialog.button.edit') : t('switchDialog.button.add')}
         </Button>

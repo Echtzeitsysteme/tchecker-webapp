@@ -10,7 +10,11 @@ import { ClockConstraint } from '../../src/model/ta/clockConstraint';
 import { Clock } from '../../src/model/ta/clock';
 import { Switch } from '../../src/model/ta/switch';
 import { Location } from '../../src/model/ta/location';
-import { locationFixtureWithInvariant, locationFixtureWithoutInvariant } from '../fixture/locationFixture';
+import {
+  locationFixtureInitWithMultiClauseInvariant,
+  locationFixtureWithInvariant,
+  locationFixtureWithoutInvariant,
+} from '../fixture/locationFixture';
 import { switchFixtureWithResetAndGuard } from '../fixture/switchFixture';
 import { ClockComparator } from '../../src/model/ta/clockComparator';
 
@@ -18,6 +22,7 @@ describe('formattingUtils', () => {
   // define and import all util functions once before starting as import is more complicated due to the use of hooks
   let formatClockConstraint: (clockConstraint?: ClockConstraint, clauseJoinStr?: string) => string | undefined;
   let formatReset: (clocks?: Clock[], compact?: boolean) => string | undefined;
+  let formatLocationLabelTable: (location: Location) => string;
   let formatLocationLabelVisual: (location: Location) => string;
   let formatSwitchTable: (sw: Switch) => string;
   let formatSwitchLabelVisual: (sw: Switch) => string;
@@ -26,6 +31,7 @@ describe('formattingUtils', () => {
     const { result } = renderHook(() => useFormattingUtils());
     formatClockConstraint = result.current.formatClockConstraint;
     formatReset = result.current.formatReset;
+    formatLocationLabelTable = result.current.formatLocationLabelTable;
     formatLocationLabelVisual = result.current.formatLocationLabelVisual;
     formatSwitchTable = result.current.formatSwitchTable;
     formatSwitchLabelVisual = result.current.formatSwitchLabelVisual;
@@ -118,6 +124,42 @@ describe('formattingUtils', () => {
 
     // then
     expect(formattedReset).toBe('{c1,c2}');
+  });
+
+  test('formatLocationLabelTable formats location label correctly when there is no invariant', () => {
+    // given
+    const location = locationFixtureWithoutInvariant();
+    const expectedFormatting = location.name;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelTable formats location label correctly when the invariant has a single clause', () => {
+    // given
+    const location = locationFixtureWithInvariant();
+    const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelTable formats location label correctly when the invariant has multiple clauses', () => {
+    // given
+    const location = locationFixtureInitWithMultiClauseInvariant();
+    const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
   });
 
   test('formatLocationLabelVisual formats location label correctly when invariant is defined', () => {

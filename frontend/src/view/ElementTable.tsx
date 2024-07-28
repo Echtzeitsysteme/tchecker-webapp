@@ -26,13 +26,14 @@ interface ElementTableProps {
   rows: ElementRowData[];
   contentSingular: string;
   contentPlural: string;
+  typeForTestId: string;
   onAddOpen: () => void;
   onEditOpen: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
 export const ElementTable: React.FC<ElementTableProps> = (props) => {
-  const { rows, contentSingular, contentPlural, onAddOpen, onEditOpen, onDelete } = props;
+  const { rows, contentSingular, contentPlural, typeForTestId, onAddOpen, onEditOpen, onDelete } = props;
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
 
@@ -58,6 +59,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
             onMouseDown={() => onEditOpen(row.id)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onEditOpen(row.id))}
             size="small"
+            data-testid={`button-edit-${typeForTestId}-${row.id}`}
           >
             <Tooltip title={t('manipulation.table.editLabel', { type: contentSingular })}>
               <EditIcon />
@@ -67,16 +69,17 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
             onMouseDown={() => onDelete(row.id)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onDelete(row.id))}
             size="small"
+            data-testid={`button-delete-${typeForTestId}-${row.id}`}
           >
             <Tooltip title={t('manipulation.table.deleteLabel', { type: contentSingular })}>
               <DeleteIcon />
             </Tooltip>
           </IconButton>
         </TableCell>
-        <TableCell>{row.displayName}</TableCell>
+        <TableCell data-testid={`table-cell-${typeForTestId}-${row.id}`}>{row.displayName}</TableCell>
       </TableRow>
     ));
-  }, [rows, styleActionsColumn, contentSingular, t, onEditOpen, onDelete, executeOnKeyboardClick]);
+  }, [rows, styleActionsColumn, contentSingular, typeForTestId, t, onEditOpen, onDelete, executeOnKeyboardClick]);
 
   return (
     <>
@@ -85,6 +88,7 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
         variant="text"
         onMouseDown={toggleCollapse}
         onKeyDown={(e) => executeOnKeyboardClick(e.key, toggleCollapse)}
+        data-testid={'button-hide-' + typeForTestId}
       >
         {collapseLabel}
       </Button>
@@ -97,12 +101,13 @@ export const ElementTable: React.FC<ElementTableProps> = (props) => {
               size="small"
               onMouseDown={onAddOpen}
               onKeyDown={(e) => executeOnKeyboardClick(e.key, onAddOpen)}
+              data-testid={'button-add-' + typeForTestId}
             >
               {t('manipulation.table.addElement', { content: contentSingular })}
             </Button>
           </div>
           <TableContainer component={Paper}>
-            <Table size="small">
+            <Table size="small" data-testid={'table-' + typeForTestId}>
               <TableHead>
                 <TableRow>
                   <TableCell style={styleActionsColumn}>{t('manipulation.table.actions')}</TableCell>

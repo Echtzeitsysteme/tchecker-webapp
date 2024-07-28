@@ -142,16 +142,19 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
           onChange={(e) => setName(e.target.value)}
           error={isNameEmpty || isNameDuplicate}
           helperText={isNameEmpty || isNameDuplicate ? nameErrorMessage : ''}
+          data-testid={'input-location-name'}
         />
         <FormControlLabel
           control={
             <Checkbox checked={initialLocationChecked} onChange={(e) => setInitialLocationChecked(e.target.checked)} />
           }
           label={t('locDialog.isInitial')}
+          data-testid={'checkbox-location-isInitial'}
         />
         <FormControlLabel
           control={<Checkbox checked={invariantChecked} onChange={(e) => setInvariantChecked(e.target.checked)} />}
           label={t('locDialog.hasInvariant')}
+          data-testid={'checkbox-location-hasInvariant'}
         />
         {invariantChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
         {invariantChecked && (
@@ -160,8 +163,9 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
             onMouseDown={() => clausesViewModel.addClause(clausesViewModel)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => clausesViewModel.addClause(clausesViewModel))}
             sx={{ marginTop: 2 }}
+            data-testid={'button-add-clause'}
           >
-            {t('locDialog.button.addClause')}
+            {t('clauses.button.addClause')}
           </Button>
         )}
       </DialogContent>
@@ -180,6 +184,7 @@ export const ManipulateLocationDialog: React.FC<ManipulateLocationDialogProps> =
           variant="contained"
           color="primary"
           disabled={isValidationError}
+          data-testid={'button-add-location-ok'}
         >
           {locPrevVersion ? t('locDialog.button.edit') : t('locDialog.button.add')}
         </Button>

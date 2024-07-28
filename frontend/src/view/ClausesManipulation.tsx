@@ -21,7 +21,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
   const clockDropdownItems = useMemo(
     () =>
       clocks.map((c) => (
-        <MenuItem key={c.name} value={c.name}>
+        <MenuItem key={c.name} value={c.name} data-testid={'menu-item-clock-' + c.name}>
           {c.name}
         </MenuItem>
       )),
@@ -31,7 +31,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
   const comparisonDropdownItems = useMemo(
     () =>
       Object.values(ClockComparator).map((v) => (
-        <MenuItem key={v} value={v}>
+        <MenuItem key={v} value={v} data-testid={'menu-item-comparison-' + v}>
           {v}
         </MenuItem>
       )),
@@ -47,6 +47,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
               disabled={clauses.length <= 1}
               onMouseDown={() => deleteClause(viewModel, row.id)}
               onKeyDown={(e) => executeOnKeyboardClick(e.key, () => deleteClause(viewModel, row.id))}
+              data-testid={'button-delete-clause-row-' + row.id}
             >
               <Tooltip title={t('clauses.delete')}>
                 <DeleteIcon />
@@ -61,6 +62,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
                 label="Clock"
                 onChange={(e) => changeClause(viewModel, row.id, 'clockValue', e.target.value)}
                 error={row.isClockInvalid}
+                data-testid={'select-clock-row'}
               >
                 {clockDropdownItems}
               </Select>
@@ -74,6 +76,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
                 label="Comparison"
                 onChange={(e) => changeClause(viewModel, row.id, 'comparisonValue', e.target.value)}
                 error={row.isComparisonInvalid}
+                data-testid={'select-comparison-row'}
               >
                 {comparisonDropdownItems}
               </Select>
@@ -90,6 +93,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
               onChange={(e) => changeClause(viewModel, row.id, 'numberInput', e.target.value)}
               InputProps={{ inputProps: { min: 0 } }}
               error={row.isNumberInvalid}
+              data-testid={'select-comparison-number-row'}
             />
           </Grid>
         </Grid>

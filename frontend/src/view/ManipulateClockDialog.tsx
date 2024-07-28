@@ -102,7 +102,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
       <DialogContent>
         <TextField
           margin="dense"
-          label={'Name'}
+          label={t('clockDialog.input.name')}
           type="text"
           fullWidth
           variant="outlined"
@@ -111,6 +111,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
           error={isValidationError}
           helperText={errorMsg}
           style={{ marginBottom: '16px' }}
+          data-testid={'input-clock-name'}
         />
       </DialogContent>
       <DialogActions>
@@ -128,6 +129,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
           variant="contained"
           color="primary"
           disabled={isValidationError}
+          data-testid={'button-add-clock-ok'}
         >
           {prevClockName ? t('clockDialog.button.edit') : t('clockDialog.button.add')}
         </Button>

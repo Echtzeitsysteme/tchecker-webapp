@@ -14,6 +14,9 @@ The usual commands for React projects also apply here.
 - `yarn format` to format all files
 - `yarn lint` for linting
 - `yarn test` for running unit tests
+- `yarn e2e` for running end-to-end tests
+- `yarn e2e-ui` for running end-to-end tests in the UI mode of Playwright
+- `yarn e2e-update-snapshots` for updating the end-to-end test snapshots
 - `yarn build` to build the app for production
 - `yarn deploy` for deployment on GitHub Pages
 

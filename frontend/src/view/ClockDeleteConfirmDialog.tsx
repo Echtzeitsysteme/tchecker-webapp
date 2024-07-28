@@ -25,7 +25,7 @@ const ClockDeleteConfirmDialog: React.FC<ClockDeleteConfirmDialogProps> = (props
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} data-testid="dialog-delete-clock-confirm">
       <DialogTitle>{t('deleteClockConfirmDialog.title', { clockName: clock.name })}</DialogTitle>
       <DialogContent>
         <DialogContentText>{t('deleteClockConfirmDialog.contentText', { clockName: clock.name })}</DialogContentText>
@@ -47,6 +47,7 @@ const ClockDeleteConfirmDialog: React.FC<ClockDeleteConfirmDialogProps> = (props
           onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onDelete(clock))}
           variant="contained"
           color="error"
+          data-testid="button-confirm-delete-clock"
         >
           {t('deleteClockConfirmDialog.button.confirm')}
         </Button>

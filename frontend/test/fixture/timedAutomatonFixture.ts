@@ -12,7 +12,7 @@ export function taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock: Clock): T
   const nameLoc1 = 'loc1';
   const clause = clauseFixtureWithClockName(clock.name);
 
-  const loc0: Location = { ...locationFixtureWithName(nameLoc0), invariant: { clauses: [clause] } };
+  const loc0: Location = { ...locationFixtureWithName(nameLoc0), isInitial: true, invariant: { clauses: [clause] } };
   const loc1: Location = { ...locationFixtureWithName(nameLoc1) };
 
   const sw0: Switch = { ...switchFixtureWithResetAndGuard([clock], undefined), source: loc0, target: loc1 };

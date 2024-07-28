@@ -5,8 +5,9 @@ import { Switch } from '../model/ta/switch';
 import { Location } from '../model/ta/location';
 
 export interface FormattingUtils {
-  formatClockConstraint: (clockConstraint?: ClockConstraint) => string | undefined;
+  formatClockConstraint: (clockConstraint?: ClockConstraint, clauseJoinStr?: string) => string | undefined;
   formatReset: (clocks?: Clock[]) => string | undefined;
+  formatLocationLabelTable: (location: Location) => string;
   formatLocationLabelVisual: (location: Location) => string;
   formatSwitchTable: (sw: Switch) => string;
   formatSwitchLabelVisual: (sw: Switch) => string;
@@ -30,6 +31,14 @@ export function useFormattingUtils(): FormattingUtils {
     }
     return `{ ${clocks.map((c) => c.name).join(', ')} }`;
   }, []);
+
+  const formatLocationLabelTable = useCallback(
+    (location: Location) => {
+      const invariant = formatClockConstraint(location.invariant);
+      return [location.name, invariant].filter((e) => e !== undefined).join(', ');
+    },
+    [formatClockConstraint]
+  );
 
   const formatLocationLabelVisual = useCallback(
     (location: Location) => {
@@ -60,6 +69,7 @@ export function useFormattingUtils(): FormattingUtils {
   return {
     formatClockConstraint: formatClockConstraint,
     formatReset: formatReset,
+    formatLocationLabelTable: formatLocationLabelTable,
     formatLocationLabelVisual: formatLocationLabelVisual,
     formatSwitchTable: formatSwitchTable,
     formatSwitchLabelVisual: formatSwitchLabelVisual,
