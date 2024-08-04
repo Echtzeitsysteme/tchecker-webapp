@@ -1,11 +1,13 @@
 import { Clause } from '../../src/model/ta/clause';
 import { ClockComparator } from '../../src/model/ta/clockComparator';
-import { clockFixtureWithClockName } from './clockFixture';
+import { ClockFixture } from './clockFixture';
 
-export function clauseFixtureAClause(): Clause {
-  return clauseFixtureWithClockName('x');
-}
+export class ClauseFixture {
+  static aClause(): Clause {
+    return ClauseFixture.withClockName('x');
+  }
 
-export function clauseFixtureWithClockName(clockName: string): Clause {
-  return { lhs: clockFixtureWithClockName(clockName), op: ClockComparator.LEQ, rhs: 5 };
+  static withClockName(clockName: string): Clause {
+    return { lhs: ClockFixture.withClockName(clockName), op: ClockComparator.LEQ, rhs: 5 };
+  }
 }

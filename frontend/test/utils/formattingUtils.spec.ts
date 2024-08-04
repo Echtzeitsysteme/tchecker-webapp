@@ -1,21 +1,12 @@
 import { renderHook } from '@testing-library/react';
 import { useFormattingUtils } from '../../src/utils/formattingUtils';
-import {
-  clockConstraintFixtureWithClockNames,
-  clockConstraintFixtureWithEmptyClauses,
-  clockConstraintFixtureWithMultipleClauses,
-  clockConstraintFixtureWithSingleClause,
-} from '../fixture/clockConstraintFixture';
+import { ClockConstraintFixture } from '../fixture/clockConstraintFixture';
 import { ClockConstraint } from '../../src/model/ta/clockConstraint';
 import { Clock } from '../../src/model/ta/clock';
 import { Switch } from '../../src/model/ta/switch';
 import { Location } from '../../src/model/ta/location';
-import {
-  locationFixtureInitWithMultiClauseInvariant,
-  locationFixtureWithInvariant,
-  locationFixtureWithoutInvariant,
-} from '../fixture/locationFixture';
-import { switchFixtureWithResetAndGuard } from '../fixture/switchFixture';
+import { LocationFixture } from '../fixture/locationFixture';
+import { SwitchFixture } from '../fixture/switchFixture';
 import { ClockComparator } from '../../src/model/ta/clockComparator';
 
 describe('formattingUtils', () => {
@@ -39,7 +30,7 @@ describe('formattingUtils', () => {
 
   test('formatClockConstraint formats clock constraint correctly when constraint has a single clause', () => {
     // given
-    const clockConstraint = clockConstraintFixtureWithSingleClause();
+    const clockConstraint = ClockConstraintFixture.withSingleClause();
     const clause = clockConstraint.clauses[0];
     const expectedFormatting = `${clause.lhs.name} ${clause.op} ${clause.rhs}`;
 
@@ -52,7 +43,7 @@ describe('formattingUtils', () => {
 
   test('formatClockConstraint formats clock constraint correctly when constraint has multiple clauses', () => {
     // given
-    const clockConstraint = clockConstraintFixtureWithMultipleClauses();
+    const clockConstraint = ClockConstraintFixture.withMultipleClauses();
     const clause0 = clockConstraint.clauses[0];
     const clauseFormatting0 = `${clause0.lhs.name} ${clause0.op} ${clause0.rhs}`;
     const clause1 = clockConstraint.clauses[1];
@@ -76,7 +67,7 @@ describe('formattingUtils', () => {
 
   test('formatClockConstraint returns undefined when clock constraint has no clauses', () => {
     // given
-    const clockConstraint = clockConstraintFixtureWithEmptyClauses();
+    const clockConstraint = ClockConstraintFixture.withEmptyClauses();
 
     // when
     const formattedConstraint = formatClockConstraint(clockConstraint);
@@ -128,7 +119,7 @@ describe('formattingUtils', () => {
 
   test('formatLocationLabelTable formats location label correctly when there is no invariant', () => {
     // given
-    const location = locationFixtureWithoutInvariant();
+    const location = LocationFixture.withoutInvariant();
     const expectedFormatting = location.name;
 
     // when
@@ -140,7 +131,7 @@ describe('formattingUtils', () => {
 
   test('formatLocationLabelTable formats location label correctly when the invariant has a single clause', () => {
     // given
-    const location = locationFixtureWithInvariant();
+    const location = LocationFixture.withInvariant();
     const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
 
     // when
@@ -152,7 +143,7 @@ describe('formattingUtils', () => {
 
   test('formatLocationLabelTable formats location label correctly when the invariant has multiple clauses', () => {
     // given
-    const location = locationFixtureInitWithMultiClauseInvariant();
+    const location = LocationFixture.initWithMultiClauseInvariant();
     const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
 
     // when
@@ -164,7 +155,7 @@ describe('formattingUtils', () => {
 
   test('formatLocationLabelVisual formats location label correctly when invariant is defined', () => {
     // given
-    const location = locationFixtureWithInvariant();
+    const location = LocationFixture.withInvariant();
     const expectedFormatting = `${location.name}\n${formatClockConstraint(location.invariant)}`;
 
     // when
@@ -176,7 +167,7 @@ describe('formattingUtils', () => {
 
   test('formatLocationLabelVisual formats location label correctly when invariant is undefined', () => {
     // given
-    const location = locationFixtureWithoutInvariant();
+    const location = LocationFixture.withoutInvariant();
 
     // when
     const formattedLocation = formatLocationLabelVisual(location);
@@ -187,8 +178,8 @@ describe('formattingUtils', () => {
 
   test('formatSwitchTable formats switch correctly when there is a guard', () => {
     // given
-    const guard = clockConstraintFixtureWithSingleClause();
-    const sw = switchFixtureWithResetAndGuard([], guard);
+    const guard = ClockConstraintFixture.withSingleClause();
+    const sw = SwitchFixture.withResetAndGuard([], guard);
     const formattedGuard = formatClockConstraint(guard);
     const expectedFormatting = [sw.source.name, sw.actionLabel, formattedGuard, sw.target.name].join(', ');
 
@@ -201,7 +192,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchTable formats switch correctly when there is no guard', () => {
     // given
-    const sw = switchFixtureWithResetAndGuard([], undefined);
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
 
     // when
     const formattedSwitch = formatSwitchTable(sw);
@@ -215,7 +206,7 @@ describe('formattingUtils', () => {
   test('formatSwitchTable formats switch correctly when there is a reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const sw = switchFixtureWithResetAndGuard([clock], undefined);
+    const sw = SwitchFixture.withResetAndGuard([clock], undefined);
     const expectedFormatting = [sw.source.name, sw.actionLabel, `{${clock.name}}`, sw.target.name].join(', ');
 
     // when
@@ -227,7 +218,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchTable formats switch correctly when there is no reset', () => {
     // given
-    const sw = switchFixtureWithResetAndGuard([], undefined);
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
 
     // when
     const formattedSwitch = formatSwitchTable(sw);
@@ -240,8 +231,8 @@ describe('formattingUtils', () => {
   test('formatSwitchTable formats switch correctly when there is a guard and a reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const guard = clockConstraintFixtureWithClockNames(clock.name);
-    const sw = switchFixtureWithResetAndGuard([clock], guard);
+    const guard = ClockConstraintFixture.withClockNames(clock.name);
+    const sw = SwitchFixture.withResetAndGuard([clock], guard);
     const expectedFormatting = [
       sw.source.name,
       sw.actionLabel,
@@ -259,8 +250,8 @@ describe('formattingUtils', () => {
 
   test('formatSwitchLabelVisual formats switch correctly when there is a guard', () => {
     // given
-    const guard = clockConstraintFixtureWithSingleClause();
-    const sw = switchFixtureWithResetAndGuard([], guard);
+    const guard = ClockConstraintFixture.withSingleClause();
+    const sw = SwitchFixture.withResetAndGuard([], guard);
     const formattedGuard = formatClockConstraint(guard);
     const expectedFormatting = `${sw.actionLabel}\n${formattedGuard}`;
 
@@ -273,7 +264,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchLabelVisual formats switch correctly when there is no guard', () => {
     // given
-    const sw = switchFixtureWithResetAndGuard([], undefined);
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
 
     // when
     const formattedSwitch = formatSwitchLabelVisual(sw);
@@ -287,7 +278,7 @@ describe('formattingUtils', () => {
   test('formatSwitchLabelVisual formats switch correctly when there is a reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const sw = switchFixtureWithResetAndGuard([clock], undefined);
+    const sw = SwitchFixture.withResetAndGuard([clock], undefined);
     const expectedFormatting = `${sw.actionLabel}\n{ ${clock.name} }`;
 
     // when
@@ -299,7 +290,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchLabelVisual formats switch correctly when there is no reset', () => {
     // given
-    const sw = switchFixtureWithResetAndGuard([], undefined);
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
 
     // when
     const formattedSwitch = formatSwitchLabelVisual(sw);
@@ -312,8 +303,8 @@ describe('formattingUtils', () => {
   test('formatSwitchLabelVisual formats switch correctly when there is a guard and a reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const guard = clockConstraintFixtureWithClockNames(clock.name);
-    const sw = switchFixtureWithResetAndGuard([clock], guard);
+    const guard = ClockConstraintFixture.withClockNames(clock.name);
+    const sw = SwitchFixture.withResetAndGuard([clock], guard);
     const expectedFormatting = [sw.actionLabel, formatClockConstraint(guard), `{ ${clock.name} }`].join('\n');
 
     // when

@@ -2,7 +2,7 @@ import { TEST_BASE_URL } from './helper/endToEndTestConstants';
 import { test } from './helper/testOptions';
 import { expect } from '@playwright/test';
 import { Clock } from '../src/model/ta/clock';
-import { clockFixtureWithClockName } from '../test/fixture/clockFixture';
+import { ClockFixture } from '../test/fixture/clockFixture';
 
 test.describe('While manipulating clocks', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,7 +11,7 @@ test.describe('While manipulating clocks', () => {
 
   test('the TA contains the correct set of clocks when a clock is added', async ({ clockUiHelper }) => {
     // given
-    const clock: Clock = clockFixtureWithClockName('myTestClock');
+    const clock: Clock = ClockFixture.withClockName('myTestClock');
     const initClockNumber = await clockUiHelper.readNumberOfClocksFromUi();
 
     // when
@@ -25,7 +25,7 @@ test.describe('While manipulating clocks', () => {
 
   test('the TA contains the correct set of clocks when a clock is deleted', async ({ clockUiHelper }) => {
     // given
-    const clock: Clock = clockFixtureWithClockName('myTestClock');
+    const clock: Clock = ClockFixture.withClockName('myTestClock');
     await clockUiHelper.addClock(clock.name);
     const initClockNumber = await clockUiHelper.readNumberOfClocksFromUi();
 
@@ -42,7 +42,7 @@ test.describe('While manipulating clocks', () => {
     // given
     const oldClockName = 'myTestClock';
     const newClockName = 'myNewTestClock';
-    const clock: Clock = clockFixtureWithClockName(oldClockName);
+    const clock: Clock = ClockFixture.withClockName(oldClockName);
     await clockUiHelper.addClock(clock.name);
 
     // when

@@ -1,9 +1,9 @@
 import { TEST_BASE_URL } from './helper/endToEndTestConstants';
 import { test } from './helper/testOptions';
 import { expect } from '@playwright/test';
-import { switchFixtureASwitch } from '../test/fixture/switchFixture';
+import { SwitchFixture } from '../test/fixture/switchFixture';
 import { Switch } from '../src/model/ta/switch';
-import { clockConstraintFixtureWithClockNames } from '../test/fixture/clockConstraintFixture';
+import { ClockConstraintFixture } from '../test/fixture/clockConstraintFixture';
 
 test.describe('While manipulating switches', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('While manipulating switches', () => {
 
   test('the TA contains the correct set of switches when a switch is added', async ({ switchUiHelper }) => {
     // given
-    const sw = switchFixtureASwitch();
+    const sw = SwitchFixture.aSwitch();
     const initSwitchNumber = await switchUiHelper.readNumberOfSwitchesFromUi();
 
     // when
@@ -26,7 +26,7 @@ test.describe('While manipulating switches', () => {
 
   test('the TA contains the correct set of switches when a switch is deleted', async ({ switchUiHelper }) => {
     // given
-    const sw = switchFixtureASwitch();
+    const sw = SwitchFixture.aSwitch();
     await switchUiHelper.addSwitch(sw);
     const initSwitchNumber = await switchUiHelper.readNumberOfSwitchesFromUi();
 
@@ -45,13 +45,13 @@ test.describe('While manipulating switches', () => {
 
   test('the TA contains the correct set of switches when a switch is edited', async ({ switchUiHelper }) => {
     // given
-    const oldSwitch = switchFixtureASwitch();
+    const oldSwitch = SwitchFixture.aSwitch();
     await switchUiHelper.addSwitch(oldSwitch);
     const newClockName = 'clock1New';
     const newSwitch: Switch = {
       source: oldSwitch.target,
       actionLabel: oldSwitch.actionLabel + 'new',
-      guard: clockConstraintFixtureWithClockNames(newClockName),
+      guard: ClockConstraintFixture.withClockNames(newClockName),
       reset: [{ name: newClockName }],
       target: oldSwitch.source,
     };

@@ -5,20 +5,11 @@ import { ClockConstraint } from '../../src/model/ta/clockConstraint';
 import { ClauseViewData } from '../../src/viewmodel/ClausesViewModel';
 import { TimedAutomaton } from '../../src/model/ta/timedAutomaton';
 import { Clock } from '../../src/model/ta/clock';
-import { clockFixtureAClock, clockFixtureWithClockName } from '../fixture/clockFixture';
-import {
-  taFixtureWithTwoLocationsAndTwoSwitches,
-  taFixtureWithTwoLocationsAndTwoSwitchesAndClock,
-} from '../fixture/timedAutomatonFixture';
-import { clauseFixtureAClause, clauseFixtureWithClockName } from '../fixture/clauseFixture';
-import {
-  clockConstraintFixtureWithClockNames,
-  clockConstraintFixtureWithSingleClause,
-} from '../fixture/clockConstraintFixture';
-import {
-  clauseViewDataFixtureSomeValidViewData,
-  clauseViewDataFixtureValidViewDataWithClockName,
-} from '../fixture/clauseViewDataFixture';
+import { ClockFixture } from '../fixture/clockFixture';
+import { TaFixture } from '../fixture/timedAutomatonFixture';
+import { ClauseFixture } from '../fixture/clauseFixture';
+import { ClockConstraintFixture } from '../fixture/clockConstraintFixture';
+import { ClauseViewDataFixture } from '../fixture/clauseViewDataFixture';
 
 describe('clockConstraintUtils', () => {
   // define and import all util functions once before starting as import is more complicated due to the use of hooks
@@ -41,7 +32,7 @@ describe('clockConstraintUtils', () => {
 
   test('clausesEqual returns true when both clauses are equal', () => {
     // given
-    const fixtureFunction = clauseFixtureAClause;
+    const fixtureFunction = ClauseFixture.aClause;
     const clause1 = fixtureFunction();
     const clause2 = fixtureFunction();
 
@@ -54,8 +45,8 @@ describe('clockConstraintUtils', () => {
 
   test('clausesEqual returns false when both clauses are defined but not equal', () => {
     // given
-    const clause1 = clauseFixtureWithClockName('x');
-    const clause2 = clauseFixtureWithClockName('y');
+    const clause1 = ClauseFixture.withClockName('x');
+    const clause2 = ClauseFixture.withClockName('y');
 
     // when
     const areEqual = clausesEqual(clause1, clause2);
@@ -66,7 +57,7 @@ describe('clockConstraintUtils', () => {
 
   test('clausesEqual returns false when exactly one clause is defined', () => {
     // given
-    const clauseDefined = clauseFixtureAClause();
+    const clauseDefined = ClauseFixture.aClause();
 
     // when
     const areEqual = clausesEqual(clauseDefined, undefined);
@@ -85,7 +76,7 @@ describe('clockConstraintUtils', () => {
 
   test('clockConstraintsEqual returns true when both constraints are equal', () => {
     // given
-    const fixtureFunction = clockConstraintFixtureWithSingleClause;
+    const fixtureFunction = ClockConstraintFixture.withSingleClause;
     const constraint1 = fixtureFunction();
     const constraint2 = fixtureFunction();
 
@@ -98,8 +89,8 @@ describe('clockConstraintUtils', () => {
 
   test('clockConstraintsEqual returns false when both constraints are defined but not equal', () => {
     // given
-    const constraint1 = clockConstraintFixtureWithClockNames('x');
-    const constraint2 = clockConstraintFixtureWithClockNames('y');
+    const constraint1 = ClockConstraintFixture.withClockNames('x');
+    const constraint2 = ClockConstraintFixture.withClockNames('y');
 
     // when
     const areEqual = clockConstraintsEqual(constraint1, constraint2);
@@ -110,7 +101,7 @@ describe('clockConstraintUtils', () => {
 
   test('clockConstraintsEqual returns false when exactly one constraint is defined', () => {
     // given
-    const constraintDefined = clockConstraintFixtureWithSingleClause();
+    const constraintDefined = ClockConstraintFixture.withSingleClause();
 
     // when
     const areEqual = clockConstraintsEqual(constraintDefined, undefined);
@@ -140,7 +131,7 @@ describe('clockConstraintUtils', () => {
 
   test('transformToClockConstraint returns the correct clock constraint when the input array has a single element', () => {
     // given
-    const singleClauseData = [clauseViewDataFixtureSomeValidViewData()];
+    const singleClauseData = [ClauseViewDataFixture.someValidViewData()];
 
     // when
     const clockConstraint = transformToClockConstraint(singleClauseData);
@@ -152,8 +143,8 @@ describe('clockConstraintUtils', () => {
 
   test('transformToClockConstraint returns the correct clock constraint when the input array has multiple elements', () => {
     // given
-    const clauseData0 = clauseViewDataFixtureValidViewDataWithClockName('x');
-    const clauseData1 = clauseViewDataFixtureValidViewDataWithClockName('y');
+    const clauseData0 = ClauseViewDataFixture.validViewDataWithClockName('x');
+    const clauseData1 = ClauseViewDataFixture.validViewDataWithClockName('y');
     const clauseData = [clauseData0, clauseData1];
 
     // when
@@ -167,8 +158,8 @@ describe('clockConstraintUtils', () => {
 
   test('constraintUsesClock returns true when the clock is used in the constraint', () => {
     // given
-    const clock = clockFixtureAClock();
-    const constraint = clockConstraintFixtureWithClockNames(clock.name);
+    const clock = ClockFixture.aClock();
+    const constraint = ClockConstraintFixture.withClockNames(clock.name);
 
     // when
     const usesClock = constraintUsesClock(clock.name, constraint);
@@ -179,8 +170,8 @@ describe('clockConstraintUtils', () => {
 
   test('constraintUsesClock returns false when the clock is not used in the constraint', () => {
     // given
-    const clock = clockFixtureAClock();
-    const constraint = clockConstraintFixtureWithClockNames(clock.name + 'unused');
+    const clock = ClockFixture.aClock();
+    const constraint = ClockConstraintFixture.withClockNames(clock.name + 'unused');
 
     // when
     const usesClock = constraintUsesClock(clock.name, constraint);
@@ -199,9 +190,9 @@ describe('clockConstraintUtils', () => {
 
   test('taUsesClockInAnyConstraint returns true when the TA uses the clock in a guard', () => {
     // given
-    const clock = clockFixtureAClock();
-    const guard = clockConstraintFixtureWithClockNames(clock.name);
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
+    const clock = ClockFixture.aClock();
+    const guard = ClockConstraintFixture.withClockNames(clock.name);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitches();
     ta.switches[0].guard = guard;
 
     // when
@@ -213,9 +204,9 @@ describe('clockConstraintUtils', () => {
 
   test('taUsesClockInAnyConstraint returns true when the TA uses the clock in an invariant', () => {
     // given
-    const clock = clockFixtureAClock();
-    const invariant = clockConstraintFixtureWithClockNames(clock.name);
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
+    const clock = ClockFixture.aClock();
+    const invariant = ClockConstraintFixture.withClockNames(clock.name);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitches();
     ta.locations[0].invariant = invariant;
 
     // when
@@ -227,8 +218,8 @@ describe('clockConstraintUtils', () => {
 
   test('taUsesClockInAnyConstraint returns false when the TA does not use the clock in any constraint', () => {
     // given
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
-    const unusedClock = clockFixtureWithClockName('unused');
+    const ta = TaFixture.withTwoLocationsAndTwoSwitches();
+    const unusedClock = ClockFixture.withClockName('unused');
 
     // when
     const usesClock = taUsesClockInAnyConstraint(ta, unusedClock);
@@ -239,7 +230,7 @@ describe('clockConstraintUtils', () => {
 
   test('taUsesClockInAnyConstraint returns false when the TA is undefined', () => {
     // given
-    const clock = clockFixtureAClock();
+    const clock = ClockFixture.aClock();
 
     // when
     const usesClock = taUsesClockInAnyConstraint(undefined, clock);
@@ -250,7 +241,7 @@ describe('clockConstraintUtils', () => {
 
   test('taUsesClockInAnyConstraint returns false when the clock is undefined', () => {
     // given
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
+    const ta = TaFixture.withTwoLocationsAndTwoSwitches();
 
     // when
     const usesClock = taUsesClockInAnyConstraint(ta, undefined);
@@ -261,8 +252,8 @@ describe('clockConstraintUtils', () => {
 
   test('removeAllClausesUsingClock removes all clauses containing the clock from guards when guards contain the clock', () => {
     // given
-    const clock = clockFixtureAClock();
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const clock = ClockFixture.aClock();
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(clock);
 
     // when
     removeAllClausesUsingClock(clock, ta);
@@ -274,8 +265,8 @@ describe('clockConstraintUtils', () => {
 
   test('removeAllClausesUsingClock removes all clauses containing the clock from invariants when invariants contain the clock', () => {
     // given
-    const clock = clockFixtureAClock();
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const clock = ClockFixture.aClock();
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(clock);
 
     // when
     removeAllClausesUsingClock(clock, ta);
@@ -289,9 +280,9 @@ describe('clockConstraintUtils', () => {
 
   test('removeAllClausesUsingClock does not change the TA when the clock is not used in any constraint', () => {
     // given
-    const clock = clockFixtureAClock();
-    const unusedClock = clockFixtureWithClockName(clock.name + 'unused');
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const clock = ClockFixture.aClock();
+    const unusedClock = ClockFixture.withClockName(clock.name + 'unused');
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(clock);
 
     // when
     removeAllClausesUsingClock(unusedClock, ta);

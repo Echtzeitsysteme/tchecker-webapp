@@ -3,9 +3,9 @@ import { Clock } from '../../src/model/ta/clock';
 import { Switch } from '../../src/model/ta/switch';
 import { TimedAutomaton } from '../../src/model/ta/timedAutomaton';
 import { useSwitchUtils } from '../../src/utils/switchUtils';
-import { switchFixtureASwitch, switchFixtureWithResetAndGuard } from '../fixture/switchFixture';
-import { clockConstraintFixtureWithClockNames } from '../fixture/clockConstraintFixture';
-import { taFixtureWithTwoLocationsAndTwoSwitchesAndClock } from '../fixture/timedAutomatonFixture';
+import { SwitchFixture } from '../fixture/switchFixture';
+import { ClockConstraintFixture } from '../fixture/clockConstraintFixture';
+import { TaFixture } from '../fixture/timedAutomatonFixture';
 
 describe('switchUtils', () => {
   let switchesEqual: (switch1?: Switch, switch2?: Switch) => boolean;
@@ -19,8 +19,8 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns true when the switches are equal', () => {
     // given
-    const sw1 = switchFixtureASwitch();
-    const sw2 = switchFixtureASwitch();
+    const sw1 = SwitchFixture.aSwitch();
+    const sw2 = SwitchFixture.aSwitch();
 
     // when
     const areEqual = switchesEqual(sw1, sw2);
@@ -39,7 +39,7 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when one argument is undefined', () => {
     // given
-    const sw = switchFixtureASwitch();
+    const sw = SwitchFixture.aSwitch();
 
     // when
     const areEqualFirstUndefined = switchesEqual(undefined, sw);
@@ -52,7 +52,7 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when the sources are not equal', () => {
     // given
-    const sw1 = switchFixtureASwitch();
+    const sw1 = SwitchFixture.aSwitch();
     const sw2 = { ...sw1, source: { ...sw1.source, name: sw1.source.name + 'a' } };
 
     // when
@@ -64,7 +64,7 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when the targets are not equal', () => {
     // given
-    const sw1 = switchFixtureASwitch();
+    const sw1 = SwitchFixture.aSwitch();
     const sw2 = { ...sw1, target: { ...sw1.target, name: sw1.target.name + 'a' } };
 
     // when
@@ -76,7 +76,7 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when the actions are not equal', () => {
     // given
-    const sw1 = switchFixtureASwitch();
+    const sw1 = SwitchFixture.aSwitch();
     const sw2 = { ...sw1, actionLabel: sw1.actionLabel + 'a' };
 
     // when
@@ -88,10 +88,10 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when the guards are not equal', () => {
     // given
-    const guard1 = clockConstraintFixtureWithClockNames('a');
-    const guard2 = clockConstraintFixtureWithClockNames('a', 'b');
-    const sw1 = switchFixtureWithResetAndGuard([], guard1);
-    const sw2 = switchFixtureWithResetAndGuard([], guard2);
+    const guard1 = ClockConstraintFixture.withClockNames('a');
+    const guard2 = ClockConstraintFixture.withClockNames('a', 'b');
+    const sw1 = SwitchFixture.withResetAndGuard([], guard1);
+    const sw2 = SwitchFixture.withResetAndGuard([], guard2);
 
     // when
     const areEqual = switchesEqual(sw1, sw2);
@@ -102,8 +102,8 @@ describe('switchUtils', () => {
 
   test('switchesEqual returns false when the resets are not equal', () => {
     // given
-    const sw1 = switchFixtureWithResetAndGuard([{ name: 'a' }], undefined);
-    const sw2 = switchFixtureWithResetAndGuard([{ name: 'a' }, { name: 'b' }], undefined);
+    const sw1 = SwitchFixture.withResetAndGuard([{ name: 'a' }], undefined);
+    const sw2 = SwitchFixture.withResetAndGuard([{ name: 'a' }, { name: 'b' }], undefined);
 
     // when
     const areEqual = switchesEqual(sw1, sw2);
@@ -115,7 +115,7 @@ describe('switchUtils', () => {
   test('removeClockFromAllResets removes correct clock from all resets when clock is in reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(clock);
     const { switches } = ta;
     const resetsInitial = switches.map((sw) => sw.reset).filter((r) => !!r && r.includes(clock)).length;
 
@@ -131,7 +131,7 @@ describe('switchUtils', () => {
   test('removeClockFromAllResets does nothing when clock is not used in any reset', () => {
     // given
     const clock: Clock = { name: 'c' };
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(clock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(clock);
     const { switches } = ta;
     const unusedClock: Clock = { name: clock.name + 'test' };
 

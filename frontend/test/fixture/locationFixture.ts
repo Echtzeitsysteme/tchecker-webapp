@@ -1,25 +1,24 @@
 import { Location } from '../../src/model/ta/location';
-import {
-  clockConstraintFixtureWithMultipleClauses,
-  clockConstraintFixtureWithSingleClause,
-} from './clockConstraintFixture';
+import { ClockConstraintFixture } from './clockConstraintFixture';
 
-export function locationFixtureWithoutInvariant(): Location {
-  return locationFixtureWithName('loc');
-}
+export class LocationFixture {
+  static withoutInvariant(): Location {
+    return LocationFixture.withName('loc');
+  }
 
-export function locationFixtureWithInvariant(): Location {
-  return { ...locationFixtureWithName('loc'), invariant: clockConstraintFixtureWithSingleClause() };
-}
+  static withInvariant(): Location {
+    return { ...LocationFixture.withName('loc'), invariant: ClockConstraintFixture.withSingleClause() };
+  }
 
-export function locationFixtureWithName(name: string): Location {
-  return { name: name, isInitial: false, invariant: undefined, xCoordinate: 0, yCoordinate: 0 };
-}
+  static withName(name: string): Location {
+    return { name: name, isInitial: false, invariant: undefined, xCoordinate: 0, yCoordinate: 0 };
+  }
 
-export function locationFixtureInitWithMultiClauseInvariant(): Location {
-  return {
-    ...locationFixtureWithName('loc'),
-    invariant: clockConstraintFixtureWithMultipleClauses(),
-    isInitial: true,
-  };
+  static initWithMultiClauseInvariant(): Location {
+    return {
+      ...LocationFixture.withName('loc'),
+      invariant: ClockConstraintFixture.withMultipleClauses(),
+      isInitial: true,
+    };
+  }
 }

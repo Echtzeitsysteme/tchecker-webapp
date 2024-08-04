@@ -1,18 +1,20 @@
 import { ClockConstraint } from '../../src/model/ta/clockConstraint';
-import { clauseFixtureAClause, clauseFixtureWithClockName } from './clauseFixture';
+import { ClauseFixture } from './clauseFixture';
 
-export function clockConstraintFixtureWithSingleClause(): ClockConstraint {
-  return { clauses: [clauseFixtureAClause()] };
-}
+export class ClockConstraintFixture {
+  static withSingleClause(): ClockConstraint {
+    return { clauses: [ClauseFixture.aClause()] };
+  }
 
-export function clockConstraintFixtureWithMultipleClauses(): ClockConstraint {
-  return { clauses: [clauseFixtureWithClockName('x'), clauseFixtureWithClockName('y')] };
-}
+  static withMultipleClauses(): ClockConstraint {
+    return { clauses: [ClauseFixture.withClockName('x'), ClauseFixture.withClockName('y')] };
+  }
 
-export function clockConstraintFixtureWithEmptyClauses(): ClockConstraint {
-  return { clauses: [] };
-}
+  static withEmptyClauses(): ClockConstraint {
+    return { clauses: [] };
+  }
 
-export function clockConstraintFixtureWithClockNames(...clockNames: string[]): ClockConstraint {
-  return { clauses: clockNames.map((name) => clauseFixtureWithClockName(name)) };
+  static withClockNames(...clockNames: string[]): ClockConstraint {
+    return { clauses: clockNames.map((name) => ClauseFixture.withClockName(name)) };
+  }
 }

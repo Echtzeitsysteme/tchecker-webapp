@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { TimedAutomaton } from '../../src/model/ta/timedAutomaton';
 import { useClockUtils } from '../../src/utils/clockUtils';
 import { Clock } from '../../src/model/ta/clock';
-import { taFixtureWithTwoLocationsAndTwoSwitchesAndClock } from '../fixture/timedAutomatonFixture';
+import { TaFixture } from '../fixture/timedAutomatonFixture';
 
 describe('clockUtils', () => {
   // define and import all util functions once before starting as import is more complicated due to the use of hooks
@@ -17,7 +17,7 @@ describe('clockUtils', () => {
     // given
     const oldClock: Clock = { name: 'c' };
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     const originalOccurrencesInResets = ta.switches
       .map((sw) => sw.reset)
@@ -45,7 +45,7 @@ describe('clockUtils', () => {
     // given
     const oldClock: Clock = { name: 'c' };
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     const originalOccurrencesInGuards = ta.switches
       .map((sw) => sw.guard)
@@ -76,7 +76,7 @@ describe('clockUtils', () => {
     // given
     const oldClock: Clock = { name: 'c' };
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     const originalOccurrencesInInvariants = ta.locations
       .map((l) => l.invariant)
@@ -107,7 +107,7 @@ describe('clockUtils', () => {
     // given
     const oldClock: Clock = { name: 'c' };
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     // when
     renameClock(oldClock.name, newClockName, ta);
@@ -123,7 +123,7 @@ describe('clockUtils', () => {
     const oldClock: Clock = { name: 'c' };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     // when
     renameClock(nonExistingClockName, newClockName, ta);
@@ -139,7 +139,7 @@ describe('clockUtils', () => {
     const oldClock: Clock = { name: 'c' };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     // when
     renameClock(nonExistingClockName, newClockName, ta);
@@ -158,7 +158,7 @@ describe('clockUtils', () => {
     const oldClock: Clock = { name: 'c' };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     // when
     renameClock(nonExistingClockName, newClockName, ta);
@@ -180,7 +180,7 @@ describe('clockUtils', () => {
     const oldClock: Clock = { name: 'c' };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
-    const ta = taFixtureWithTwoLocationsAndTwoSwitchesAndClock(oldClock);
+    const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
     // when
     renameClock(nonExistingClockName, newClockName, ta);

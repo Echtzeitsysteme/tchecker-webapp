@@ -1,6 +1,6 @@
 import { TEST_BASE_URL } from './helper/endToEndTestConstants';
 import { test } from './helper/testOptions';
-import { taFixtureWithTwoLocationsAndTwoSwitches } from '../test/fixture/timedAutomatonFixture';
+import { TaFixture } from '../test/fixture/timedAutomatonFixture';
 import { expect } from '@playwright/test';
 
 test.describe('While manipulating a TA', () => {
@@ -12,7 +12,7 @@ test.describe('While manipulating a TA', () => {
     taUiHelper,
   }) => {
     // given
-    const ta = taFixtureWithTwoLocationsAndTwoSwitches();
+    const ta = TaFixture.withTwoLocationsAndTwoSwitches();
 
     // when
     await taUiHelper.setTimedAutomatonTo(ta);

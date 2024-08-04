@@ -2,10 +2,7 @@ import { TEST_BASE_URL } from './helper/endToEndTestConstants';
 import { test } from './helper/testOptions';
 import { expect } from '@playwright/test';
 import { Location } from '../src/model/ta/location';
-import {
-  locationFixtureInitWithMultiClauseInvariant,
-  locationFixtureWithoutInvariant,
-} from '../test/fixture/locationFixture';
+import { LocationFixture } from '../test/fixture/locationFixture';
 
 test.describe('While manipulating locations', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,7 +11,7 @@ test.describe('While manipulating locations', () => {
 
   test('the TA contains the correct set of locations when a location is added', async ({ locationUiHelper }) => {
     // given
-    const location: Location = locationFixtureInitWithMultiClauseInvariant();
+    const location: Location = LocationFixture.initWithMultiClauseInvariant();
     const initLocationNumber = await locationUiHelper.readNumberOfLocationsFromUi();
 
     // when
@@ -30,7 +27,7 @@ test.describe('While manipulating locations', () => {
 
   test('the TA contains the correct set of locations when a location is deleted', async ({ locationUiHelper }) => {
     // given
-    const location = locationFixtureWithoutInvariant();
+    const location = LocationFixture.withoutInvariant();
     await locationUiHelper.addLocation(location);
     const initLocNumber = await locationUiHelper.readNumberOfLocationsFromUi();
 
@@ -49,9 +46,9 @@ test.describe('While manipulating locations', () => {
 
   test('the TA contains the correct set of locations when a location is edited', async ({ locationUiHelper }) => {
     // given
-    const oldLocation = locationFixtureWithoutInvariant();
+    const oldLocation = LocationFixture.withoutInvariant();
     await locationUiHelper.addLocation(oldLocation);
-    const newLocation = { ...locationFixtureInitWithMultiClauseInvariant(), name: oldLocation.name + 'new' };
+    const newLocation = { ...LocationFixture.initWithMultiClauseInvariant(), name: oldLocation.name + 'new' };
 
     // when
     await locationUiHelper.editLocation(oldLocation.name, newLocation);
