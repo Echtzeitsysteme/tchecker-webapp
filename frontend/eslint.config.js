@@ -35,7 +35,7 @@ export default tseslint.config(
   },
   {
     // eslint-plugin-unused-imports
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.spec.ts'],
     rules: {
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': 'off',
