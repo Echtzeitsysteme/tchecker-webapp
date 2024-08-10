@@ -154,7 +154,7 @@ jobs:
   deploy:
     needs:
       - static-analysis
-      # - e2e # TODO: enable once the pipeline works as expected
+      - e2e
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/release'
     concurrency:
