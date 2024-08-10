@@ -39,7 +39,7 @@ jobs:
         run: yarn --immutable
 
   # Job 2: Check linting and formatting
-  lint:
+  static-analysis:
     needs: install
     runs-on: ubuntu-latest
     steps:
@@ -134,7 +134,10 @@ jobs:
             ~/.cache/yarn
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Setup browsers for E2E tests
+      - name: Install Playwright dependencies for E2E tests
+        run: yarn playwright install-deps
+
+      - name: Install browsers for E2E tests
         run: yarn playwright install
 
       - name: Run E2E tests
