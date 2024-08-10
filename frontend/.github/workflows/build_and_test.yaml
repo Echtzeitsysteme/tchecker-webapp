@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  HUSKY: 0
+
 jobs:
   # Job 1: Install dependencies and cache
   install:
@@ -25,7 +28,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -35,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-  # Job 2: Linting and formatting check
+  # Job 2: Check linting and formatting
   lint:
     needs: install
     runs-on: ubuntu-latest
@@ -49,7 +52,7 @@ jobs:
           node-version: '22'
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -57,7 +60,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
       - name: Linting
-        run: yarn lint
+        run: yarn eslint . --report-unused-disable-directives
 
       - name: Check formatting
         run: yarn prettier --check .
@@ -76,7 +79,7 @@ jobs:
           node-version: '22'
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -100,7 +103,7 @@ jobs:
           node-version: '22'
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -124,12 +127,15 @@ jobs:
           node-version: '22'
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
             ~/.cache/yarn
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Run end-to-end tests
+      - name: Setup browsers for E2E tests
+        run: yarn playwright install
+
+      - name: Run E2E tests
         run: yarn e2e
