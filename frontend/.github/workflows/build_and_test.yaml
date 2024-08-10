@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   HUSKY: 0
@@ -119,7 +120,7 @@ jobs:
       - build
       - test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release') || github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release') || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
