@@ -115,7 +115,9 @@ jobs:
 
   # Job 5: Run end-to-end tests with Playwright
   e2e:
-    needs: install
+    needs:
+      - build
+      - test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
