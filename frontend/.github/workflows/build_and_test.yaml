@@ -119,6 +119,7 @@ jobs:
       - build
       - test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release') || github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
