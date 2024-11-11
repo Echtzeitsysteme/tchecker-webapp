@@ -9,6 +9,7 @@ import { useSwitchUtils } from '../utils/switchUtils';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import { useClockUtils } from '../utils/clockUtils';
 import { INIT_AUTOMATON } from '../utils/initAutomaton';
+import {SwitchStatement} from "../model/ta/switchStatement.ts";
 
 export interface AnalysisViewModel {
   state: AnalysisState;
@@ -17,14 +18,20 @@ export interface AnalysisViewModel {
     viewModel: AnalysisViewModel,
     locationName: string,
     isInitial?: boolean,
-    invariant?: ClockConstraint
+    invariant?: ClockConstraint,
+    committed?: boolean,
+    urgent?: boolean,
+    labels?: string[]
   ) => void;
   editLocation: (
     viewModel: AnalysisViewModel,
     locationName: string,
     prevLocationName: string,
     isInitial?: boolean,
-    invariant?: ClockConstraint
+    invariant?: ClockConstraint,
+    committed?: boolean,
+    urgent?: boolean,
+    labels?: string[]
   ) => void;
   removeLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
   setInitialLocation: (viewModel: AnalysisViewModel, locationName: string) => void;
@@ -40,7 +47,8 @@ export interface AnalysisViewModel {
     actionLabel: string,
     resetNames: string[],
     targetName: string,
-    guard?: ClockConstraint
+    guard?: ClockConstraint,
+    statement?: SwitchStatement
   ) => void;
   editSwitch: (
     viewModel: AnalysisViewModel,
@@ -49,12 +57,14 @@ export interface AnalysisViewModel {
     action: string,
     resetNames: string[],
     targetName: string,
-    guard?: ClockConstraint
+    guard?: ClockConstraint,
+    statement?: SwitchStatement
   ) => void;
   removeSwitch: (viewModel: AnalysisViewModel, switchToRemove: Switch) => void;
-  addClock: (viewModel: AnalysisViewModel, clockName: string) => void;
-  editClock: (viewModel: AnalysisViewModel, clockName: string, prevClockName: string) => void;
+  addClock: (viewModel: AnalysisViewModel, clockName: string, size: number) => void;
+  editClock: (viewModel: AnalysisViewModel, clockName: string, size: number, prevClockName: string) => void;
   removeClock: (viewModel: AnalysisViewModel, clock: Clock) => void;
+  setAutomaton : (viewModel: AnalysisViewModel, ta: TimedAutomaton) => void;
 }
 
 export enum AnalysisState {
@@ -88,7 +98,8 @@ export function useAnalysisViewModel(): AnalysisViewModel {
   }, []);
 
   const addLocation = useCallback(
-    (viewModel: AnalysisViewModel, locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
+    (viewModel: AnalysisViewModel, locationName: string, isInitial?: boolean, invariant?: ClockConstraint, committed?: boolean,
+     urgent?: boolean, labels?: string[]) => {
       const ta = viewModel.ta;
       const locations = ta.locations;
       let newLoc: Location;
@@ -99,11 +110,15 @@ export function useAnalysisViewModel(): AnalysisViewModel {
           name: locationName,
           isInitial: isInitial,
           invariant: invariant,
+          committed: committed,
+          urgent: urgent,
+          labels: labels,
           xCoordinate: xCoordAvg,
           yCoordinate: yCoordAvg,
+          setLayout: true,
         };
       } else {
-        newLoc = { name: locationName, isInitial: true, invariant: invariant, xCoordinate: 0, yCoordinate: 0 };
+        newLoc = { name: locationName, isInitial: true, invariant: invariant, committed: committed, urgent: urgent, labels: labels, xCoordinate: 0, yCoordinate: 0, setLayout: true, };
       }
       const updatedLocs = [...locations, newLoc];
       if (isInitial) {
@@ -125,13 +140,19 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       locationName: string,
       prevLocationName: string,
       isInitial?: boolean,
-      invariant?: ClockConstraint
+      invariant?: ClockConstraint,
+      committed?: boolean,
+      urgent?: boolean,
+      labels?: string[]
     ) => {
       const ta = viewModel.ta;
       const locations = [...ta.locations];
       const loc = locations.filter((l) => l.name === prevLocationName)[0];
       loc.name = locationName;
       loc.invariant = invariant;
+      loc.committed = committed;
+      loc.urgent = urgent;
+      loc.labels = labels;
       const updatedTa = { ...ta, locations: locations };
       const updatedViewModel = { ...viewModel, ta: updatedTa };
       setViewModel(updatedViewModel);
@@ -172,6 +193,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       const loc = updatedLocs.filter((l) => l.name === locationName)[0];
       loc.xCoordinate = xCoordinate;
       loc.yCoordinate = yCoordinate;
+      loc.setLayout = true;
       const updatedTa = { ...ta, locations: updatedLocs };
       setViewModel({ ...viewModel, ta: updatedTa });
     },
@@ -187,7 +209,8 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       actionLabel: string,
       resetNames: string[],
       targetName: string,
-      guard?: ClockConstraint
+      guard?: ClockConstraint,
+      statement?: SwitchStatement
     ) => {
       const ta = viewModel.ta;
       const newSwitch: Switch = {
@@ -196,6 +219,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
         actionLabel: actionLabel,
         reset: ta.clocks.filter((c) => resetNames.includes(c.name)),
         guard: guard,
+        statement: statement
       };
       const updatedSwitches = [...ta.switches, newSwitch];
       const updatedTa = { ...ta, switches: updatedSwitches };
@@ -212,7 +236,8 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       action: string,
       resetNames: string[],
       targetName: string,
-      guard?: ClockConstraint
+      guard?: ClockConstraint,
+      statement?: SwitchStatement
     ) => {
       const ta = viewModel.ta;
       const switches = [...ta.switches];
@@ -222,6 +247,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
       switchToEdit.actionLabel = action;
       switchToEdit.reset = ta.clocks.filter((c) => resetNames.includes(c.name));
       switchToEdit.guard = guard;
+      switchToEdit.statement = statement;
       const updatedTa = { ...ta, switches: switches };
       const updatedViewModel = { ...viewModel, ta: updatedTa };
       setViewModel(updatedViewModel);
@@ -248,17 +274,19 @@ export function useAnalysisViewModel(): AnalysisViewModel {
 
   // ===== manipulate clocks ===================================================
 
-  const addClock = useCallback((viewModel: AnalysisViewModel, clockName: string) => {
+  const addClock = useCallback((viewModel: AnalysisViewModel, clockName: string, size: number) => {
     const ta = viewModel.ta;
-    const updatedClocks = [...ta.clocks, { name: clockName }];
+    const updatedClocks = [...ta.clocks, { name: clockName, size: size }];
     const updatedTa = { ...ta, clocks: updatedClocks };
     setViewModel({ ...viewModel, ta: updatedTa });
   }, []);
 
   const editClock = useCallback(
-    (viewModel: AnalysisViewModel, clockName: string, prevClockName: string) => {
+    (viewModel: AnalysisViewModel, clockName: string, size: number, prevClockName: string) => {
       const updatedTa = { ...viewModel.ta };
       renameClock(prevClockName, clockName, updatedTa);
+      const changedClock = viewModel.ta.clocks.filter((clock)=> clock.name === clockName)[0];
+      changedClock.size = size;
       setViewModel({ ...viewModel, ta: updatedTa });
       setViewModel({ ...viewModel, ta: updatedTa });
     },
@@ -277,6 +305,13 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     [removeAllClausesUsingClock, removeClockFromAllResets]
   );
 
+  const setAutomaton = useCallback(
+      (viewModel: AnalysisViewModel, ta: TimedAutomaton) => {
+        setViewModel({ ...viewModel, ta: ta, state: AnalysisState.READY });
+      },
+      []
+  );
+
   const [viewModel, setViewModel] = useState<AnalysisViewModel>({
     state: AnalysisState.INIT,
     ta: INIT_AUTOMATON,
@@ -291,6 +326,7 @@ export function useAnalysisViewModel(): AnalysisViewModel {
     addClock: addClock,
     editClock: editClock,
     removeClock: removeClock,
+    setAutomaton: setAutomaton,
   });
 
   // ===================================================================================================================

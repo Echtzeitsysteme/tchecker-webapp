@@ -3,10 +3,14 @@ import { Switch } from '../model/ta/switch';
 import { useClockConstraintUtils } from './clockConstraintUtils';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { Clock } from '../model/ta/clock';
+import { SwitchStatement } from '../model/ta/switchStatement.ts';
+import { StatementViewData } from '../viewmodel/StatementsViewModel.ts';
+import { FreeClause } from '../model/ta/freeClause.ts';
 
 export interface SwitchUtils {
   switchesEqual: (switch1: Switch | undefined, switch2: Switch | undefined) => boolean;
   removeClockFromAllResets: (clock: Clock, ta: TimedAutomaton) => void;
+  transformToSwitchStatement: (statements: StatementViewData[]) => SwitchStatement | undefined;
 }
 
 export function useSwitchUtils(): SwitchUtils {
@@ -59,5 +63,21 @@ export function useSwitchUtils(): SwitchUtils {
     }
   }, []);
 
-  return { switchesEqual: switchesEqual, removeClockFromAllResets: removeClockFromAllResets };
+  const transformToSwitchStatement = useCallback((statements: StatementViewData[]) => {
+    if (!statements || statements.length === 0) {
+      return undefined;
+    }
+    const statement: SwitchStatement = { statements: [] };
+    statements.forEach((stmt) => {
+      const newStmt: FreeClause = { term: stmt.term.trim() };
+      statement.statements.push(newStmt);
+    });
+    return statement;
+  }, []);
+
+  return {
+    switchesEqual: switchesEqual,
+    removeClockFromAllResets: removeClockFromAllResets,
+    transformToSwitchStatement: transformToSwitchStatement,
+  };
 }

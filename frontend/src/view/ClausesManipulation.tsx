@@ -44,7 +44,7 @@ export const ClausesManipulation: React.FC<ClausesManipulationProps> = (props) =
         <Grid key={row.id} container spacing={2} alignItems="center">
           <Grid item xs={1}>
             <IconButton
-              disabled={clauses.length <= 1}
+              disabled={clauses.length <= 0}
               onMouseDown={() => deleteClause(viewModel, row.id)}
               onKeyDown={(e) => executeOnKeyboardClick(e.key, () => deleteClause(viewModel, row.id))}
               data-testid={'button-delete-clause-row-' + row.id}

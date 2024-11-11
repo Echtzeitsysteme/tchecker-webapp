@@ -17,21 +17,33 @@ export function useMappingUtils(): MappingUtils {
       const edges = new DataSet<Edge>();
 
       ta.locations.forEach((location) => {
-        nodes.add({
+        const newNode: Node = {
           id: `${location.name}`,
           label: formatLocationLabelVisual(location),
           x: location.xCoordinate,
           y: location.yCoordinate,
-        });
+        };
+        if (location.isInitial) {
+          newNode.group = 'startGroup';
+        }
+        nodes.add(newNode);
       });
 
       ta.switches.forEach((sw, index) => {
-        edges.add({
+        const newEdge: Edge = {
           id: index,
           from: `${sw.source.name}`,
           to: `${sw.target.name}`,
           label: formatSwitchLabelVisual(sw),
-        });
+        };
+        //unnötig (?)
+        newEdge.smooth = {
+          enabled: true,
+          type: 'dynamic',
+          forceDirection: undefined,
+          roundness: 0,
+        };
+        edges.add(newEdge);
       });
 
       return <Data>{

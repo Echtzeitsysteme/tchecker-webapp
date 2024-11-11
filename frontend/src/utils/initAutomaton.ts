@@ -5,8 +5,8 @@ import { ClockConstraint } from '../model/ta/clockConstraint';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { Switch } from '../model/ta/switch';
 
-const CLOCK_0: Clock = { name: 'x' };
-const CLOCK_1: Clock = { name: 'y' };
+const CLOCK_0: Clock = { name: 'x', size: 1 };
+const CLOCK_1: Clock = { name: 'y', size: 1 };
 
 const CLOCK_CONSTRAINT_0: ClockConstraint = {
   clauses: [
@@ -16,6 +16,7 @@ const CLOCK_CONSTRAINT_0: ClockConstraint = {
       rhs: 5,
     },
   ],
+  freeClauses: [],
 };
 const CLOCK_CONSTRAINT_1: ClockConstraint = {
   clauses: [
@@ -30,6 +31,7 @@ const CLOCK_CONSTRAINT_1: ClockConstraint = {
       rhs: 3,
     },
   ],
+  freeClauses: [],
 };
 
 const LOC_0: Location = {
@@ -38,11 +40,13 @@ const LOC_0: Location = {
   invariant: CLOCK_CONSTRAINT_0,
   xCoordinate: -100,
   yCoordinate: 100,
+  setLayout: true,
 };
 const LOC_1: Location = {
   name: 'final',
   xCoordinate: 100,
   yCoordinate: 100,
+  setLayout: true,
 };
 
 const SWITCH_0: Switch = {

@@ -13,7 +13,8 @@ export function useClockUtils(): ClockUtils {
   const renameClock = useCallback(
     (oldClockName: string, newClockName: string, ta: TimedAutomaton) => {
       const { locations, switches, clocks } = ta;
-      const newClock: Clock = { name: newClockName };
+      const oldClock = clocks.filter((clock) => clock.name === oldClockName)[0];
+      const newClock: Clock = { name: newClockName, size: oldClock.size };
 
       // update clock
       const clockIndex = clocks.map((c) => c.name).indexOf(oldClockName);

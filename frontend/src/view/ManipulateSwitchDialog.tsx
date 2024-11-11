@@ -28,6 +28,11 @@ import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import { Switch } from '../model/ta/switch';
 import { useSwitchUtils } from '../utils/switchUtils';
 import { useButtonUtils } from '../utils/buttonUtils';
+import { useFreeClausesViewModel } from '../viewmodel/FreeClausesViewModel.ts';
+import { FreeClausesManipulation } from './FreeClausesManipulation.tsx';
+import { useStatementsViewModel } from '../viewmodel/StatementsViewModel.ts';
+import { StatementManipulation } from './StatementManipulation.tsx';
+import { SwitchStatement } from '../model/ta/switchStatement.ts';
 
 interface ManipulateSwitchDialogProps {
   open: boolean;
@@ -42,6 +47,7 @@ interface ManipulateSwitchDialogProps {
     resetNames: string[],
     targetName: string,
     guard?: ClockConstraint,
+    statement?: SwitchStatement,
     prevSwitch?: Switch // only for editing (not for adding)
   ) => void;
 }
@@ -50,10 +56,14 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
   const { open, locations, switches, clocks, switchPrevVersion, handleClose, handleSubmit } = props;
   const clausesViewModel = useClausesViewModel();
   const { clauses, setClausesFromClockConstraint } = clausesViewModel;
+  const freeClausesViewModel = useFreeClausesViewModel();
+  const { freeClauses, setFreeClausesFromClockConstraint } = freeClausesViewModel;
+  const statementsViewModel = useStatementsViewModel();
+  const { statements, setStatement } = statementsViewModel;
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
   const { transformToClockConstraint } = useClockConstraintUtils();
-  const { switchesEqual } = useSwitchUtils();
+  const { transformToSwitchStatement, switchesEqual } = useSwitchUtils();
   const [action, setAction] = useState<string>('');
   const [source, setSource] = useState<string>('');
   const [target, setTarget] = useState<string>('');
@@ -71,6 +81,9 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
   );
   const [justOpened, setJustOpened] = useState(true);
   const [guardChecked, setGuardChecked] = useState(false);
+  const [statementChecked, setStatementChecked] = useState(false);
+  const [someFreeClauseEmpty, setSomeFreeClauseEmpty] = useState(false);
+  const [someStatementEmpty, setSomeStatementEmpty] = useState(false);
 
   const setResetsFromClockArray = useCallback(
     (clocksToReset: Clock[]) => {
@@ -102,9 +115,18 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
       if (switchPrevVersion.guard) {
         setGuardChecked(true);
         setClausesFromClockConstraint(clausesViewModel, switchPrevVersion.guard);
+        setFreeClausesFromClockConstraint(freeClausesViewModel, switchPrevVersion.guard);
       } else {
         setGuardChecked(false);
         clausesViewModel.resetClauses(clausesViewModel);
+        freeClausesViewModel.resetFreeClauses(freeClausesViewModel);
+      }
+      if (switchPrevVersion.statement) {
+        setStatementChecked(true);
+        setStatement(statementsViewModel, switchPrevVersion.statement);
+      } else {
+        setStatementChecked(false);
+        statementsViewModel.resetStatements(statementsViewModel);
       }
     } else {
       // when adding switch: set reset intially to none
@@ -119,6 +141,10 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     clausesViewModel,
     setClausesFromClockConstraint,
     setResetsFromClockArray,
+    setFreeClausesFromClockConstraint,
+    freeClausesViewModel,
+    setStatement,
+    statementsViewModel,
   ]);
 
   // update validation checks
@@ -126,7 +152,9 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     setActionEmpty(action.trim() === '');
     setSourceEmpty(source.trim() === '');
     setTargetEmpty(target.trim() === '');
-  }, [action, source, target]);
+    setSomeFreeClauseEmpty(freeClauses.some((clause) => clause.term.trim().length === 0));
+    setSomeStatementEmpty(statements.some((stmt) => stmt.term.trim().length === 0));
+  }, [action, freeClauses, source, statements, target]);
 
   const isEqualToExistingSwitch = useMemo(() => {
     let existingSwitches: Switch[];
@@ -139,24 +167,39 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     const sourceLoc: Location = { name: source, xCoordinate: 0, yCoordinate: 0 };
     const targetLoc: Location = { name: target, xCoordinate: 0, yCoordinate: 0 };
     const guard: ClockConstraint | undefined =
-      guardChecked && clauses.length > 0 ? transformToClockConstraint(clauses) : undefined;
+      guardChecked && (clauses.length > 0 || freeClauses.length > 0)
+        ? transformToClockConstraint(clauses, freeClauses)
+        : undefined;
     const reset: Clock[] = clocks.filter((c) => resets[c.name]);
-    const newSwitch: Switch = { source: sourceLoc, guard: guard, actionLabel: action, reset: reset, target: targetLoc };
+    const statement: SwitchStatement | undefined =
+      statementChecked && statements.length > 0 ? transformToSwitchStatement(statements) : undefined;
+    const newSwitch: Switch = {
+      source: sourceLoc,
+      guard: guard,
+      actionLabel: action,
+      reset: reset,
+      statement: statement,
+      target: targetLoc,
+    };
 
     // Does switch already exist? Do not allow another switch being equal to an existing switch
     return existingSwitches.filter((sw) => switchesEqual(sw, newSwitch)).length > 0;
   }, [
     switchPrevVersion,
-    switches,
     source,
     target,
     guardChecked,
     clauses,
-    resets,
-    action,
-    clocks,
+    freeClauses,
     transformToClockConstraint,
+    clocks,
+    statementChecked,
+    statements,
+    transformToSwitchStatement,
+    action,
+    switches,
     switchesEqual,
+    resets,
   ]);
 
   const equalToExistingErrorMsg: JSX.Element | undefined = useMemo(() => {
@@ -176,14 +219,19 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
       isSourceEmpty ||
       isTargetEmpty ||
       isEqualToExistingSwitch ||
-      (guardChecked && clausesViewModel.isValidationError),
+      (guardChecked && clausesViewModel.isValidationError) ||
+      (guardChecked && someFreeClauseEmpty) ||
+      (statementChecked && someStatementEmpty),
     [
       isActionEmpty,
       isSourceEmpty,
       isTargetEmpty,
-      guardChecked,
       isEqualToExistingSwitch,
+      guardChecked,
       clausesViewModel.isValidationError,
+      someFreeClauseEmpty,
+      statementChecked,
+      someStatementEmpty,
     ]
   );
 
@@ -209,6 +257,8 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     clocks.forEach((c) => handleResetClockChange(c.name, false));
     setGuardChecked(false);
     clausesViewModel.resetClauses(clausesViewModel);
+    freeClausesViewModel.resetFreeClauses(freeClausesViewModel);
+    statementsViewModel.resetStatements(statementsViewModel);
     setJustOpened(true); // for next opening of the dialog
     handleClose();
   };
@@ -217,13 +267,17 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
     if (isValidationError) {
       return;
     }
-    const guard: ClockConstraint | undefined = guardChecked ? transformToClockConstraint(clauses) : undefined;
+    const guard: ClockConstraint | undefined = guardChecked
+      ? transformToClockConstraint(clauses, freeClauses)
+      : undefined;
     const resetNames: string[] = clocks.filter((c) => resets[c.name]).map((c) => c.name);
+    const statement: SwitchStatement | undefined =
+      statementChecked && statements.length > 0 ? transformToSwitchStatement(statements) : undefined;
     if (switchPrevVersion) {
-      handleSubmit(source, action, resetNames, target, guard, switchPrevVersion);
+      handleSubmit(source, action.trim(), resetNames, target, guard, statement, switchPrevVersion);
       // value reset not needed for editing because values are loaded from existing version
     } else {
-      handleSubmit(source, action, resetNames, target, guard);
+      handleSubmit(source, action.trim(), resetNames, target, guard, statement);
       // reset values for next opening of dialog
       setAction('');
       setSource('');
@@ -231,6 +285,8 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
       clocks.forEach((c) => handleResetClockChange(c.name, false));
       setGuardChecked(false);
       clausesViewModel.resetClauses(clausesViewModel);
+      freeClausesViewModel.resetFreeClauses(freeClausesViewModel);
+      statementsViewModel.resetStatements(statementsViewModel);
     }
     setJustOpened(true); // for next opening of dialog
   };
@@ -327,6 +383,7 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
           label={t('switchDialog.hasGuard')}
         />
         {guardChecked && <ClausesManipulation viewModel={clausesViewModel} clocks={clocks} />}
+        {guardChecked && <FreeClausesManipulation viewModel={freeClausesViewModel} />}
         {guardChecked && (
           <Button
             variant="outlined"
@@ -336,6 +393,44 @@ export const ManipulateSwitchDialog: React.FC<ManipulateSwitchDialogProps> = (pr
             data-testid={'button-add-clause'}
           >
             {t('clauses.button.addClause')}
+          </Button>
+        )}
+        {guardChecked && (
+          <Button
+            variant="outlined"
+            onMouseDown={() => freeClausesViewModel.addFreeClause(freeClausesViewModel)}
+            onKeyDown={(e) =>
+              executeOnKeyboardClick(e.key, () => freeClausesViewModel.addFreeClause(freeClausesViewModel))
+            }
+            sx={{ marginTop: 2, marginLeft: 1 }}
+            data-testid={'button-add-freeClause'}
+          >
+            {t('freeClauses.button.addFreeClause')}
+          </Button>
+        )}
+        <Divider sx={{ my: 1 }} />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={statementChecked}
+              onChange={(e) => setStatementChecked(e.target.checked)}
+              data-testid={'checkbox-switch-hasStatement'}
+            />
+          }
+          label={t('switchDialog.hasStatement')}
+        />
+        {statementChecked && <StatementManipulation viewModel={statementsViewModel} />}
+        {statementChecked && (
+          <Button
+            variant="outlined"
+            onMouseDown={() => statementsViewModel.addStatement(statementsViewModel)}
+            onKeyDown={(e) =>
+              executeOnKeyboardClick(e.key, () => statementsViewModel.addStatement(statementsViewModel))
+            }
+            sx={{ marginTop: 2 }}
+            data-testid={'button-add-statement'}
+          >
+            {t('switchDialog.button.addStatement')}
           </Button>
         )}
         <Divider sx={{ my: 1 }} />

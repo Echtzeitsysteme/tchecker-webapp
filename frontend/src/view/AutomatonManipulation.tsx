@@ -14,13 +14,20 @@ import { Clock } from '../model/ta/clock';
 import { useClockConstraintUtils } from '../utils/clockConstraintUtils';
 import ClockDeleteConfirmDialog from './ClockDeleteConfirmDialog';
 import ManipulateClockDialog from './ManipulateClockDialog';
+import { OpenedSystems } from '../viewmodel/OpenedSystems.ts';
+import { Integer } from '../model/ta/integer.ts';
+import ManipulateIntegerDialog from './ManipulateIntegerDialog.tsx';
+import { SwitchStatement } from '../model/ta/switchStatement.ts';
+import { ManipulateSyncDialog } from './ManipulateSyncDialog.tsx';
+import { SyncConstraint } from '../model/ta/syncConstraint.ts';
 
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
+  openedSystems: OpenedSystems;
 }
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
-  const { viewModel } = props;
+  const { viewModel, openedSystems } = props;
   const {
     ta,
     addLocation,
@@ -34,8 +41,10 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     removeClock,
   } = viewModel;
   const { locations, switches, clocks } = ta;
+  const { selectedSystem, addInteger, editInteger, removeInteger, addSync, editSync, removeSync } = openedSystems;
+  const { integers, synchronizations, processes } = selectedSystem;
   const { t } = useTranslation();
-  const { formatLocationLabelTable, formatSwitchTable } = useFormattingUtils();
+  const { formatLocationLabelTable, formatSwitchTable, formatSyncTable } = useFormattingUtils();
   const { taUsesClockInAnyConstraint } = useClockConstraintUtils();
 
   const [locationAddOpen, setLocationAddOpen] = useState(false);
@@ -46,9 +55,15 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const [switchToEdit, setSwitchToEdit] = useState<Switch | undefined>(undefined);
   const [clockAddOpen, setClockAddOpen] = useState(false);
   const [clockEditOpen, setClockEditOpen] = useState(false);
-  const [clockNameToEdit, setClockNameToEdit] = useState<string | undefined>(undefined);
+  const [clockToEdit, setClockToEdit] = useState<Clock | undefined>(undefined);
   const [clockDeleteConfirmOpen, setClockDeleteConfirmOpen] = useState(false);
   const [clockToDelete, setClockToDelete] = useState<Clock | undefined>(undefined);
+  const [integerAddOpen, setIntegerAddOpen] = useState(false);
+  const [integerEditOpen, setIntegerEditOpen] = useState(false);
+  const [integerToEdit, setIntegerToEdit] = useState<Integer | undefined>(undefined);
+  const [syncAddOpen, setSyncAddOpen] = useState(false);
+  const [syncEditOpen, setSyncEditOpen] = useState(false);
+  const [syncToEdit, setSyncToEdit] = useState<SyncConstraint | undefined>(undefined);
 
   // ===== manipulate locations ================================================
 
@@ -63,8 +78,15 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   );
   const handleLocationEditClose = () => setLocationEditOpen(false);
 
-  const handleLocationAdd = (locationName: string, isInitial?: boolean, invariant?: ClockConstraint) => {
-    addLocation(viewModel, locationName, isInitial, invariant);
+  const handleLocationAdd = (
+    locationName: string,
+    isInitial?: boolean,
+    invariant?: ClockConstraint,
+    committed?: boolean,
+    urgent?: boolean,
+    labels?: string[]
+  ) => {
+    addLocation(viewModel, locationName, isInitial, invariant, committed, urgent, labels);
     setLocationAddOpen(false);
   };
 
@@ -72,12 +94,15 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     locationName: string,
     isInitial?: boolean,
     invariant?: ClockConstraint,
+    committed?: boolean,
+    urgent?: boolean,
+    labels?: string[],
     prevLocationName?: string
   ) => {
     if (!prevLocationName) {
       throw Error('handleLocationEdit: prevLocationName is empty or undefined');
     }
-    editLocation(viewModel, locationName, prevLocationName, isInitial, invariant);
+    editLocation(viewModel, locationName, prevLocationName, isInitial, invariant, committed, urgent, labels);
     setLocationEditOpen(false);
   };
 
@@ -140,9 +165,10 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     action: string,
     resetNames: string[],
     targetName: string,
-    guard?: ClockConstraint
+    guard?: ClockConstraint,
+    statement?: SwitchStatement
   ) => {
-    addSwitch(viewModel, sourceName, action, resetNames, targetName, guard);
+    addSwitch(viewModel, sourceName, action, resetNames, targetName, guard, statement);
     setSwitchAddOpen(false);
   };
 
@@ -152,12 +178,13 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     resetNames: string[],
     targetName: string,
     guard?: ClockConstraint,
+    statement?: SwitchStatement,
     prevSwitch?: Switch
   ) => {
     if (!prevSwitch) {
       throw Error('handleSwitchEdit: prevSwitch is null or undefined');
     }
-    editSwitch(viewModel, prevSwitch, sourceName, action, resetNames, targetName, guard);
+    editSwitch(viewModel, prevSwitch, sourceName, action, resetNames, targetName, guard, statement);
     setSwitchEditOpen(false);
   };
 
@@ -192,23 +219,23 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleClockAddClose = () => setClockAddOpen(false);
   const handleClockEditOpen = useCallback(
     (id: number) => {
-      setClockNameToEdit(clocks[id].name);
+      setClockToEdit(clocks[id]);
       setClockEditOpen(true);
     },
     [clocks]
   );
   const handleClockEditClose = () => setClockEditOpen(false);
 
-  const handleClockAdd = (clockName: string) => {
-    addClock(viewModel, clockName);
+  const handleClockAdd = (clockName: string, size: string) => {
+    addClock(viewModel, clockName, parseInt(size));
     setClockAddOpen(false);
   };
 
-  const handleClockEdit = (clockName: string, prevClockName?: string) => {
+  const handleClockEdit = (clockName: string, size: string, prevClockName?: string) => {
     if (!prevClockName) {
       throw Error('handleClockEdit: prevClockName is null or undefined or empty');
     }
-    editClock(viewModel, clockName, prevClockName);
+    editClock(viewModel, clockName, parseInt(size), prevClockName);
     setClockEditOpen(false);
   };
 
@@ -237,7 +264,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   );
 
   const clockTable: JSX.Element = useMemo(() => {
-    const clockRows = clocks.map((clock, index) => ({ id: index, displayName: clock.name }));
+    const clockRows = clocks.map((clock, index) => ({ id: index, displayName: clock.name + ', size:' + clock.size }));
     return (
       <ElementTable
         rows={clockRows}
@@ -251,16 +278,145 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     );
   }, [clocks, t, handleClockEditOpen, handleClockDelete]);
 
+  // ===== manipulate Integers ===================================================
+
+  const handleIntegerAddOpen = () => setIntegerAddOpen(true);
+  const handleIntegerAddClose = () => setIntegerAddOpen(false);
+
+  const handleIntegerEditOpen = useCallback(
+    (id: number) => {
+      setIntegerToEdit(integers[id]);
+      setIntegerEditOpen(true);
+    },
+    [integers]
+  );
+  const handleIntegerEditClose = () => setIntegerEditOpen(false);
+
+  const handleIntegerAdd = (name: string, size: string, min: string, max: string, init: string) => {
+    addInteger(openedSystems, name, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
+    setIntegerAddOpen(false);
+  };
+
+  const handleIntegerEdit = (
+    name: string,
+    size: string,
+    min: string,
+    max: string,
+    init: string,
+    prevIntegerName?: string
+  ) => {
+    if (!prevIntegerName) {
+      throw Error('handleIntegerEdit: prevIntegerName is empty or undefined');
+    }
+    editInteger(openedSystems, name, prevIntegerName, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
+    setIntegerEditOpen(false);
+  };
+
+  const handleIntegerDelete = useCallback(
+    (id: number) => {
+      const integerName = integers[id].name;
+      removeInteger(openedSystems, integerName);
+    },
+    [integers, openedSystems, removeInteger]
+  );
+
+  const integerTable: JSX.Element = useMemo(() => {
+    const integerRows = integers.map<ElementRowData>((int, index) => {
+      const displayName =
+        int.name +
+        ', ' +
+        'size:' +
+        String(int.size) +
+        ', ' +
+        '[' +
+        String(int.min) +
+        ', ' +
+        String(int.max) +
+        ']' +
+        ', ' +
+        'init:' +
+        String(int.init);
+      const rowData: ElementRowData = { id: index, displayName: displayName };
+      return rowData;
+    });
+
+    return (
+      <ElementTable
+        rows={integerRows}
+        contentSingular={t('manipulation.table.integerSingular')}
+        contentPlural={t('manipulation.table.integerPlural')}
+        typeForTestId={'integer'}
+        onAddOpen={handleIntegerAddOpen}
+        onEditOpen={handleIntegerEditOpen}
+        onDelete={handleIntegerDelete}
+      />
+    );
+  }, [integers, t, handleIntegerEditOpen, handleIntegerDelete]);
+
+  // ===== manipulate SyncConstraint ===================================================
+
+  const handleSyncAddOpen = () => setSyncAddOpen(true);
+  const handleSyncAddClose = () => setSyncAddOpen(false);
+
+  const handleSyncEditOpen = useCallback(
+    (id: number) => {
+      setSyncToEdit(synchronizations[id]);
+      setSyncEditOpen(true);
+    },
+    [synchronizations]
+  );
+  const handleSyncEditClose = () => setSyncEditOpen(false);
+
+  const handleSyncAdd = (syncConstraint: SyncConstraint) => {
+    addSync(openedSystems, syncConstraint.syncs);
+    setSyncAddOpen(false);
+  };
+
+  const handleSyncEdit = (syncConstraint: SyncConstraint, prevSync?: SyncConstraint) => {
+    if (!prevSync) {
+      throw Error('handleSyncEdit: prevSyncId is empty or undefined');
+    }
+    editSync(openedSystems, syncConstraint.syncs, prevSync);
+    setSyncEditOpen(false);
+  };
+
+  const handleSyncDelete = useCallback(
+    (id: number) => {
+      const syncToDelete = synchronizations[id];
+      removeSync(openedSystems, syncToDelete);
+    },
+    [openedSystems, removeSync, synchronizations]
+  );
+
+  const syncTable: JSX.Element = useMemo(() => {
+    const syncRows = synchronizations.map<ElementRowData>((syncConstraint, index) => ({
+      id: index,
+      displayName: formatSyncTable(syncConstraint.syncs),
+    }));
+
+    return (
+      <ElementTable
+        rows={syncRows}
+        contentSingular={t('manipulation.table.syncSingular')}
+        contentPlural={t('manipulation.table.syncPlural')}
+        typeForTestId={'sync'}
+        onAddOpen={handleSyncAddOpen}
+        onEditOpen={handleSyncEditOpen}
+        onDelete={handleSyncDelete}
+      />
+    );
+  }, [formatSyncTable, handleSyncDelete, handleSyncEditOpen, synchronizations, t]);
+
   // ===========================================================================
 
   const allTables: JSX.Element[] = useMemo(() => {
-    const tables = [locationTable, switchTable, clockTable];
+    const tables = [locationTable, switchTable, clockTable, integerTable, syncTable];
     return tables.map((table, index) => (
       <div key={index} style={{ marginBottom: '16px' }}>
         {table}
       </div>
     ));
-  }, [locationTable, switchTable, clockTable]);
+  }, [locationTable, switchTable, clockTable, integerTable, syncTable]);
 
   return (
     <>
@@ -304,20 +460,50 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
         clocks={clocks}
         handleClose={handleClockAddClose}
         handleSubmit={handleClockAdd}
-        prevClockName={undefined}
+        prevClock={undefined}
       />
       <ManipulateClockDialog
         open={clockEditOpen}
         clocks={clocks}
         handleClose={handleClockEditClose}
         handleSubmit={handleClockEdit}
-        prevClockName={clockNameToEdit}
+        prevClock={clockToEdit}
       />
       <ClockDeleteConfirmDialog
         clock={clockToDelete}
         open={clockDeleteConfirmOpen}
         onClose={handleClockDeleteClose}
         onDelete={deleteClock}
+      />
+      <ManipulateIntegerDialog
+        open={integerAddOpen}
+        integers={integers}
+        handleClose={handleIntegerAddClose}
+        handleSubmit={handleIntegerAdd}
+        intPrevVersion={undefined}
+      />
+      <ManipulateIntegerDialog
+        open={integerEditOpen}
+        integers={integers}
+        handleClose={handleIntegerEditClose}
+        handleSubmit={handleIntegerEdit}
+        intPrevVersion={integerToEdit}
+      />
+      <ManipulateSyncDialog
+        open={syncAddOpen}
+        synchronizations={synchronizations}
+        processes={processes}
+        handleClose={handleSyncAddClose}
+        handleSubmit={handleSyncAdd}
+        syncPrevVersion={undefined}
+      />
+      <ManipulateSyncDialog
+        open={syncEditOpen}
+        synchronizations={synchronizations}
+        processes={processes}
+        handleClose={handleSyncEditClose}
+        handleSubmit={handleSyncEdit}
+        syncPrevVersion={syncToEdit}
       />
     </>
   );

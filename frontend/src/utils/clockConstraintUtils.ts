@@ -5,11 +5,16 @@ import { ClauseViewData } from '../viewmodel/ClausesViewModel';
 import { Clock } from '../model/ta/clock';
 import { ClockComparator } from '../model/ta/clockComparator';
 import { TimedAutomaton } from '../model/ta/timedAutomaton';
+import { FreeClauseViewData } from '../viewmodel/FreeClausesViewModel.ts';
+import { FreeClause } from '../model/ta/freeClause.ts';
 
 export interface ClockConstraintUtils {
   clausesEqual: (clause1?: Clause, clause2?: Clause) => boolean;
   clockConstraintsEqual: (cc1?: ClockConstraint, cc2?: ClockConstraint) => boolean;
-  transformToClockConstraint: (clauseData: ClauseViewData[]) => ClockConstraint | undefined;
+  transformToClockConstraint: (
+    clauseData: ClauseViewData[],
+    freeClauseData: FreeClauseViewData[]
+  ) => ClockConstraint | undefined;
   constraintUsesClock: (clockName: string, clockConstraint?: ClockConstraint) => boolean;
   taUsesClockInAnyConstraint: (ta?: TimedAutomaton, clock?: Clock) => boolean;
   removeAllClausesUsingClock: (clock: Clock, ta: TimedAutomaton) => void;
@@ -76,39 +81,64 @@ export function useClockConstraintUtils(): ClockConstraintUtils {
     [clausesEqual]
   );
 
-  const transformToClockConstraint = useCallback((clauseData: ClauseViewData[]): ClockConstraint | undefined => {
-    // clauseData array should be defined
-    if (!clauseData || clauseData.length === 0) {
-      return undefined;
-    }
-    // every element of array should be defined
-    for (const element of clauseData) {
-      if (!element.clockValue || !element.comparisonValue || !element.numberInput) {
+  const transformToClockConstraint = useCallback(
+    (clauseData: ClauseViewData[], freeClauseData: FreeClauseViewData[]): ClockConstraint | undefined => {
+      // either clauseData or freeClauseData array should be defined
+      if ((!clauseData && !freeClauseData) || (clauseData.length === 0 && freeClauseData.length === 0)) {
         return undefined;
       }
-    }
 
-    return clauseData
-      .map<Clause>((c) => {
-        const lhs: Clock = { name: c.clockValue };
-        const op: ClockComparator | undefined = Object.values(ClockComparator).find(
-          (value) => value === c.comparisonValue
-        );
-        if (op === undefined) {
-          throw new Error(`Invalid comparison value: ${c.comparisonValue}`);
+      // every element of clauseData array should be defined
+      let emptyClause: boolean = false;
+      for (const element of clauseData) {
+        if (!element.clockValue || !element.comparisonValue || !element.numberInput) {
+          emptyClause = true;
         }
-        const rhs: number = parseInt(c.numberInput);
-        const clause: Clause = { lhs, op, rhs };
-        return clause;
-      })
-      .reduce<ClockConstraint>(
-        (accumulator, current) => {
-          accumulator.clauses.push(current);
-          return accumulator;
-        },
-        { clauses: [] }
-      );
-  }, []);
+      }
+
+      //TODO assuming clock in non-free Clause can only be 1?
+      const clockSize = 1;
+      if (!emptyClause) {
+        const guard = clauseData
+          .map<Clause>((c) => {
+            const lhs: Clock = { name: c.clockValue, size: clockSize };
+            const op: ClockComparator | undefined = Object.values(ClockComparator).find(
+              (value) => value === c.comparisonValue
+            );
+            if (op === undefined) {
+              throw new Error(`Invalid comparison value: ${c.comparisonValue}`);
+            }
+            const rhs: number = parseInt(c.numberInput);
+            const clause: Clause = { lhs, op, rhs };
+            return clause;
+          })
+          .reduce<ClockConstraint>(
+            (accumulator, current) => {
+              accumulator.clauses.push(current);
+              return accumulator;
+            },
+            { clauses: [], freeClauses: [] }
+          );
+        if (freeClauseData && freeClauseData.length >= 0) {
+          freeClauseData.forEach((c) => {
+            const freeClause: FreeClause = { term: c.term.trim() };
+            guard.freeClauses.push(freeClause);
+          });
+        }
+        return guard;
+      } else {
+        const guard: ClockConstraint = { clauses: [], freeClauses: [] };
+        if (freeClauseData && freeClauseData.length >= 0) {
+          freeClauseData.forEach((c) => {
+            const freeClause: FreeClause = { term: c.term.trim() };
+            guard.freeClauses.push(freeClause);
+          });
+        }
+        return guard;
+      }
+    },
+    []
+  );
 
   const constraintUsesClock = useCallback((clockName: string, clockConstraint?: ClockConstraint): boolean => {
     if (!clockConstraint) {

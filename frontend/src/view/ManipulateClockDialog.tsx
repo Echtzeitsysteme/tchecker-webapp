@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Clock } from '../model/ta/clock';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { useButtonUtils } from '../utils/buttonUtils';
@@ -8,20 +8,24 @@ import { useButtonUtils } from '../utils/buttonUtils';
 interface ManipulateClockDialogProps {
   open: boolean;
   clocks: Clock[];
-  prevClockName?: string; // only for editing (not for adding)
+  prevClock?: Clock; // only for editing (not for adding)
   handleClose: () => void;
   handleSubmit: (
     clockName: string,
+    size: string,
     prevClockName?: string // only for editing (not for adding)
   ) => void;
 }
 
 export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (props) => {
-  const { open, clocks, prevClockName, handleClose, handleSubmit } = props;
+  const { open, clocks, prevClock, handleClose, handleSubmit } = props;
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
 
   const [clockName, setClockName] = useState<string>('');
+  const [size, setSize] = useState<string>('');
+  const [isSizeInvalid, setIsSizeInvalid] = useState(false);
+  const [sizeErrorMsg, setSizeErrorMsg] = useState('');
 
   // effect for setting initial value upon opening the dialog
   useEffect(() => {
@@ -30,24 +34,32 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
       return;
     }
 
-    if (!prevClockName) {
+    if (!prevClock) {
       setClockName('');
+      setSize('');
     } else {
-      setClockName(prevClockName);
+      setClockName(prevClock.name);
+      setSize(prevClock.size.toString());
     }
-  }, [prevClockName, open]);
+  }, [prevClock, open]);
 
   const otherClockNames = useMemo(() => {
     const names = clocks.map((c) => c.name);
-    if (!prevClockName) {
+    if (!prevClock) {
       return names;
     }
-    return names.filter((n) => n !== prevClockName);
-  }, [clocks, prevClockName]);
+    return names.filter((n) => n !== prevClock.name);
+  }, [clocks, prevClock]);
+
+  useEffect(() => {
+    setIsSizeInvalid(size.trim() === '' || parseInt(size) < 1);
+
+    isSizeInvalid && setSizeErrorMsg(t('clockDialog.errorSizeInvalid'));
+  }, [isSizeInvalid, size, t]);
 
   const isValidationError = useMemo(
-    () => !clockName || otherClockNames.includes(clockName),
-    [clockName, otherClockNames]
+    () => !clockName || otherClockNames.includes(clockName) || !size || isSizeInvalid,
+    [clockName, isSizeInvalid, otherClockNames, size]
   );
 
   const errorMsg = useMemo(() => {
@@ -65,6 +77,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
   const handleCloseDialog = () => {
     // reset entries when dialog is closed
     setClockName('');
+    setSize('');
     handleClose();
   };
 
@@ -72,12 +85,13 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
     if (isValidationError) {
       return;
     }
-    if (prevClockName) {
-      handleSubmit(clockName, prevClockName);
+    if (prevClock) {
+      handleSubmit(clockName.trim(), size, prevClock.name);
     } else {
-      handleSubmit(clockName);
+      handleSubmit(clockName.trim(), size);
       // reset entries for next opening of dialog
       setClockName('');
+      setSize('');
     }
   };
 
@@ -90,7 +104,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
       }}
     >
       <DialogTitle>
-        {prevClockName ? t('clockDialog.title.editClock') : t('clockDialog.title.addClock')}
+        {prevClock ? t('clockDialog.title.editClock') : t('clockDialog.title.addClock')}
         <IconButton
           onMouseDown={handleCloseDialog}
           onKeyDown={(e) => executeOnKeyboardClick(e.key, handleCloseDialog)}
@@ -100,19 +114,39 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <TextField
-          margin="dense"
-          label={t('clockDialog.input.name')}
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={clockName}
-          onChange={(e) => setClockName(e.target.value)}
-          error={isValidationError}
-          helperText={errorMsg}
-          style={{ marginBottom: '16px' }}
-          data-testid={'input-clock-name'}
-        />
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={7}>
+            <TextField
+              margin="dense"
+              label={t('clockDialog.input.name')}
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={clockName}
+              onChange={(e) => setClockName(e.target.value)}
+              error={isValidationError}
+              helperText={errorMsg}
+              style={{ marginBottom: '16px' }}
+              data-testid={'input-clock-name'}
+            />
+          </Grid>
+          <Grid item xs={5}>
+            <TextField
+              margin="dense"
+              label={t('clockDialog.input.size')}
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={size}
+              onChange={(e) => (parseInt(e.target.value) < 0 ? setSize('0') : setSize(e.target.value))}
+              InputProps={{ inputProps: { min: 0 } }}
+              error={isSizeInvalid}
+              helperText={isSizeInvalid ? sizeErrorMsg : ''}
+              style={{ marginBottom: '16px' }}
+              data-testid={'select-clock-size'}
+            />
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button
@@ -131,7 +165,7 @@ export const ManipulateClockDialog: React.FC<ManipulateClockDialogProps> = (prop
           disabled={isValidationError}
           data-testid={'button-add-clock-ok'}
         >
-          {prevClockName ? t('clockDialog.button.edit') : t('clockDialog.button.add')}
+          {prevClock ? t('clockDialog.button.edit') : t('clockDialog.button.add')}
         </Button>
       </DialogActions>
     </Dialog>

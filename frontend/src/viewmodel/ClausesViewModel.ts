@@ -82,7 +82,7 @@ export function useClausesViewModel(): ClausesViewModel {
   );
 
   const deleteClause = useCallback((viewModel: ClausesViewModel, id: number) => {
-    if (viewModel.clauses.length <= 1) {
+    if (viewModel.clauses.length <= 0) {
       return;
     }
     const updatedClauses = viewModel.clauses.filter((row) => row.id !== id);
@@ -119,7 +119,7 @@ export function useClausesViewModel(): ClausesViewModel {
 
   const [viewModel, setViewModel] = useState<ClausesViewModel>({
     state: ClausesState.INIT,
-    clauses: [emptyClause],
+    clauses: [],
     isValidationError: true,
     resetClauses: resetClauses,
     setClausesFromClockConstraint: setClausesFromClockConstraint,
