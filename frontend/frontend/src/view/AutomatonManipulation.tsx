@@ -20,7 +20,7 @@ import ManipulateIntegerDialog from './ManipulateIntegerDialog.tsx';
 import { SwitchStatement } from '../model/ta/switchStatement.ts';
 import { ManipulateSyncDialog } from './ManipulateSyncDialog.tsx';
 import { SyncConstraint } from '../model/ta/syncConstraint.ts';
-
+import { TCheckerActions } from './TCheckerActions.tsx';
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
   openedSystems: OpenedSystems;
@@ -421,6 +421,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   return (
     <>
       {allTables}
+      <TCheckerActions openedSystems={openedSystems} />
       <ManipulateLocationDialog
         open={locationAddOpen}
         locations={locations}
