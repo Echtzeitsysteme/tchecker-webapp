@@ -70,7 +70,7 @@ function App() {
             lg={3}
             sx={{ borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
           >
-            <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} />
+            <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} />
           </Grid>
           <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
             <AutomatonVisualization viewModel={viewModel} />
