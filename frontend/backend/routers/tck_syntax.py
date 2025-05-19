@@ -19,7 +19,7 @@ def check(body: str = Body(...)):
     output, result = call_tchecker.call_tchecker_function_in_new_process(
         func_name="tck_syntax_check_syntax",
         argtypes=["ctypes.c_char_p"],
-        restype="ctypes.c_char_p",
+        has_result=True,
         args=[temp_file_path]
     )
 
@@ -28,7 +28,7 @@ def check(body: str = Body(...)):
     
     print("Output: " + output)
     print(result)
-    return result.decode('latin-1')
+    return result
 
 @router.put("/to_dot")
 def to_dot(body: str = Body(...)):
@@ -41,13 +41,13 @@ def to_dot(body: str = Body(...)):
     output, result = call_tchecker.call_tchecker_function_in_new_process(
         func_name="tck_syntax_to_dot",
         argtypes=["ctypes.c_char_p"],
-        restype="ctypes.c_char_p",
+        has_result=True,
         args=[temp_file_path]
     )
     # Cleanup
     os.remove(temp_file_path)
         
-    return result.decode('utf-8')
+    return result
 
 @router.put("/to_json")
 def to_json(body: str = Body(...)):
@@ -60,13 +60,15 @@ def to_json(body: str = Body(...)):
     output, result = call_tchecker.call_tchecker_function_in_new_process(
         func_name="tck_syntax_to_json",
         argtypes=["ctypes.c_char_p"],
-        restype="ctypes.c_char_p",
+        has_result=True,
         args=[temp_file_path]
     )
+
+    print(output)
     # Cleanup
     os.remove(temp_file_path)
         
-    return result.decode('utf-8')
+    return result
 
 
 class CreateSynchronizedProductBody(BaseModel):
@@ -84,11 +86,11 @@ def to_json(body: CreateSynchronizedProductBody = Body(...)):
     output, result = call_tchecker.call_tchecker_function_in_new_process(
         func_name="tck_syntax_create_synchronized_product",
         argtypes=["ctypes.c_char_p", "ctypes.c_char_p"],
-        restype="ctypes.c_char_p",
+        has_result=True,
         args=[temp_file_path, body.process_name]
     )
 
     # Cleanup
     os.remove(temp_file_path)
         
-    return result.decode('utf-8')
+    return result

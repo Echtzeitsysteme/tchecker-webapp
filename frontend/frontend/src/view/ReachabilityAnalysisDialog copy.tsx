@@ -12,6 +12,7 @@ import { FormControl, FormControlLabel, FormLabel, Icon, Radio, RadioGroup, Text
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { OpenedSystems } from '../viewmodel/OpenedSystems';
 import { TCheckerReachabilityAlgorithm, TCheckerReachabilityCertificate, TCheckerReachabilityStats, TCheckerSearchOrder, TCheckerUtils } from '../utils/tcheckerUtils';
+import StringListInput from './TCheckerLabelsInput';
 
 
 interface ReachabilityAnalysisDialogProps {
@@ -31,11 +32,12 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
 
 
     const [formValues, setFormValues] = useState({
-        algorithm: 'reach', // Default value for Algorithm RadioGroup
-        searchOrder: 'dfs', // Default value for Search Order RadioGroup
-        certificate: 'none', // Default value for Certificate RadioGroup
-        blockSize: null, // Default value for Block Size TextField
-        hashTableSize: null, // Default value for Hash Table Size TextField
+        algorithm: 'reach',
+        searchOrder: 'dfs',
+        certificate: 'none',
+        blockSize: null,
+        hashTableSize: null,
+        labels: [] as string[],
     });
 
     const [view, setView] = useState<'form' | 'result'>('form');
@@ -44,7 +46,7 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
     const [expandAdvancedOptions, setExpandAdvancedOptions] = useState(false);
 
 
-    useEffect(()=> {
+    useEffect(() => {
         setFormValues((prev) => ({
             ...prev,
             algorithm: 'reach',
@@ -84,6 +86,7 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
             formValues.algorithm as TCheckerReachabilityAlgorithm,
             formValues.searchOrder as TCheckerSearchOrder,
             formValues.certificate as TCheckerReachabilityCertificate,
+            formValues.labels,
             formValues.blockSize as number | null,
             formValues.hashTableSize as number | null,
         );
@@ -173,6 +176,15 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
                                 <FormControlLabel value="concrete" control={<Radio />} label={t('tcheckerReachabilityAnalysisDialog.form.certificate.concrete')} />
                             </RadioGroup>
                         </FormControl>
+
+
+                        <div style={{ marginTop: '8px', marginBottom: '8px', fontWeight: '400', color: 'rgba(0, 0, 0, 0.6)' }}>
+                            {t('tcheckerReachabilityAnalysisDialog.form.labels')}
+                        </div>
+                        <StringListInput
+                            value={formValues.labels}
+                            onChange={(items) => setFormValues((prev) => ({ ...prev, labels: items }))}
+                            label={t('tcheckerReachabilityAnalysisDialog.form.newLabel')} ></StringListInput>
 
                         {expandAdvancedOptions ? (
                             <div>

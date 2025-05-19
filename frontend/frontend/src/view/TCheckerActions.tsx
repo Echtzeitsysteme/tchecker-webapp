@@ -12,7 +12,8 @@ import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import SyntaxCheckErrorDialog from './SyntaxCheckErrorDialog';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { useTranslation } from 'react-i18next';
-import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog';
+import LivenessAnalysisDialog from './LivenessAnalysisDialog';
+import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog copy';
 
 export interface TCheckerActionsProps {
   viewModel: AnalysisViewModel;
@@ -29,6 +30,7 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
   const [syntaxCheckErrors, setSyntaxCheckErrors] = useState<string[] | undefined>(undefined);
 
   const [reachabilityAnalysisOpen, setReachabilityAnalysisOpen] = useState(false);
+  const [livenessAnalysisOpen, setLivenessAnalysisOpen] = useState(false);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -141,6 +143,13 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             color="primary">
             {t('tcheckerAction.reachabilityAnalysis')}
           </Button>
+          <Button
+            style={{ marginTop: '12px' }}
+            onMouseDown={() => setLivenessAnalysisOpen(true)}
+            variant="contained"
+            color="primary">
+            {t('tcheckerAction.livenessAnalysis')}
+          </Button>
         </div>
       )}
 
@@ -155,8 +164,10 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
       </SyntaxCheckErrorDialog>
 
       <ReachabilityAnalysisDialog  open={reachabilityAnalysisOpen} onClose={() => setReachabilityAnalysisOpen(false)} openedProcesses={openedProcesses} openedSystems={openedSystems}>
-
       </ReachabilityAnalysisDialog>
+
+      <LivenessAnalysisDialog open={livenessAnalysisOpen} onClose={() => setLivenessAnalysisOpen(false)} openedProcesses={openedProcesses} openedSystems={openedSystems}>
+      </LivenessAnalysisDialog>
 
     </div>
   );

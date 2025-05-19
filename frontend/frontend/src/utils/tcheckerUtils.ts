@@ -1,21 +1,33 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
 import { createTCheckerFile } from './tckFileUtils';
 
+
+export enum TCheckerSearchOrder {
+  dfs = 'dfs',
+  bfs = 'bfs',
+}
+
 export enum TCheckerReachabilityAlgorithm {
   reach = 'reach',
   concur19 = 'concur19',
   covreach = 'covreach',
 }
 
-export enum TCheckerSearchOrder {
-  dfs = 'dfs',
-  bfs = 'bfs',
-}
 export enum TCheckerReachabilityCertificate {
   graph = 'graph',
   symbolic = 'symbolic',
   concrete = 'concrete',
   none = 'none',
+}
+
+export enum TCheckerLivenessAlgorithm {
+  couvscc = 'couvscc',
+  ndfs = 'ndfs',
+}
+
+export enum TCheckerLivenessCertificate {
+  graph = 'graph',
+  symbolic = 'symbolic',
 }
 
 export interface TCheckerReachabilityStats {
@@ -25,9 +37,18 @@ export interface TCheckerReachabilityStats {
   runningTimeSeconds: string;
 }
 
+export interface TCheckerLivenessStats {
+  cycle: boolean;
+  visitedStates: number;
+  visitedTransitions: number;
+  runningTimeSeconds: string;
+}
+
 export class TCheckerUtils {
   private static tckSyntaxBaseUrl: string = 'http://localhost:8000/tck_syntax';
   private static tckReachBaseUrl: string = 'http://localhost:8000/tck_reach';
+
+  private static tckLivenessBaseUrl: string = 'http://localhost:8000/tck_liveness';
 
   public static async callGenerateDotFile(system: SystemOptionType): Promise<void> {
     const ta = await createTCheckerFile(system);
@@ -118,6 +139,7 @@ export class TCheckerUtils {
     algorithm: TCheckerReachabilityAlgorithm,
     searchOrder: TCheckerSearchOrder,
     certificate: TCheckerReachabilityCertificate,
+    labels: string[],
     blockSize: number | null,
     tableSize: number | null
   ): Promise<{
@@ -137,6 +159,7 @@ export class TCheckerUtils {
       algorithm: algorithmIndex,
       search_order: searchOrderIndex,
       certificate: certificateIndex,
+      labels: labels.join(','),
       block_size: blockSize,
       table_size: tableSize,
     };
@@ -155,6 +178,50 @@ export class TCheckerUtils {
       certificate: responseJson.certificate,
     } 
   }
+
+  public static async callLivenessAnalysis(
+    system: SystemOptionType,
+    algorithm: TCheckerLivenessAlgorithm,
+    searchOrder: TCheckerSearchOrder,
+    certificate: TCheckerLivenessCertificate,
+    labels: string[],
+    blockSize: number | null,
+    tableSize: number | null
+  ): Promise<{
+    stats: TCheckerLivenessStats;
+    certificate: string;
+  }> {
+    const ta = await createTCheckerFile(system);
+
+    // Pass enums as indices
+    const algorithmIndex = Object.values(TCheckerLivenessAlgorithm).indexOf(algorithm);
+    const searchOrderIndex = Object.values(TCheckerSearchOrder).indexOf(searchOrder);
+    const certificateIndex = Object.values(TCheckerLivenessCertificate).indexOf(certificate);
+
+    const body = {
+      ta: ta,
+      algorithm: algorithmIndex,
+      search_order: searchOrderIndex,
+      certificate: certificateIndex,
+      labels: labels.join(','),
+      block_size: blockSize,
+      table_size: tableSize,
+    };
+
+    const response = await fetch(`${this.tckLivenessBaseUrl}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const responseJson = (await response.json()) as { stats: string; certificate: string };
+
+    return {
+      stats: parseLivenessStats(responseJson.stats),
+      certificate: responseJson.certificate,
+    };
+  }
 }
 
 function parseReachabilityStats(stats: string): TCheckerReachabilityStats {
@@ -166,6 +233,21 @@ function parseReachabilityStats(stats: string): TCheckerReachabilityStats {
   
   return {
     reachable,
+    visitedStates,
+    visitedTransitions,
+    runningTimeSeconds,
+  };
+}
+
+function parseLivenessStats(stats: string): TCheckerLivenessStats {
+  const lines = stats.split('\n');
+  const cycle = lines[1].split(' ')[1] === 'true';
+  const runningTimeSeconds = lines[2].split(' ')[1];
+  const visitedStates = parseInt(lines[3].split(' ')[1], 10);
+  const visitedTransitions = parseInt(lines[4].split(' ')[1], 10);
+  
+  return {
+    cycle,
     visitedStates,
     visitedTransitions,
     runningTimeSeconds,

@@ -25,11 +25,6 @@ def main():
         help="JSON‑encoded list of ctypes type names, e.g. '[\"ctypes.c_int\", \"ctypes.c_double\"]'"
     )
     parser.add_argument(
-        "--restype", "-r",
-        required=True,
-        help="ctypes type name for the return value, or 'None' for void"
-    )
-    parser.add_argument(
         "--args", "-A",
         required=True,
         help="JSON‑encoded list of argument values"
@@ -45,7 +40,6 @@ def main():
     # 3) set its signature
     argtypes = json.loads(opts.argtypes)
     func.argtypes = [eval(t) for t in argtypes]
-    func.restype  = None if opts.restype == "None" else ctypes.c_void_p
 
     # 4) parse our JSON args
     py_args = json.loads(opts.args)
@@ -56,17 +50,9 @@ def main():
             if isinstance(val, str):
                 py_args[idx] = val.encode('utf-8')
 
+
     # 5) call it (any C‑side prints still go to stdout)
-    result = func(*py_args)
-
-    string_result = ctypes.cast(result, ctypes.c_char_p).value
-
-    # free the C‑side memory if needed
-    if func.restype is ctypes.c_char_p:    
-        dll.free_string(ctypes.c_char_p(result))
-
-    
-    sys.stdout.write(repr(string_result))
+    func(*py_args)
 
 if __name__ == "__main__":
     main()

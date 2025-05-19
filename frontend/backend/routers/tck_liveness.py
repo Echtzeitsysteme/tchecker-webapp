@@ -6,10 +6,10 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel
 import util.call_tchecker as call_tchecker
 
-router = APIRouter(prefix="/tck_reach", tags=["tck_reach"])
+router = APIRouter(prefix="/tck_liveness", tags=["tck_liveness"])
 
 
-class TckReachBody(BaseModel):
+class TckLivenessBody(BaseModel):
     ta: str
     labels: str
     algorithm: int
@@ -19,7 +19,7 @@ class TckReachBody(BaseModel):
     table_size: Optional[int] = None
 
 @router.put("/")
-def reach(body: TckReachBody = Body(...)):
+def reach(body: TckLivenessBody = Body(...)):
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.ta.encode('utf-8'))
@@ -29,7 +29,7 @@ def reach(body: TckReachBody = Body(...)):
     print(body.labels)
 
     output, result = call_tchecker.call_tchecker_function_in_new_process(
-        func_name="tck_reach",
+        func_name="tck_liveness",
         argtypes=["ctypes.c_char_p", "ctypes.c_char_p", "ctypes.c_int", "ctypes.c_int", "ctypes.c_int", "ctypes.POINTER(ctypes.c_int)", "ctypes.POINTER(ctypes.c_int)"],
         has_result=True,
         args=[temp_file_path, body.labels, body.algorithm, body.search_order, body.certificate, body.block_size, body.table_size]
