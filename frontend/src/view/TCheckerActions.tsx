@@ -14,6 +14,7 @@ import { useButtonUtils } from '../utils/buttonUtils';
 import { useTranslation } from 'react-i18next';
 import LivenessAnalysisDialog from './LivenessAnalysisDialog';
 import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog copy';
+import CompareAnalysisDialog from './CompareAnalysisDialog';
 
 export interface TCheckerActionsProps {
   viewModel: AnalysisViewModel;
@@ -31,6 +32,7 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   const [reachabilityAnalysisOpen, setReachabilityAnalysisOpen] = useState(false);
   const [livenessAnalysisOpen, setLivenessAnalysisOpen] = useState(false);
+  const [compareAnalysisOpen, setCompareAnalysisOpen] = useState(false);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -150,6 +152,13 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             color="primary">
             {t('tcheckerAction.livenessAnalysis')}
           </Button>
+          <Button
+            style={{ marginTop: '12px' }}
+            onMouseDown={() => setCompareAnalysisOpen(true)}
+            variant="contained"
+            color="primary">
+            {t('tcheckerAction.compareAnalysis')}
+          </Button>
         </div>
       )}
 
@@ -168,6 +177,9 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
       <LivenessAnalysisDialog open={livenessAnalysisOpen} onClose={() => setLivenessAnalysisOpen(false)} openedProcesses={openedProcesses} openedSystems={openedSystems}>
       </LivenessAnalysisDialog>
+
+      <CompareAnalysisDialog open={compareAnalysisOpen} onClose={() => setCompareAnalysisOpen(false)} openedSystems={openedSystems}>
+      </CompareAnalysisDialog>
 
     </div>
   );

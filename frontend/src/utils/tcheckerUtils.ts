@@ -44,11 +44,17 @@ export interface TCheckerLivenessStats {
   runningTimeSeconds: string;
 }
 
+export interface TCheckerCompareStats {
+  relationshipFulfilled: boolean;
+  visitedPairOfStates: number;
+  runningTimeSeconds: string;
+}
+
 export class TCheckerUtils {
   private static tckSyntaxBaseUrl: string = 'http://localhost:8000/tck_syntax';
   private static tckReachBaseUrl: string = 'http://localhost:8000/tck_reach';
-
   private static tckLivenessBaseUrl: string = 'http://localhost:8000/tck_liveness';
+  private static tckCompareBaseUrl: string = 'http://localhost:8000/tck_compare';
 
   public static async callGenerateDotFile(system: SystemOptionType): Promise<void> {
     const ta = await createTCheckerFile(system);
@@ -222,6 +228,41 @@ export class TCheckerUtils {
       certificate: responseJson.certificate,
     };
   }
+
+  public static async callCompareAnalysis(
+    firstSystem: SystemOptionType,
+    secondSystem: SystemOptionType,
+    blockSize: number | null,
+    tableSize: number | null
+  ): Promise<{
+    stats: TCheckerCompareStats;
+    certificate: string;
+  }> {
+    const firstTa = await createTCheckerFile(firstSystem);
+    const secondTa = await createTCheckerFile(secondSystem);
+
+    const body = {
+      first_ta: firstTa,
+      second_ta: secondTa,
+      block_size: blockSize,
+      table_size: tableSize,
+      relationship: 0
+    };
+
+    const response = await fetch(`${this.tckCompareBaseUrl}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const responseJson = (await response.json()) as { stats: string; certificate: string };
+
+    return {
+      stats: parseCompareStats(responseJson.stats),
+      certificate: responseJson.certificate,
+    };
+  }
 }
 
 function parseReachabilityStats(stats: string): TCheckerReachabilityStats {
@@ -250,6 +291,25 @@ function parseLivenessStats(stats: string): TCheckerLivenessStats {
     cycle,
     visitedStates,
     visitedTransitions,
+    runningTimeSeconds,
+  };
+}
+
+function parseCompareStats(stats: string): TCheckerCompareStats {
+  /*
+  MEMORY_MAX_RSS 63500
+  RELATIONSHIP_FULFILLED true
+  RUNNING_TIME_SECONDS 0.00019751
+  VISITED_PAIR_OF_STATES 2
+  */
+
+  const lines = stats.split('\n');
+  const relationshipFulfilled = lines[1].split(' ')[1] === 'true';
+  const runningTimeSeconds = lines[2].split(' ')[1];
+  const visitedPairOfStates = parseInt(lines[3].split(' ')[1], 10);
+  return {
+    relationshipFulfilled,
+    visitedPairOfStates,
     runningTimeSeconds,
   };
 }

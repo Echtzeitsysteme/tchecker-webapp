@@ -123,6 +123,7 @@
   "tcheckerAction.createProductAutomaton": "Produktautomaten erstellen",
   "tcheckerAction.reachabilityAnalysis": "Erreichbarkeitsanalyse",
   "tcheckerAction.livenessAnalysis": "Lebendigkeitsanalyse",
+  "tcheckerAction.compareAnalysis": "Vergleichsanalyse",
   "tcheckerReachabilityAnalysisDialog.title": "Erreichbarkeitsanalyse",
   "tcheckerReachabilityAnalysisDialog.result.reachable": "Erreichbar",
   "tcheckerReachabilityAnalysisDialog.result.visitedStates": "Besuchte Zustände",
@@ -165,5 +166,12 @@
   "tcheckerLivenessAnalysisDialog.closeAdvancedOptions": "Erweiterte Optionen schließen",
   "tcheckerLivenessAnalysisDialog.cancel": "Abbrechen",
   "tcheckerLivenessAnalysisDialog.downloadCertificate": "Zertifikat herunterladen",
-  "tcheckerLivenessAnalysisDialog.startAnalysis": "Analyse starten"
+  "tcheckerLivenessAnalysisDialog.startAnalysis": "Analyse starten",
+  "tcheckerCompareAnalysisDialog.title": "Vergleich - starke zeitliche Bisimilarität",
+  "tcheckerCompareAnalysisDialog.selectSystems": "Wähle Systeme zum Vergleichen aus",
+  "tcheckerCompareAnalysisDialog.cancel": "Abbrechen",
+  "tcheckerCompareAnalysisDialog.startCompare": "Vergleich starten",
+  "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Beziehung erfüllt",
+  "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Besuchte Paare von Zuständen"
+
 }
