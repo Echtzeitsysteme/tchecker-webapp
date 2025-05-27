@@ -1,0 +1,96 @@
+import ctypes
+import tempfile
+import os
+from fastapi import APIRouter, Body
+from pydantic import BaseModel
+import util.call_tchecker as call_tchecker
+
+router = APIRouter(prefix="/tck_syntax", tags=["tck_syntax"])
+
+@router.put("/check")
+def check(body: str = Body(...)):
+    
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(body.encode('utf-8'))
+        temp_file_path = temp_file.name
+        
+    print(temp_file_path)
+
+    output, result = call_tchecker.call_tchecker_function_in_new_process(
+        func_name="tck_syntax_check_syntax",
+        argtypes=["ctypes.c_char_p"],
+        has_result=True,
+        args=[temp_file_path]
+    )
+
+    # Cleanup
+    # os.remove(temp_file_path)
+    
+    print("Output: " + output)
+    print(result)
+    return result
+
+@router.put("/to_dot")
+def to_dot(body: str = Body(...)):
+    
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(body.encode('utf-8'))
+        temp_file_path = temp_file.name
+        
+    
+    output, result = call_tchecker.call_tchecker_function_in_new_process(
+        func_name="tck_syntax_to_dot",
+        argtypes=["ctypes.c_char_p"],
+        has_result=True,
+        args=[temp_file_path]
+    )
+    # Cleanup
+    os.remove(temp_file_path)
+        
+    return result
+
+@router.put("/to_json")
+def to_json(body: str = Body(...)):
+    
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(body.encode('utf-8'))
+        temp_file_path = temp_file.name
+        
+    
+    output, result = call_tchecker.call_tchecker_function_in_new_process(
+        func_name="tck_syntax_to_json",
+        argtypes=["ctypes.c_char_p"],
+        has_result=True,
+        args=[temp_file_path]
+    )
+
+    print(output)
+    # Cleanup
+    os.remove(temp_file_path)
+        
+    return result
+
+
+class CreateSynchronizedProductBody(BaseModel):
+    ta: str
+    process_name: str
+
+@router.put("/create_synchronized_product")
+def to_json(body: CreateSynchronizedProductBody = Body(...)):
+    
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(body.ta.encode('utf-8'))
+        temp_file_path = temp_file.name
+        
+    
+    output, result = call_tchecker.call_tchecker_function_in_new_process(
+        func_name="tck_syntax_create_synchronized_product",
+        argtypes=["ctypes.c_char_p", "ctypes.c_char_p"],
+        has_result=True,
+        args=[temp_file_path, body.process_name]
+    )
+
+    # Cleanup
+    os.remove(temp_file_path)
+        
+    return result
