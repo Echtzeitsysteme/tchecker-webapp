@@ -20,9 +20,6 @@ class TckCompareBody(BaseModel):
 @router.put("/")
 async def compare(body: TckCompareBody = Body(...)):
     
-    # Wait 10sec
-    await asyncio.sleep(10) 
-
     with tempfile.NamedTemporaryFile(delete=False) as temp_file_first_ta:
         temp_file_first_ta.write(body.first_ta.encode('utf-8'))
         temp_file_path_first_ta = temp_file_first_ta.name
