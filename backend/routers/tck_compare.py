@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
 import util.call_tchecker as call_tchecker
+import asyncio
 
 router = APIRouter(prefix="/tck_compare", tags=["tck_compare"])
 
@@ -17,8 +18,11 @@ class TckCompareBody(BaseModel):
     table_size: Optional[int] = None
 
 @router.put("/")
-def reach(body: TckCompareBody = Body(...)):
+async def compare(body: TckCompareBody = Body(...)):
     
+    # Wait 10sec
+    await asyncio.sleep(10) 
+
     with tempfile.NamedTemporaryFile(delete=False) as temp_file_first_ta:
         temp_file_first_ta.write(body.first_ta.encode('utf-8'))
         temp_file_path_first_ta = temp_file_first_ta.name

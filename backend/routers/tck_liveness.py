@@ -1,10 +1,10 @@
-import ctypes
 import tempfile
 import os
 from typing import Optional
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
 import util.call_tchecker as call_tchecker
+import asyncio
 
 router = APIRouter(prefix="/tck_liveness", tags=["tck_liveness"])
 
@@ -19,7 +19,9 @@ class TckLivenessBody(BaseModel):
     table_size: Optional[int] = None
 
 @router.put("/")
-def reach(body: TckLivenessBody = Body(...)):
+async def reach(body: TckLivenessBody = Body(...)):
+
+    await asyncio.sleep(10) 
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.ta.encode('utf-8'))

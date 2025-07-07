@@ -1,7 +1,7 @@
 import ctypes
 import tempfile
 import os
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 import util.call_tchecker as call_tchecker
 
@@ -9,6 +9,9 @@ router = APIRouter(prefix="/tck_syntax", tags=["tck_syntax"])
 
 @router.put("/check")
 def check(body: str = Body(...)):
+
+    if not body or body.strip() == "":
+        raise HTTPException(status_code=422, detail="Request body cannot be empty")
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.encode('utf-8'))
@@ -32,6 +35,9 @@ def check(body: str = Body(...)):
 
 @router.put("/to_dot")
 def to_dot(body: str = Body(...)):
+
+    if not body or body.strip() == "":
+        raise HTTPException(status_code=422, detail="Request body cannot be empty")
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.encode('utf-8'))
@@ -51,6 +57,9 @@ def to_dot(body: str = Body(...)):
 
 @router.put("/to_json")
 def to_json(body: str = Body(...)):
+
+    if not body or body.strip() == "":
+        raise HTTPException(status_code=422, detail="Request body cannot be empty")
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.encode('utf-8'))
@@ -77,6 +86,9 @@ class CreateSynchronizedProductBody(BaseModel):
 
 @router.put("/create_synchronized_product")
 def to_json(body: CreateSynchronizedProductBody = Body(...)):
+
+    if not body:
+        raise HTTPException(status_code=422, detail="Request body cannot be empty")
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(body.ta.encode('utf-8'))
