@@ -8,11 +8,13 @@ import Button from '@mui/material/Button';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useButtonUtils } from '../utils/buttonUtils';
-import { FormControl, FormControlLabel, FormLabel, Icon, Radio, RadioGroup, TextField } from '@mui/material';
+import { CircularProgress, FormControl, FormControlLabel, FormLabel, Icon, Radio, RadioGroup, TextField } from '@mui/material';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { OpenedSystems } from '../viewmodel/OpenedSystems';
 import { TCheckerReachabilityAlgorithm, TCheckerReachabilityCertificate, TCheckerReachabilityStats, TCheckerSearchOrder, TCheckerUtils } from '../utils/tcheckerUtils';
 import StringListInput from './TCheckerLabelsInput';
+import TCheckerErrorDialog from './TCheckerErrorDialog';
+import AbortAnalysisDialog from './AbortAnalysisDialog';
 
 
 interface ReachabilityAnalysisDialogProps {
@@ -42,6 +44,10 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
 
     const [view, setView] = useState<'form' | 'result'>('form');
     const [result, setResult] = useState<{ stats: TCheckerReachabilityStats, certificate: string } | null>(null); // State to store the result of the analysis
+    const [loading, setLoading] = useState(false);
+    const [abortController, setAbortController] = useState<AbortController | null>(null);
+    const [tcheckerError, setTcheckerError] = useState<string | undefined>(undefined);
+    const [abortAnalysisDialogOpen, setAbortAnalysisDialogOpen] = useState(false);
 
     const [expandAdvancedOptions, setExpandAdvancedOptions] = useState(false);
 
@@ -81,18 +87,43 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
     };
 
     async function startReachabilityAnalysis() {
-        const result = await TCheckerUtils.callReachabilityAnalysis(
-            openedSystems.selectedSystem,
-            formValues.algorithm as TCheckerReachabilityAlgorithm,
-            formValues.searchOrder as TCheckerSearchOrder,
-            formValues.certificate as TCheckerReachabilityCertificate,
-            formValues.labels,
-            formValues.blockSize as number | null,
-            formValues.hashTableSize as number | null,
-        );
+        if (loading) {
+            return;
+        }
 
-        setResult(result);
-        setView('result'); // Switch to result vie
+        setLoading(true);
+        const abortController = new AbortController();
+        setAbortController(abortController);
+        try {
+            const [result, error] = await TCheckerUtils.callReachabilityAnalysis(
+                openedSystems.selectedSystem,
+                formValues.algorithm as TCheckerReachabilityAlgorithm,
+                formValues.searchOrder as TCheckerSearchOrder,
+                formValues.certificate as TCheckerReachabilityCertificate,
+                formValues.labels,
+                formValues.blockSize as number | null,
+                formValues.hashTableSize as number | null,
+                abortController.signal
+            );
+
+            if (error) {
+                console.log('Error during reachability analysis:', error);
+                if (error.name === 'AbortError') {
+                    console.log('Request was aborted');
+                }
+
+                setLoading(false);
+                setTcheckerError(error.message);
+                return;
+            }
+
+            setLoading(false);
+            setResult(result);
+            setView('result');
+        } catch (error) {
+            setLoading(false);
+            return;
+        }
     }
 
     function downloadCertificate() {
@@ -112,8 +143,28 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
 
     }
 
+    function handleAbortAnalysisDialogClose(confirmed: boolean) {
+        setAbortAnalysisDialogOpen(false);
+        if (confirmed && abortController) {
+            handleClose(true);
+        }
+    }
+
+    function handleClose(force: boolean = false) {
+        if (!force && loading) {
+            setAbortAnalysisDialogOpen(true);
+            return;
+        }
+
+        abortController?.abort();
+        setLoading(false);
+        setView('form');
+        setResult(null);
+        onClose();
+    }
+
     return (
-        <Dialog open={open} onClose={onClose} data-testid="dialog-delete-clock-confirm">
+        <><Dialog open={open} onClose={() => handleClose()} data-testid="dialog-delete-clock-confirm">
             <DialogTitle>{t('tcheckerReachabilityAnalysisDialog.title')}</DialogTitle>
             <DialogContent>
                 {view === 'result' ? (
@@ -241,8 +292,8 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
             </DialogContent>
             <DialogActions>
                 <Button
-                    onMouseDown={() => onClose()}
-                    onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onClose())}
+                    onMouseDown={() => handleClose(true)}
+                    onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleClose(true))}
                     variant="contained"
                     color="error"
                 >
@@ -265,12 +316,28 @@ const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
                         variant="contained"
                         color="primary"
                     >
-                        {t('tcheckerReachabilityAnalysisDialog.startAnalysis')}
+                        {loading ? (
+                            <>
+                                <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                                    <CircularProgress size='20px' color='inherit' />
+                                </div>
+                                {t('tcheckerReachabilityAnalysisDialog.analysisInProgress')}
+                            </>
+                        ) : (
+                            <>{t('tcheckerReachabilityAnalysisDialog.startAnalysis')}</>
+                        )}
+
+
                     </Button>
                 )}
 
             </DialogActions>
         </Dialog>
+
+            <TCheckerErrorDialog open={!!tcheckerError} onClose={() => setTcheckerError(undefined)} errorMessage={tcheckerError || ''}>
+            </TCheckerErrorDialog>
+            <AbortAnalysisDialog open={abortAnalysisDialogOpen} onClose={handleAbortAnalysisDialogClose} ></AbortAnalysisDialog>
+        </>
     )
 };
 

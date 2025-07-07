@@ -145,6 +145,7 @@
   "tcheckerReachabilityAnalysisDialog.closeAdvancedOptions": "Close Advanced Options",
   "tcheckerReachabilityAnalysisDialog.cancel": "Cancel",
   "tcheckerReachabilityAnalysisDialog.downloadCertificate": "Download Certificate",
+  "tcheckerReachabilityAnalysisDialog.analysisInProgress": "Analyzing...",
   "tcheckerReachabilityAnalysisDialog.startAnalysis": "Start Analysis",
   "tcheckerLivenessAnalysisDialog.title": "Liveness Analysis",
   "tcheckerLivenessAnalysisDialog.result.cycle": "Cycle",
@@ -166,12 +167,19 @@
   "tcheckerLivenessAnalysisDialog.closeAdvancedOptions": "Close Advanced Options",
   "tcheckerLivenessAnalysisDialog.cancel": "Cancel",
   "tcheckerLivenessAnalysisDialog.downloadCertificate": "Download Certificate",
+  "tcheckerLivenessAnalysisDialog.analysisInProgress": "Analyzing...",
   "tcheckerLivenessAnalysisDialog.startAnalysis": "Start Analysis",
   "tcheckerCompareAnalysisDialog.title": "Compare - strong timed bisimilarity",
   "tcheckerCompareAnalysisDialog.selectSystems": "Select Systems to Compare",
   "tcheckerCompareAnalysisDialog.cancel": "Cancel",
   "tcheckerCompareAnalysisDialog.startCompare": "Start Comparison",
+  "tcheckerCompareAnalysisDialog.analysisInProgress": "Analyzing...",
   "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Relationship Fulfilled",
-  "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Visited Pairs of States"
+  "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Visited Pairs of States",
+  "abortAnalysisDialog.title": "Abort Analysis",
+  "abortAnalysisDialog.contentText": "Are you sure you want to abort the analysis?",
+  "abortAnalysisDialog.button.cancel": "No",
+  "abortAnalysisDialog.button.confirm": "Yes, abort",
+  "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again."
 }
   

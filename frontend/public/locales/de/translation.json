@@ -145,6 +145,7 @@
   "tcheckerReachabilityAnalysisDialog.closeAdvancedOptions": "Erweiterte Optionen schließen",
   "tcheckerReachabilityAnalysisDialog.cancel": "Abbrechen",
   "tcheckerReachabilityAnalysisDialog.downloadCertificate": "Zertifikat herunterladen",
+  "tcheckerReachabilityAnalysisDialog.analysisInProgress": "Analysieren...",
   "tcheckerReachabilityAnalysisDialog.startAnalysis": "Analyse starten",
   "tcheckerLivenessAnalysisDialog.title": "Livenss-Analyse",
   "tcheckerLivenessAnalysisDialog.result.cycle": "Zyklus",
@@ -166,12 +167,18 @@
   "tcheckerLivenessAnalysisDialog.closeAdvancedOptions": "Erweiterte Optionen schließen",
   "tcheckerLivenessAnalysisDialog.cancel": "Abbrechen",
   "tcheckerLivenessAnalysisDialog.downloadCertificate": "Zertifikat herunterladen",
+  "tcheckerLivenessAnalysisDialog.analysisInProgress": "Analysieren...",
   "tcheckerLivenessAnalysisDialog.startAnalysis": "Analyse starten",
   "tcheckerCompareAnalysisDialog.title": "Vergleich - starke zeitliche Bisimilarität",
   "tcheckerCompareAnalysisDialog.selectSystems": "Wähle Systeme zum Vergleichen aus",
   "tcheckerCompareAnalysisDialog.cancel": "Abbrechen",
   "tcheckerCompareAnalysisDialog.startCompare": "Vergleich starten",
+  "tcheckerCompareAnalysisDialog.analysisInProgress": "Analysieren...",
   "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Beziehung erfüllt",
-  "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Besuchte Paare von Zuständen"
-
+  "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Besuchte Paare von Zuständen",
+  "abortAnalysisDialog.title": "Analyse abbrechen",
+  "abortAnalysisDialog.contentText": "Bist du sicher, dass du die Analyse abbrechen möchtest?",
+  "abortAnalysisDialog.button.cancel": "Nein",
+  "abortAnalysisDialog.button.confirm": "Ja, abbrechen",
+  "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut."
 }

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import LivenessAnalysisDialog from './LivenessAnalysisDialog';
 import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog copy';
 import CompareAnalysisDialog from './CompareAnalysisDialog';
+import TCheckerErrorDialog from './TCheckerErrorDialog';
 
 export interface TCheckerActionsProps {
   viewModel: AnalysisViewModel;
@@ -28,6 +29,7 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
 
+  const [tcheckerError, setTcheckerError] = useState<string | undefined>(undefined);
   const [syntaxCheckErrors, setSyntaxCheckErrors] = useState<string[] | undefined>(undefined);
 
   const [reachabilityAnalysisOpen, setReachabilityAnalysisOpen] = useState(false);
@@ -51,7 +53,17 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   async function callSyntaxCheck(): Promise<void> {
 
-    const response = await TCheckerUtils.callSyntaxCheckForSystem(openedSystems.selectedSystem);
+    const [response, error] = await TCheckerUtils.callSyntaxCheckForSystem(openedSystems.selectedSystem);
+
+    if (error) {
+      setTcheckerError(error.message);
+      return;
+    }
+
+    if (response === undefined || response === null) {
+      return;
+    }
+
     console.log(response);
     if (response.length === 0) {
       setSuccessSnackbarOpen(true);
@@ -61,16 +73,32 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
   }
 
   async function callGenerateDotFile(): Promise<void> {
-    await TCheckerUtils.callGenerateDotFile(openedSystems.selectedSystem);
+    const [_, error] = await TCheckerUtils.callGenerateDotFile(openedSystems.selectedSystem);
+    if (error) {
+      setTcheckerError(error.message);
+    } else {
+      setTcheckerError(undefined);
+    }
   }
 
 
   async function callGenerateJsonFile(): Promise<void> {
-    await TCheckerUtils.callGenerateJsonFile(openedSystems.selectedSystem);
+    const [_, error] = await TCheckerUtils.callGenerateJsonFile(openedSystems.selectedSystem);
+    if (error) {
+      setTcheckerError(error.message);
+    } else {
+      setTcheckerError(undefined);
+    }
   }
 
   async function callCreateProductAutomaton(): Promise<void> {
-    const response = await TCheckerUtils.callCreateSynchronizedProduct(openedSystems.selectedSystem);
+    const [response, error] = await TCheckerUtils.callCreateSynchronizedProduct(openedSystems.selectedSystem);
+
+    if (error) {
+      setTcheckerError(error.message);
+      return;
+    }
+
     console.log(response);
 
     const parsedData = await ParseUtils.parseFile(response);
@@ -180,6 +208,10 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
       <CompareAnalysisDialog open={compareAnalysisOpen} onClose={() => setCompareAnalysisOpen(false)} openedSystems={openedSystems}>
       </CompareAnalysisDialog>
+
+      <TCheckerErrorDialog open={!!tcheckerError} onClose={() => setTcheckerError(undefined)} errorMessage={tcheckerError || ''}>
+
+      </TCheckerErrorDialog>
 
     </div>
   );

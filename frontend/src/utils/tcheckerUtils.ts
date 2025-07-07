@@ -1,5 +1,6 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
 import { createTCheckerFile } from './tckFileUtils';
+import { ErrorResult, tryCatchAsync } from './tryCatchUtil';
 
 
 export enum TCheckerSearchOrder {
@@ -56,15 +57,21 @@ export class TCheckerUtils {
   private static tckLivenessBaseUrl: string = 'http://localhost:8000/tck_liveness';
   private static tckCompareBaseUrl: string = 'http://localhost:8000/tck_compare';
 
-  public static async callGenerateDotFile(system: SystemOptionType): Promise<void> {
+  public static async callGenerateDotFile(system: SystemOptionType): Promise<ErrorResult<void>> {
     const ta = await createTCheckerFile(system);
-    const response = await fetch(`${this.tckSyntaxBaseUrl}/to_dot`, {
-      method: 'PUT',
-      body: ta,
-      headers: {},
-    });
+    
+    
+    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/to_dot`, {
+        method: 'PUT',
+        body: ta,
+        headers: {},
+      }));
+    
+    if (error) {
+      return [undefined, error];
+    }
 
-    const data = await response.json();
+    const data = await response!.json();
 
     try {
       const blob = new Blob([data]);
@@ -72,20 +79,26 @@ export class TCheckerUtils {
       a.href = URL.createObjectURL(blob);
       a.download = `${system.label}.dot`;
       a.click();
+      return [undefined, null];
     } catch (error) {
       console.error(error);
+      return [undefined, error as Error];
     }
   }
 
-  public static async callGenerateJsonFile(system: SystemOptionType): Promise<void> {
+  public static async callGenerateJsonFile(system: SystemOptionType): Promise<ErrorResult<void>> {
     const ta = await createTCheckerFile(system);
-    const response = await fetch(`${this.tckSyntaxBaseUrl}/to_json`, {
+    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/to_json`, {
       method: 'PUT',
       body: ta,
       headers: {},
-    });
+    }));
 
-    const data = await response.json();
+    if (error) {
+      return [undefined, error];
+    }
+
+    const data = await response!.json();
 
     try {
       const blob = new Blob([data]);
@@ -93,23 +106,35 @@ export class TCheckerUtils {
       a.href = URL.createObjectURL(blob);
       a.download = `${system.label}.json`;
       a.click();
+      return [undefined, null];
     } catch (error) {
       console.error(error);
+      return [undefined, error as Error];
     }
   }
 
-  public static async callSyntaxCheckForSystem(system: SystemOptionType): Promise<string[]> {
+  public static async callSyntaxCheckForSystem(system: SystemOptionType): Promise<ErrorResult<string[]>> {
     const ta = await createTCheckerFile(system);
     return await this.callSyntaxCheck(ta);
   }
 
-  public static async callSyntaxCheck(tck: string): Promise<string[]> {
-    const response = await fetch(`${this.tckSyntaxBaseUrl}/check`, {
+  public static async callSyntaxCheck(tck: string): Promise<ErrorResult<string[]>> {
+    const [response, error] = await tryCatchAsync(() =>fetch(`${this.tckSyntaxBaseUrl}/check`, {
       method: 'PUT',
       body: tck,
       headers: {},
-    });
-    const responseString = await response.json();
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Syntax check failed: ${errorText}`)];
+    }
+
+    const responseString = await response!.json();
 
     const syntaxErrors = responseString
       .split('\n')
@@ -120,24 +145,36 @@ export class TCheckerUtils {
           !line.toLocaleLowerCase().includes('error(s)')
       );
 
-    return syntaxErrors;
+    return [syntaxErrors, null];
   }
 
-  public static async callCreateSynchronizedProduct(system: SystemOptionType): Promise<string> {
+  public static async callCreateSynchronizedProduct(system: SystemOptionType): Promise<ErrorResult<any>> {
     const ta = await createTCheckerFile(system);
     const body = {
       ta: ta,
       process_name: system.label,
     };
 
-    const response = await fetch(`${this.tckSyntaxBaseUrl}/create_synchronized_product`, {
+    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/create_synchronized_product`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-    return await response.json();
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Product automaton creation failed: ${errorText}`)];
+    }
+
+    const productAutomaton = await response!.json();
+
+    return [productAutomaton, null];
   }
 
   public static async callReachabilityAnalysis(
@@ -147,11 +184,12 @@ export class TCheckerUtils {
     certificate: TCheckerReachabilityCertificate,
     labels: string[],
     blockSize: number | null,
-    tableSize: number | null
-  ): Promise<{
+    tableSize: number | null,
+    abortSignal?: AbortSignal
+  ): Promise<ErrorResult<{
     stats: TCheckerReachabilityStats;
     certificate: string;
-  }> {
+  }>> {
     const ta = await createTCheckerFile(system);
 
     // Pass enums as indices
@@ -170,19 +208,30 @@ export class TCheckerUtils {
       table_size: tableSize,
     };
 
-    const response = await fetch(`${this.tckReachBaseUrl}`, {
+    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckReachBaseUrl}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-    const responseJson = (await response.json()) as { stats: string; certificate: string };
+      signal: abortSignal,
+    }));
 
-    return {
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Reachability analysis failed: ${errorText}`)];
+    }
+
+    const responseJson = (await response!.json()) as { stats: string; certificate: string };
+
+    return [{
       stats: parseReachabilityStats(responseJson.stats),
       certificate: responseJson.certificate,
-    } 
+    }, null];
   }
 
   public static async callLivenessAnalysis(
@@ -192,11 +241,12 @@ export class TCheckerUtils {
     certificate: TCheckerLivenessCertificate,
     labels: string[],
     blockSize: number | null,
-    tableSize: number | null
-  ): Promise<{
+    tableSize: number | null,
+    abortSignal?: AbortSignal
+  ): Promise<ErrorResult<{
     stats: TCheckerLivenessStats;
     certificate: string;
-  }> {
+  }>> {
     const ta = await createTCheckerFile(system);
 
     // Pass enums as indices
@@ -214,30 +264,42 @@ export class TCheckerUtils {
       table_size: tableSize,
     };
 
-    const response = await fetch(`${this.tckLivenessBaseUrl}`, {
+    const [response, error] = await tryCatchAsync(() =>fetch(`${this.tckLivenessBaseUrl}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-    const responseJson = (await response.json()) as { stats: string; certificate: string };
+      signal: abortSignal,
+    }));
 
-    return {
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Liveness analysis failed: ${errorText}`)];
+    }
+
+    const responseJson = (await response!.json()) as { stats: string; certificate: string };
+
+    return [{
       stats: parseLivenessStats(responseJson.stats),
       certificate: responseJson.certificate,
-    };
+    }, null];
   }
 
   public static async callCompareAnalysis(
     firstSystem: SystemOptionType,
     secondSystem: SystemOptionType,
     blockSize: number | null,
-    tableSize: number | null
-  ): Promise<{
+    tableSize: number | null,
+    abortSignal?: AbortSignal
+  ): Promise<ErrorResult<{
     stats: TCheckerCompareStats;
     certificate: string;
-  }> {
+  }>> {
     const firstTa = await createTCheckerFile(firstSystem);
     const secondTa = await createTCheckerFile(secondSystem);
 
@@ -249,19 +311,30 @@ export class TCheckerUtils {
       relationship: 0
     };
 
-    const response = await fetch(`${this.tckCompareBaseUrl}`, {
+    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckCompareBaseUrl}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-    const responseJson = (await response.json()) as { stats: string; certificate: string };
+      signal: abortSignal,
+    }));
 
-    return {
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Comparison analysis failed: ${errorText}`)];
+    }
+
+    const responseJson = (await response!.json()) as { stats: string; certificate: string };
+
+    return [{
       stats: parseCompareStats(responseJson.stats),
       certificate: responseJson.certificate,
-    };
+    }, null];
   }
 }
 
@@ -296,13 +369,6 @@ function parseLivenessStats(stats: string): TCheckerLivenessStats {
 }
 
 function parseCompareStats(stats: string): TCheckerCompareStats {
-  /*
-  MEMORY_MAX_RSS 63500
-  RELATIONSHIP_FULFILLED true
-  RUNNING_TIME_SECONDS 0.00019751
-  VISITED_PAIR_OF_STATES 2
-  */
-
   const lines = stats.split('\n');
   const relationshipFulfilled = lines[1].split(' ')[1] === 'true';
   const runningTimeSeconds = lines[2].split(' ')[1];
