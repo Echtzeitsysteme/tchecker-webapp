@@ -15,7 +15,7 @@ describe('clockUtils', () => {
 
   test('renameClock renames all clock occurences in the resets', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
@@ -43,7 +43,7 @@ describe('clockUtils', () => {
 
   test('renameClock renames all clock occurences in the guards', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
@@ -74,7 +74,7 @@ describe('clockUtils', () => {
 
   test('renameClock renames all clock occurences in the invariants', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
@@ -105,7 +105,7 @@ describe('clockUtils', () => {
 
   test('renameClock renames all the clock in the set of clocks', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
 
@@ -120,7 +120,7 @@ describe('clockUtils', () => {
 
   test('renameClock does not change clock name in set of clocks when clock name does not occur', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
@@ -136,7 +136,7 @@ describe('clockUtils', () => {
 
   test('renameClock does not change clock name in resets when clock name does not occur', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
@@ -155,7 +155,7 @@ describe('clockUtils', () => {
 
   test('renameClock does not change clock name in guards when clock name does not occur', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);
@@ -177,7 +177,7 @@ describe('clockUtils', () => {
 
   test('renameClock does not change clock name in invariants when clock name does not occur', () => {
     // given
-    const oldClock: Clock = { name: 'c' };
+    const oldClock: Clock = { name: 'c', size: 1 };
     const nonExistingClockName = 'nonExistintClock';
     const newClockName = 'newClock';
     const ta = TaFixture.withTwoLocationsAndTwoSwitchesAndClock(oldClock);

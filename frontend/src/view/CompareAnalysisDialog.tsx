@@ -1,5 +1,4 @@
 import { Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel } from '@mui/material';
-import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { OpenedSystems, SystemOptionType } from '../viewmodel/OpenedSystems';
 import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';

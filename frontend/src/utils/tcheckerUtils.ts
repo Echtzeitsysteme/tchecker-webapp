@@ -1,4 +1,5 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
+import { getAppConfig } from './appConfigUtils';
 import { createTCheckerFile } from './tckFileUtils';
 import { ErrorResult, tryCatchAsync } from './tryCatchUtil';
 
@@ -51,17 +52,38 @@ export interface TCheckerCompareStats {
   runningTimeSeconds: string;
 }
 
-export class TCheckerUtils {
-  private static tckSyntaxBaseUrl: string = 'http://localhost:8000/tck_syntax';
-  private static tckReachBaseUrl: string = 'http://localhost:8000/tck_reach';
-  private static tckLivenessBaseUrl: string = 'http://localhost:8000/tck_liveness';
-  private static tckCompareBaseUrl: string = 'http://localhost:8000/tck_compare';
+enum TCheckerExecutables {
+  TckSyntax = 'TckSyntax',
+  TckReach = 'TckReach',
+  TckLiveness = 'TckLiveness',
+  TckCompare = 'TckCompare',
+  TckSimulate = 'TckSimulate',
+}
 
+
+export class TCheckerUtils {
+
+
+  private static async getUrlForExecutable(executable: TCheckerExecutables): Promise<string> {
+    const baseUrl = (await getAppConfig()).backend.url;
+
+    const executableUrls: Record<TCheckerExecutables, string> = {
+      [TCheckerExecutables.TckSyntax]: `${baseUrl}/tck_syntax`,
+      [TCheckerExecutables.TckReach]: `${baseUrl}/tck_reach`,
+      [TCheckerExecutables.TckLiveness]: `${baseUrl}/tck_liveness`,
+      [TCheckerExecutables.TckCompare]: `${baseUrl}/tck_compare`,
+      [TCheckerExecutables.TckSimulate]: `${baseUrl}/tck_simulate`,
+    };
+
+    return executableUrls[executable];
+  }
+  
   public static async callGenerateDotFile(system: SystemOptionType): Promise<ErrorResult<void>> {
     const ta = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/to_dot`;
     
     
-    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/to_dot`, {
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
         method: 'PUT',
         body: ta,
         headers: {},
@@ -88,7 +110,9 @@ export class TCheckerUtils {
 
   public static async callGenerateJsonFile(system: SystemOptionType): Promise<ErrorResult<void>> {
     const ta = await createTCheckerFile(system);
-    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/to_json`, {
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/to_json`;
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
       method: 'PUT',
       body: ta,
       headers: {},
@@ -118,10 +142,12 @@ export class TCheckerUtils {
     return await this.callSyntaxCheck(ta);
   }
 
-  public static async callSyntaxCheck(tck: string): Promise<ErrorResult<string[]>> {
-    const [response, error] = await tryCatchAsync(() =>fetch(`${this.tckSyntaxBaseUrl}/check`, {
+  public static async callSyntaxCheck(ta: string): Promise<ErrorResult<string[]>> {
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/check`;
+    
+    const [response, error] = await tryCatchAsync(() =>fetch(url, {
       method: 'PUT',
-      body: tck,
+      body: ta,
       headers: {},
     }));
 
@@ -150,12 +176,14 @@ export class TCheckerUtils {
 
   public static async callCreateSynchronizedProduct(system: SystemOptionType): Promise<ErrorResult<any>> {
     const ta = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/create_synchronized_product`;
+
     const body = {
       ta: ta,
       process_name: system.label,
     };
 
-    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckSyntaxBaseUrl}/create_synchronized_product`, {
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -191,6 +219,7 @@ export class TCheckerUtils {
     certificate: string;
   }>> {
     const ta = await createTCheckerFile(system);
+    const url = await this.getUrlForExecutable(TCheckerExecutables.TckReach);
 
     // Pass enums as indices
 
@@ -208,7 +237,7 @@ export class TCheckerUtils {
       table_size: tableSize,
     };
 
-    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckReachBaseUrl}`, {
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -248,6 +277,7 @@ export class TCheckerUtils {
     certificate: string;
   }>> {
     const ta = await createTCheckerFile(system);
+    const url = await this.getUrlForExecutable(TCheckerExecutables.TckLiveness);
 
     // Pass enums as indices
     const algorithmIndex = Object.values(TCheckerLivenessAlgorithm).indexOf(algorithm);
@@ -264,7 +294,7 @@ export class TCheckerUtils {
       table_size: tableSize,
     };
 
-    const [response, error] = await tryCatchAsync(() =>fetch(`${this.tckLivenessBaseUrl}`, {
+    const [response, error] = await tryCatchAsync(() =>fetch(url, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -302,6 +332,7 @@ export class TCheckerUtils {
   }>> {
     const firstTa = await createTCheckerFile(firstSystem);
     const secondTa = await createTCheckerFile(secondSystem);
+    const url = await this.getUrlForExecutable(TCheckerExecutables.TckCompare);
 
     const body = {
       first_ta: firstTa,
@@ -310,8 +341,8 @@ export class TCheckerUtils {
       table_size: tableSize,
       relationship: 0
     };
-
-    const [response, error] = await tryCatchAsync(() => fetch(`${this.tckCompareBaseUrl}`, {
+    
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {

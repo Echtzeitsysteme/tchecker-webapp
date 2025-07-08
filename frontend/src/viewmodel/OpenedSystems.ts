@@ -40,7 +40,7 @@ export function useOpenedSystems(): OpenedSystems {
         (openedSystems: OpenedSystems, systemOption: SystemOptionType) => {
             const systemOptions = openedSystems.systemOptions;
             systemOptions.push(systemOption);
-            setOpenedSystems({...openedSystems, openedSystems: openedSystems, systemOptions: systemOptions, selectedSystem: systemOption});
+            setOpenedSystems({...openedSystems, systemOptions: systemOptions, selectedSystem: systemOption});
         },
         []
     );
@@ -51,7 +51,7 @@ export function useOpenedSystems(): OpenedSystems {
             const newOptions = options.filter((option) => option !== systemOption);
             openedSystems.selectedSystem = newOptions[0];
             //oder so eine setSystemOptions Methode kreieren und dann hier openedSystems.setSystemsOptions(openedSystems, newOptions); ???
-            setOpenedSystems({...openedSystems, openedSystems: openedSystems, systemOptions: newOptions});
+            setOpenedSystems({...openedSystems, systemOptions: newOptions});
         },
         []
     );

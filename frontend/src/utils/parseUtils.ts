@@ -10,6 +10,7 @@ import { TimedAutomaton } from '../model/ta/timedAutomaton';
 import { AutomatonOptionType } from '../viewmodel/OpenedProcesses';
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
 import { handleConstr, handleStatement } from './uploadUtils';
+import { Location } from '../model/ta/location';
 import timedAutomata from '../parser/timedAutomata';
 
 export class ParseUtils {

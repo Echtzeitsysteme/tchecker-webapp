@@ -1,5 +1,4 @@
 import Button from '@mui/material/Button';
-import { t } from 'i18next';
 import React, { useState } from 'react';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -116,7 +115,7 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   }
 
-  function handleSnackbarClose(event: React.SyntheticEvent<any> | Event, reason: SnackbarCloseReason) {
+  function handleSnackbarClose(_: React.SyntheticEvent<any> | Event, reason: SnackbarCloseReason) {
     if (reason === 'clickaway') {
       return
     }

@@ -78,7 +78,7 @@ describe('formattingUtils', () => {
 
   test('formatReset formats reset correctly when reset has a single clock', () => {
     // given
-    const clocks: Clock[] = [{ name: 'c' }];
+    const clocks: Clock[] = [{ name: 'c', size: 1 }];
 
     // when
     const formattedReset = formatReset(clocks);
@@ -89,7 +89,7 @@ describe('formattingUtils', () => {
 
   test('formatReset formats reset correctly when reset has multiple clocks', () => {
     // given
-    const clocks: Clock[] = [{ name: 'c1' }, { name: 'c2' }];
+    const clocks: Clock[] = [{ name: 'c1', size: 1 }, { name: 'c2', size: 1 }];
 
     // when
     const formattedReset = formatReset(clocks);
@@ -108,7 +108,7 @@ describe('formattingUtils', () => {
 
   test('formatReset formats reset correctly when result should be compact', () => {
     // given
-    const clocks: Clock[] = [{ name: 'c1' }, { name: 'c2' }];
+    const clocks: Clock[] = [{ name: 'c1', size: 1 }, { name: 'c2', size: 1 }];
 
     // when
     const formattedReset = formatReset(clocks, true);
@@ -205,7 +205,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchTable formats switch correctly when there is a reset', () => {
     // given
-    const clock: Clock = { name: 'c' };
+    const clock: Clock = { name: 'c', size: 1 };
     const sw = SwitchFixture.withResetAndGuard([clock], undefined);
     const expectedFormatting = [sw.source.name, sw.actionLabel, `{${clock.name}}`, sw.target.name].join(', ');
 
@@ -230,7 +230,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchTable formats switch correctly when there is a guard and a reset', () => {
     // given
-    const clock: Clock = { name: 'c' };
+    const clock: Clock = { name: 'c', size: 1 };
     const guard = ClockConstraintFixture.withClockNames(clock.name);
     const sw = SwitchFixture.withResetAndGuard([clock], guard);
     const expectedFormatting = [
@@ -277,7 +277,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchLabelVisual formats switch correctly when there is a reset', () => {
     // given
-    const clock: Clock = { name: 'c' };
+    const clock: Clock = { name: 'c', size: 1 };
     const sw = SwitchFixture.withResetAndGuard([clock], undefined);
     const expectedFormatting = `${sw.actionLabel}\n{ ${clock.name} }`;
 
@@ -302,7 +302,7 @@ describe('formattingUtils', () => {
 
   test('formatSwitchLabelVisual formats switch correctly when there is a guard and a reset', () => {
     // given
-    const clock: Clock = { name: 'c' };
+    const clock: Clock = { name: 'c', size: 1 };
     const guard = ClockConstraintFixture.withClockNames(clock.name);
     const sw = SwitchFixture.withResetAndGuard([clock], guard);
     const expectedFormatting = [sw.actionLabel, formatClockConstraint(guard), `{ ${clock.name} }`].join('\n');

@@ -74,7 +74,7 @@ export function useStatementsViewModel(): StatementsViewModel {
     }, []);
 
     const changeStatement = useCallback(
-        (viewModel: StatementsViewModel, id: number, field: keyof StatementViewData, value: string) => {
+        (viewModel: StatementsViewModel, id: number, field: keyof StatementViewData | 'freeInput', value: string) => {
             const updatedStatements = viewModel.statements.map((row) => {
                 if (row.id === id) {
                     const updatedRow = { ...row, [field]: value };

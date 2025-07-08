@@ -102,8 +102,8 @@ const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
           selectOnFocus
           handleHomeEndKeys
           disableClearable
-          value={value}
-          onChange={(event, newValue) => {
+          value={value.label}
+          onChange={(_, newValue) => {
             //console.log('Optionen:', options);
 
             //set value and automaton to existing option

@@ -8,7 +8,7 @@ import Button from '@mui/material/Button';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useButtonUtils } from '../utils/buttonUtils';
-import { CircularProgress, FormControl, FormControlLabel, FormLabel, Icon, Radio, RadioGroup, TextField } from '@mui/material';
+import { CircularProgress, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField } from '@mui/material';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { OpenedSystems } from '../viewmodel/OpenedSystems';
 import { TCheckerReachabilityAlgorithm, TCheckerReachabilityCertificate, TCheckerReachabilityStats, TCheckerSearchOrder, TCheckerUtils } from '../utils/tcheckerUtils';
@@ -27,7 +27,7 @@ interface ReachabilityAnalysisDialogProps {
 
 
 const ReachabilityAnalysisDialog = (props: ReachabilityAnalysisDialogProps) => {
-    const { open, onClose, openedProcesses, openedSystems } = props;
+    const { open, onClose, openedSystems } = props;
 
     const { t } = useTranslation();
     const { executeOnKeyboardClick } = useButtonUtils();

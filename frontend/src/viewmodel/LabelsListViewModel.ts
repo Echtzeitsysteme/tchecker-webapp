@@ -73,7 +73,7 @@ export function useLabelsViewModel(): LabelsViewModel {
     }, []);
 
     const changeLabel = useCallback(
-        (viewModel: LabelsViewModel, id: number, field: keyof LabelsViewData, value: string) => {
+        (viewModel: LabelsViewModel, id: number, field: keyof LabelsViewData | 'freeInput', value: string) => {
             const updatedLabels = viewModel.labels.map((row) => {
                 if (row.id === id) {
                     const updatedRow = { ...row, [field]: value };

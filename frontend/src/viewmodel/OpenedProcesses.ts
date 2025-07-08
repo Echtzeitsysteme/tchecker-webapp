@@ -21,13 +21,13 @@ export function useOpenedProcesses(): OpenedProcesses {
   const addAutomatonOption = useCallback((openedProcesses: OpenedProcesses, automatonOption: AutomatonOptionType) => {
     const automatonOptions = openedProcesses.automatonOptions;
     automatonOptions.push(automatonOption);
-    setOpenedProcesses({ ...openedProcesses, openedProcesses: openedProcesses, automatonOptions: automatonOptions, selectedOption: automatonOption });
+    setOpenedProcesses({ ...openedProcesses, automatonOptions: automatonOptions, selectedOption: automatonOption });
   }, []);
 
   const setAutomatonOptions = useCallback(
     (openedProcesses: OpenedProcesses, automatonOptions: AutomatonOptionType[]) => {
       openedProcesses.selectedOption = automatonOptions[0];
-      setOpenedProcesses({ ...openedProcesses, openedProcesses: openedProcesses, automatonOptions: automatonOptions });
+      setOpenedProcesses({ ...openedProcesses, automatonOptions: automatonOptions });
     },
     []
   );
@@ -39,8 +39,7 @@ export function useOpenedProcesses(): OpenedProcesses {
       console.log('newoptions', newOptions);
       openedProcesses.selectedOption = newOptions[0]; //<- sollte eig unnötig sein...
       openedProcesses.automatonOptions = newOptions; //<- sollte eig unnötig sein...
-      setOpenedProcesses({ ...openedProcesses, openedProcesses: openedProcesses, automatonOptions: newOptions });
-      //openedProcesses.setAutomatonOptions(openedProcesses, newOptions);
+      setOpenedProcesses({ ...openedProcesses, automatonOptions: newOptions });
     },
     []
   );

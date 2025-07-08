@@ -10,12 +10,13 @@ import { TaFixture } from '../fixture/timedAutomatonFixture';
 import { ClauseFixture } from '../fixture/clauseFixture';
 import { ClockConstraintFixture } from '../fixture/clockConstraintFixture';
 import { ClauseViewDataFixture } from '../fixture/clauseViewDataFixture';
+import { FreeClauseViewData } from '../../src/viewmodel/FreeClausesViewModel';
 
 describe('clockConstraintUtils', () => {
   // define and import all util functions once before starting as import is more complicated due to the use of hooks
   let clausesEqual: (clause1?: Clause, clause2?: Clause) => boolean;
   let clockConstraintsEqual: (cc1?: ClockConstraint, cc2?: ClockConstraint) => boolean;
-  let transformToClockConstraint: (clauseData: ClauseViewData[]) => ClockConstraint | undefined;
+  let transformToClockConstraint: (clauseData: ClauseViewData[], freeClauseData: FreeClauseViewData[]) => ClockConstraint | undefined;
   let constraintUsesClock: (clockName: string, clockConstraint?: ClockConstraint) => boolean;
   let taUsesClockInAnyConstraint: (ta?: TimedAutomaton, clock?: Clock) => boolean;
   let removeAllClausesUsingClock: (clock: Clock, ta: TimedAutomaton) => void;
@@ -121,9 +122,10 @@ describe('clockConstraintUtils', () => {
   test('transformToClockConstraint returns undefined when clauseData is empty', () => {
     // given
     const emptyClauseData: ClauseViewData[] = [];
+    const emptyFreeClauseData: FreeClauseViewData[] = [];
 
     // when
-    const clockConstraint = transformToClockConstraint(emptyClauseData);
+    const clockConstraint = transformToClockConstraint(emptyClauseData, emptyFreeClauseData);
 
     // then
     expect(clockConstraint).toBeUndefined();
@@ -132,9 +134,10 @@ describe('clockConstraintUtils', () => {
   test('transformToClockConstraint returns the correct clock constraint when the input array has a single element', () => {
     // given
     const singleClauseData = [ClauseViewDataFixture.someValidViewData()];
+    const emptyFreeClauseData: FreeClauseViewData[] = [];
 
     // when
-    const clockConstraint = transformToClockConstraint(singleClauseData);
+    const clockConstraint = transformToClockConstraint(singleClauseData, emptyFreeClauseData);
 
     // then
     expect(clockConstraint?.clauses).toHaveLength(1);
@@ -146,9 +149,11 @@ describe('clockConstraintUtils', () => {
     const clauseData0 = ClauseViewDataFixture.validViewDataWithClockName('x');
     const clauseData1 = ClauseViewDataFixture.validViewDataWithClockName('y');
     const clauseData = [clauseData0, clauseData1];
+    const emptyFreeClauseData: FreeClauseViewData[] = [];
 
     // when
-    const clockConstraint = transformToClockConstraint(clauseData);
+    const clockConstraint = transformToClockConstraint(clauseData, emptyFreeClauseData);
+    
 
     // then
     expect(clockConstraint?.clauses).toHaveLength(2);

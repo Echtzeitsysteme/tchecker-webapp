@@ -8,7 +8,7 @@ export interface FreeClausesViewModel {
     setFreeClausesFromClockConstraint: (viewModel: FreeClausesViewModel, clockConstraint?: ClockConstraint) => void;
     addFreeClause: (viewModel: FreeClausesViewModel) => void;
     deleteFreeClause: (viewModel: FreeClausesViewModel, id: number) => void;
-    changeFreeClause: (viewModel: FreeClausesViewModel, id: number, field: keyof FreeClauseViewData, value: string) => void;
+    changeFreeClause: (viewModel: FreeClausesViewModel, id: number, field: keyof FreeClauseViewData | 'freeInput', value: string) => void;
 }
 
 export enum ClausesState {
@@ -74,7 +74,7 @@ export function useFreeClausesViewModel(): FreeClausesViewModel {
     }, []);
 
     const changeFreeClause = useCallback(
-        (viewModel: FreeClausesViewModel, id: number, field: keyof FreeClauseViewData, value: string) => {
+        (viewModel: FreeClausesViewModel, id: number, field: keyof FreeClauseViewData | 'freeInput', value: string) => {
             const updatedClauses = viewModel.freeClauses.map((row) => {
                 if (row.id === id) {
                     const updatedRow = { ...row, [field]: value };

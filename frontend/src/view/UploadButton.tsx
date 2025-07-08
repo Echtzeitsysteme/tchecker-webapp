@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import { Button } from '@mui/material';
@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { TCheckerUtils } from '../utils/tcheckerUtils.ts';
 import { ParseUtils } from '../utils/parseUtils.ts';
 import SyntaxCheckErrorDialog from './SyntaxCheckErrorDialog.tsx';
+import TCheckerErrorDialog from './TCheckerErrorDialog.tsx';
 
 export interface OpenedDocs {
   viewModel: AnalysisViewModel; //für update Locations iwie?
@@ -22,8 +23,9 @@ const UploadButton: React.FC<OpenedDocs> = (props) => {
   const { viewModel, openedSystems, openedProcesses } = props;
   const { t } = useTranslation();
 
-  const [syntaxCheckError, setSyntaxCheckError] = React.useState<string[] | undefined>(undefined);
-  const [uploadedFileContent, setUploadedFileContent] = React.useState<string | undefined>(undefined);
+  const [syntaxCheckError, setSyntaxCheckError] = useState<string[] | undefined>(undefined);
+  const [uploadedFileContent, setUploadedFileContent] = useState<string | undefined>(undefined);
+  const [tcheckerError, setTcheckerError] = useState<string | undefined>(undefined);
 
   const handleClick = (uploadedFileEvent: React.ChangeEvent<HTMLInputElement>) => {
     const inputElem = uploadedFileEvent.target as HTMLInputElement & {
@@ -44,8 +46,13 @@ const UploadButton: React.FC<OpenedDocs> = (props) => {
 
       try {
 
-        const syntaxCheckResult = await TCheckerUtils.callSyntaxCheck(fileContent);
+        const [syntaxCheckResult, error] = await TCheckerUtils.callSyntaxCheck(fileContent);
         console.log('syntaxCheckResult:', syntaxCheckResult);
+
+        if (error) {
+          setTcheckerError(error.message);      
+          return;
+        }
                 
         if (syntaxCheckResult.length > 0) {
           setSyntaxCheckError(syntaxCheckResult);
@@ -100,6 +107,8 @@ const UploadButton: React.FC<OpenedDocs> = (props) => {
         </Button>
       </label>
       <SyntaxCheckErrorDialog open={!!syntaxCheckError} onClose={() => setSyntaxCheckError(undefined)} syntaxCheckErrors={syntaxCheckError} checkedSystem={uploadedFileContent!} />
+      <TCheckerErrorDialog open={!!tcheckerError} onClose={() => setTcheckerError(undefined)} errorMessage={tcheckerError || ''}>
+                    </TCheckerErrorDialog>
     </>
   );
 };

@@ -13,11 +13,11 @@ export class TaFixture {
     const nameLoc1 = 'loc1';
     const clause = ClauseFixture.withClockName(clock.name);
 
-    const loc0: Location = { ...LocationFixture.withName(nameLoc0), isInitial: true, invariant: { clauses: [clause] } };
+    const loc0: Location = { ...LocationFixture.withName(nameLoc0), isInitial: true, invariant: { clauses: [clause], freeClauses: [] } };
     const loc1: Location = { ...LocationFixture.withName(nameLoc1) };
 
     const sw0: Switch = { ...SwitchFixture.withResetAndGuard([clock], undefined), source: loc0, target: loc1 };
-    const sw1: Switch = { ...SwitchFixture.withResetAndGuard([], { clauses: [clause] }), source: loc1, target: loc0 };
+    const sw1: Switch = { ...SwitchFixture.withResetAndGuard([], { clauses: [clause], freeClauses: [] }), source: loc1, target: loc0 };
 
     return {
       locations: [loc0, loc1],

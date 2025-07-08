@@ -107,7 +107,7 @@ const SystemSelection: React.FC<SystemSelectionProps> = (props) => {
           selectOnFocus
           handleHomeEndKeys
           disableClearable
-          value={value}
+          value={value.label}
           onChange={(event, newValue) => {
             console.log(event);
             console.log('Optionen:', options);
