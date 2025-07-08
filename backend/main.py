@@ -12,15 +12,10 @@ app.include_router(tck_reach.router)
 app.include_router(tck_liveness.router)
 app.include_router(tck_compare.router)
 
-origins = [
-    "http://localhost:5173",  # React/Svelte dev server
-    "http://127.0.0.1:8000",
-]
-
 # Add the middleware to your app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,            # List of origins that can talk to this backend
+    allow_origins=["*"],              # Allow any origin
     allow_credentials=True,           # Allow cookies/auth headers
     allow_methods=["*"],              # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],              # Allow all headers
