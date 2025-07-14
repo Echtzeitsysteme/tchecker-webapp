@@ -7,7 +7,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Load a shared library, call one function, and print its return value"
+        description="Load TChecker shared library and call a function with specified arguments."
     )
     parser.add_argument(
         "--lib-path", "-L",

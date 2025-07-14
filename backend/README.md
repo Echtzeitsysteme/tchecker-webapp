@@ -25,6 +25,13 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt 
 
 ```
+You will also need to build the TChecker shared library. Follow the instructions in the [TChecker documentation](https://github.com/ticktac-project/tchecker/wiki/Installation-of-TChecker) to build the library and set the `LIBTCHECKER_ENABLE_SHARED` OPTION to `ON` during the CMake configuration step. 
+Copy TChecker shared library binary to the project root directory:
+```bash
+cp /path/to/tchecker/installation ./libtchecker.so
+
+```
+
 
 ### Running the server
 To run the server, use the following command:

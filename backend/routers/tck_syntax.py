@@ -7,7 +7,7 @@ import util.call_tchecker as call_tchecker
 
 router = APIRouter(prefix="/tck_syntax", tags=["tck_syntax"])
 
-@router.put("/check")
+@router.put("/check", summary="Check syntax of a timed automaton")
 def check(body: str = Body(...)):
 
     if not body or body.strip() == "":
@@ -33,7 +33,7 @@ def check(body: str = Body(...)):
     print(result)
     return result
 
-@router.put("/to_dot")
+@router.put("/to_dot", summary="Convert timed automaton to DOT format")
 def to_dot(body: str = Body(...)):
 
     if not body or body.strip() == "":
@@ -55,7 +55,7 @@ def to_dot(body: str = Body(...)):
         
     return result
 
-@router.put("/to_json")
+@router.put("/to_json", summary="Convert timed automaton to JSON format")
 def to_json(body: str = Body(...)):
 
     if not body or body.strip() == "":
@@ -84,8 +84,8 @@ class CreateSynchronizedProductBody(BaseModel):
     ta: str
     process_name: str
 
-@router.put("/create_synchronized_product")
-def to_json(body: CreateSynchronizedProductBody = Body(...)):
+@router.put("/create_synchronized_product", summary="Create a synchronized product of timed automata")
+def create_product(body: CreateSynchronizedProductBody = Body(...)):
 
     if not body:
         raise HTTPException(status_code=422, detail="Request body cannot be empty")

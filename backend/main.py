@@ -4,7 +4,11 @@ from routers import tck_reach
 from routers import tck_liveness
 from routers import tck_compare
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
+app = FastAPI(
+    title="Timed Automata Analysis Backend",
+    description="A backend service for analyzing timed automata using TChecker.",
+    version="1.0.0"
+)
 
 # Include routers from separate files
 app.include_router(tck_syntax.router)
