@@ -2,19 +2,23 @@ import './App.css';
 import { useTranslation } from 'react-i18next';
 import AutomatonVisualization from './view/AutomatonVisualization';
 import { Box, Grid } from '@mui/material';
-import { useLayoutEffect, useRef, useState } from 'react';
-import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AnalysisState, useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
 import { AutomatonManipulation } from './view/AutomatonManipulation';
 import ProcessSelection from './view/ProcessSelection.tsx';
 import AutomatonDrawer from './view/AutomationDrawer.tsx';
 import { useOpenedSystems } from './viewmodel/OpenedSystems.ts';
 import { useOpenedProcesses } from './viewmodel/OpenedProcesses.ts';
 import LayoutButton from './view/LayoutButton.tsx';
+import TCheckerSimulation from './view/TCheckerSimulation.tsx';
+import TCheckerSimulationDrawer from './view/TcheckerSimulationDrawer.tsx';
+import { useSimulationModel } from './viewmodel/SimulationModel.ts';
 
 function App() {
   const viewModel = useAnalysisViewModel();
   const openedSystems = useOpenedSystems();
   const openedProcesses = useOpenedProcesses();
+  const simulationModel = useSimulationModel();
   const { t } = useTranslation();
 
   // calculate size of content elements so that content always fits the window size
@@ -22,6 +26,9 @@ function App() {
   const toolRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
   const [toolbarHeight, setToolbarHeight] = useState(0);
+
+  console.log('App initialized with viewModel:', viewModel);
+
 
   useLayoutEffect(() => {
     const updateContentHeight = () => {
@@ -50,33 +57,60 @@ function App() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
+  // useEffect(() => {
+  //   console.log('ViewModelChanged');
+  // }, [viewModel])
+
+  
   return (
     <>
       <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
         ⏰ {t('app.title')}
       </h1>
       <Box ref={toolRef} sx={{ display: 'flex', alignItems: 'center' }}>
-        <AutomatonDrawer viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} />
-        <ProcessSelection viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} />
+        <AutomatonDrawer viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
+        <ProcessSelection viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
         <LayoutButton viewModel={viewModel} />
       </Box>
-      <Box sx={{ display: 'flex', height: `${contentHeight - toolbarHeight - 1}px`, overflow: 'hidden' }}>
-        <Grid container sx={{ height: '100%' }}>
-          <Grid
-            item
-            xs={12}
-            sm={4}
-            md={3}
-            lg={3}
-            sx={{ borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
-          >
-            <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} />
+      {simulationModel.simulationActive ? (
+        <Box sx={{ display: 'flex', height: `${contentHeight - toolbarHeight - 1}px`, overflow: 'hidden' }}>
+          <Grid container sx={{ height: '100%' }}>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              md={3}
+              lg={3}
+              sx={{ borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
+            >
+              <TCheckerSimulationDrawer viewModel={viewModel} openedProcesses={openedProcesses} simulationModel={simulationModel}/>
+            </Grid>
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
+              <TCheckerSimulation viewModel={viewModel} openedProcesses={openedProcesses} simulationModel={simulationModel} />
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
-            <AutomatonVisualization viewModel={viewModel} />
+        </Box>
+        
+      ) : (
+
+        <Box sx={{ display: 'flex', height: `${contentHeight - toolbarHeight - 1}px`, overflow: 'hidden' }}>
+          <Grid container sx={{ height: '100%' }}>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              md={3}
+              lg={3}
+              sx={{ borderRight: '1px solid #ccc', paddingLeft: '16px', overflowY: 'auto', height: '100%' }}
+            >
+              <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
+            </Grid>
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
+              <AutomatonVisualization viewModel={viewModel} />
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
+        </Box>
+      )}
     </>
   );
 }

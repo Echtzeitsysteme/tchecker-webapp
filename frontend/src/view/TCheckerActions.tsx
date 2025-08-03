@@ -7,7 +7,7 @@ import { OpenedSystems } from '../viewmodel/OpenedSystems';
 import { TCheckerUtils } from '../utils/tcheckerUtils';
 import { ParseUtils } from '../utils/parseUtils';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
-import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
+import { AnalysisState, AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import SyntaxCheckErrorDialog from './SyntaxCheckErrorDialog';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { useTranslation } from 'react-i18next';
@@ -15,15 +15,16 @@ import LivenessAnalysisDialog from './LivenessAnalysisDialog';
 import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog copy';
 import CompareAnalysisDialog from './CompareAnalysisDialog';
 import TCheckerErrorDialog from './TCheckerErrorDialog';
+import { SimulationModel } from '../viewmodel/SimulationModel';
 
 export interface TCheckerActionsProps {
   viewModel: AnalysisViewModel;
   openedSystems: OpenedSystems;
   openedProcesses: OpenedProcesses;
+  simulationModel: SimulationModel;
 }
 export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
-  console.log('Running TCheckerActions');
-  const { viewModel, openedSystems, openedProcesses } = props;
+  const { viewModel, openedSystems, openedProcesses, simulationModel } = props;
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
@@ -115,6 +116,11 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   }
 
+  function startSimulation(): void {
+    simulationModel.startSimulation(openedSystems.selectedSystem);
+    
+  }
+
   function handleSnackbarClose(_: React.SyntheticEvent<any> | Event, reason: SnackbarCloseReason) {
     if (reason === 'clickaway') {
       return
@@ -185,6 +191,13 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             variant="contained"
             color="primary">
             {t('tcheckerAction.compareAnalysis')}
+          </Button>
+          <Button
+            style={{ marginTop: '12px' }}
+            onMouseDown={() => startSimulation()}
+            variant="contained"
+            color="primary">
+            {t('Simulation starten')}
           </Button>
         </div>
       )}

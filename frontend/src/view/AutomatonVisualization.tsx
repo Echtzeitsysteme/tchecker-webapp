@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Data, Network, Options } from 'vis-network/peer';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { useMappingUtils } from '../utils/mappingUtils';
@@ -7,12 +7,14 @@ interface VisualizationProps {
   viewModel: AnalysisViewModel;
 }
 
-const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
+const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
   const { viewModel } = props;
   const { ta, updateLocationCoordinates } = viewModel;
   const { locations } = ta;
   const { mapTaToVisDataModel } = useMappingUtils();
   const networkRef = useRef<HTMLDivElement>(null);
+  const [network, setNetwork] = useState<Network | null>(null);
+  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
 
   const data: Data = mapTaToVisDataModel(ta);
 
@@ -26,6 +28,10 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
       });
     }
   });
+
+  useImperativeHandle(ref, () => ({
+    highlightNode: (nodeId: string) => highlightNode(nodeId),
+  }));
 
   useEffect(() => {
     if (!networkRef.current) {
@@ -78,8 +84,12 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
     };
 
     const network = new Network(networkRef.current, data, options);
+    setNetwork(network);
 
+    
     network.on('stabilizationIterationsDone', function () {
+
+    
       const nodePositions = network.getPositions();
       locations.forEach((location) => {
         const locationName = location.name;
@@ -87,6 +97,14 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         location.yCoordinate = nodePositions[locationName].y;
         location.setLayout = true;
       });
+
+      if (highlightedNode) {
+        highlightNode(highlightedNode);
+      }
+    });
+
+    network.on('click', (params) => {
+      console.log('Clicked node:', params);
     });
 
     // Event listener for dragEnd event (update coordinates saved in locations if a location is moved)
@@ -112,9 +130,72 @@ const AutomatonVisualization: React.FC<VisualizationProps> = (props) => {
         });
       }
     });
-  }, [ta, viewModel, updateLocationCoordinates, mapTaToVisDataModel, locations, data]);
+  }, [viewModel, mapTaToVisDataModel]);
+
+  function highlightNode(nodeId: string) {
+    console.log('Highlighting node:', nodeId);
+    setHighlightedNode(nodeId);
+    
+    if (!network || !nodeId) {
+      console.log('Network or nodeId is not defined');
+      return;
+    }
+    
+    if (highlightedNode && nodeExists(highlightedNode)) {
+      if (highlightedNode !== nodeId) {
+        network.updateClusteredNode(highlightedNode, {
+          color: {
+            background: 'white',
+            border: 'black',
+          }
+        });
+      }
+    }
+
+
+    if (nodeExists(nodeId)) {
+      network.updateClusteredNode(nodeId, {
+        color: {
+          background: '#3A9BDC',
+          border: '#1260cc',
+        }
+      })
+    } else {
+      console.warn(`Node with ID ${nodeId} does not exist in the network.`);
+    }
+  }
+
+  function highlightEdge(edgeId: string) {
+    console.log('Highlighting edge:', edgeId);
+    if (!network || !edgeId) {
+      console.log('Network or edgeId is not defined');
+      return;
+    }
+
+    if (edgeExists(edgeId)) {
+      network.updateEdge(edgeId, {
+        color: {
+          color: '#3A9BDC',
+          highlight: '#1260cc',
+        }
+      });
+    } else {
+      console.warn(`Edge with ID ${edgeId} does not exist in the network.`);
+    }
+  }
+
+
+  function nodeExists(nodeId: string): boolean {
+    const nodePath = network?.findNode(nodeId)
+    return nodePath && nodePath.length > 0;
+  }
+
+  function edgeExists(edgeId: string): boolean {
+    const edgePath = network?.getBaseEdges(edgeId);
+    return edgePath && edgePath.length > 0;
+  }
 
   return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;
-};
+});
 
 export default AutomatonVisualization;

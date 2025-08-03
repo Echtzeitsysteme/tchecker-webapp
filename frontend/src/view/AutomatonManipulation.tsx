@@ -22,14 +22,16 @@ import { ManipulateSyncDialog } from './ManipulateSyncDialog.tsx';
 import { SyncConstraint } from '../model/ta/syncConstraint.ts';
 import { TCheckerActions } from './TCheckerActions.tsx';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
+import { SimulationModel } from '../viewmodel/SimulationModel.ts';
 interface ManipulationProps {
   viewModel: AnalysisViewModel;
   openedProcesses: OpenedProcesses;
   openedSystems: OpenedSystems;
+  simulationModel: SimulationModel;
 }
 
 export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
-  const { viewModel, openedSystems, openedProcesses } = props;
+  const { viewModel, openedSystems, openedProcesses, simulationModel } = props;
   const {
     ta,
     addLocation,
@@ -423,7 +425,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   return (
     <>
       {allTables}
-      <TCheckerActions viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} />
+      <TCheckerActions viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel}/>
       <ManipulateLocationDialog
         open={locationAddOpen}
         locations={locations}

@@ -9,15 +9,17 @@ import { OpenedSystems } from '../viewmodel/OpenedSystems.ts';
 import { Location } from '../model/ta/location.ts';
 import { TimedAutomaton } from '../model/ta/timedAutomaton.ts';
 import { useTranslation } from 'react-i18next';
+import { SimulationModel } from '../viewmodel/SimulationModel.ts';
 
 export interface ProcessSelectionProps {
   viewModel: AnalysisViewModel;
   openedProcesses: OpenedProcesses;
   openedSystems: OpenedSystems;
+  simulationModel: SimulationModel;
 }
 
 const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
-  const { viewModel, openedProcesses, openedSystems } = props;
+  const { viewModel, openedProcesses, openedSystems, simulationModel } = props;
   const { t } = useTranslation();
   const options = openedProcesses.automatonOptions;
   let value = openedProcesses.selectedOption;
@@ -89,7 +91,7 @@ const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
           helperText={validationError ? nameErrorMsg : ' '}
           data-testid={'input-process-name'}
         />
-        <Button variant="contained" disabled={validationError} onClick={addProcess} sx={{ mb: 2 }}>
+        <Button variant="contained" disabled={validationError || simulationModel.simulationActive} onClick={addProcess} sx={{ mb: 2 }}>
           <AddIcon />
           {t('processSelection.button.add')}
         </Button>

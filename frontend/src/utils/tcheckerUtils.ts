@@ -1,4 +1,5 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
+import { NextSimulationState, RawSimulationState } from '../viewmodel/SimulationModel';
 import { getAppConfig } from './appConfigUtils';
 import { createTCheckerFile } from './tckFileUtils';
 import { ErrorResult, tryCatchAsync } from './tryCatchUtil';
@@ -79,13 +80,13 @@ export class TCheckerUtils {
   }
   
   public static async callGenerateDotFile(system: SystemOptionType): Promise<ErrorResult<void>> {
-    const ta = await createTCheckerFile(system);
+    const sysdecl = await createTCheckerFile(system);
     const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/to_dot`;
     
     
     const [response, error] = await tryCatchAsync(() => fetch(url, {
         method: 'PUT',
-        body: ta,
+        body: sysdecl,
         headers: {},
       }));
     
@@ -109,12 +110,12 @@ export class TCheckerUtils {
   }
 
   public static async callGenerateJsonFile(system: SystemOptionType): Promise<ErrorResult<void>> {
-    const ta = await createTCheckerFile(system);
+    const sysdecl = await createTCheckerFile(system);
     const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/to_json`;
 
     const [response, error] = await tryCatchAsync(() => fetch(url, {
       method: 'PUT',
-      body: ta,
+      body: sysdecl,
       headers: {},
     }));
 
@@ -138,8 +139,8 @@ export class TCheckerUtils {
   }
 
   public static async callSyntaxCheckForSystem(system: SystemOptionType): Promise<ErrorResult<string[]>> {
-    const ta = await createTCheckerFile(system);
-    return await this.callSyntaxCheck(ta);
+    const sysdecl = await createTCheckerFile(system);
+    return await this.callSyntaxCheck(sysdecl);
   }
 
   public static async callSyntaxCheck(ta: string): Promise<ErrorResult<string[]>> {
@@ -175,11 +176,11 @@ export class TCheckerUtils {
   }
 
   public static async callCreateSynchronizedProduct(system: SystemOptionType): Promise<ErrorResult<any>> {
-    const ta = await createTCheckerFile(system);
+    const sysdecl = await createTCheckerFile(system);
     const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/create_synchronized_product`;
 
     const body = {
-      ta: ta,
+      sysdecl: sysdecl,
       process_name: system.label,
     };
 
@@ -218,7 +219,7 @@ export class TCheckerUtils {
     stats: TCheckerReachabilityStats;
     certificate: string;
   }>> {
-    const ta = await createTCheckerFile(system);
+    const sysdecl = await createTCheckerFile(system);
     const url = await this.getUrlForExecutable(TCheckerExecutables.TckReach);
 
     // Pass enums as indices
@@ -228,7 +229,7 @@ export class TCheckerUtils {
     const certificateIndex = Object.values(TCheckerReachabilityCertificate).indexOf(certificate);
 
     const body = {
-      ta: ta,
+      sysdecl: sysdecl,
       algorithm: algorithmIndex,
       search_order: searchOrderIndex,
       certificate: certificateIndex,
@@ -276,7 +277,7 @@ export class TCheckerUtils {
     stats: TCheckerLivenessStats;
     certificate: string;
   }>> {
-    const ta = await createTCheckerFile(system);
+    const sysdecl = await createTCheckerFile(system);
     const url = await this.getUrlForExecutable(TCheckerExecutables.TckLiveness);
 
     // Pass enums as indices
@@ -285,7 +286,7 @@ export class TCheckerUtils {
     const certificateIndex = Object.values(TCheckerLivenessCertificate).indexOf(certificate);
 
     const body = {
-      ta: ta,
+      sysdecl: sysdecl,
       algorithm: algorithmIndex,
       search_order: searchOrderIndex,
       certificate: certificateIndex,
@@ -330,13 +331,13 @@ export class TCheckerUtils {
     stats: TCheckerCompareStats;
     certificate: string;
   }>> {
-    const firstTa = await createTCheckerFile(firstSystem);
-    const secondTa = await createTCheckerFile(secondSystem);
+    const firstSysdecl = await createTCheckerFile(firstSystem);
+    const secondSysdecl = await createTCheckerFile(secondSystem);
     const url = await this.getUrlForExecutable(TCheckerExecutables.TckCompare);
 
     const body = {
-      first_ta: firstTa,
-      second_ta: secondTa,
+      first_sysdecl: firstSysdecl,
+      second_sysdecl: secondSysdecl,
       block_size: blockSize,
       table_size: tableSize,
       relationship: 0
@@ -367,15 +368,46 @@ export class TCheckerUtils {
       certificate: responseJson.certificate,
     }, null];
   }
+
+  public static async callSimulate(system: SystemOptionType, startingState: RawSimulationState): Promise<ErrorResult<string>> {
+    const sysdecl = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/simulate`;
+
+    const body = {
+      sysdecl: sysdecl,
+      starting_state: startingState ? JSON.stringify(startingState) : null,
+    };
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Simulation failed: ${errorText}`)];
+    }
+
+    const simulationResult = await response!.text();
+    return [simulationResult, null];
+  }
 }
 
 function parseReachabilityStats(stats: string): TCheckerReachabilityStats {
-  const lines = stats.split('\n');
-  const reachable = lines[1].split(' ')[1] === 'true';
-  const runningTimeSeconds = lines[2].split(' ')[1];
-  const visitedStates = parseInt(lines[3].split(' ')[1], 10);
-  const visitedTransitions = parseInt(lines[4].split(' ')[1], 10);
-  
+  const parsedStats = parseTCheckerStats(stats);
+
+  const reachable = parsedStats['REACHABLE'] === 'true';
+  const runningTimeSeconds = parsedStats['RUNNING_TIME_SECONDS'] || '0';
+  const visitedStates = parseInt(parsedStats['VISITED_STATES'] || '0', 10);
+  const visitedTransitions = parseInt(parsedStats['VISITED_TRANSITIONS'] || '0', 10);
+
   return {
     reachable,
     visitedStates,
@@ -385,11 +417,11 @@ function parseReachabilityStats(stats: string): TCheckerReachabilityStats {
 }
 
 function parseLivenessStats(stats: string): TCheckerLivenessStats {
-  const lines = stats.split('\n');
-  const cycle = lines[1].split(' ')[1] === 'true';
-  const runningTimeSeconds = lines[2].split(' ')[1];
-  const visitedStates = parseInt(lines[3].split(' ')[1], 10);
-  const visitedTransitions = parseInt(lines[4].split(' ')[1], 10);
+  const parsedStats = parseTCheckerStats(stats);
+  const cycle = parsedStats['CYCLE'] === 'true';
+  const runningTimeSeconds = parsedStats['RUNNING_TIME_SECONDS'] || '0';
+  const visitedStates = parseInt(parsedStats['VISITED_STATES'] || '0', 10);
+  const visitedTransitions = parseInt(parsedStats['VISITED_TRANSITIONS'] || '0', 10);
   
   return {
     cycle,
@@ -400,13 +432,30 @@ function parseLivenessStats(stats: string): TCheckerLivenessStats {
 }
 
 function parseCompareStats(stats: string): TCheckerCompareStats {
-  const lines = stats.split('\n');
-  const relationshipFulfilled = lines[1].split(' ')[1] === 'true';
-  const runningTimeSeconds = lines[2].split(' ')[1];
-  const visitedPairOfStates = parseInt(lines[3].split(' ')[1], 10);
+  const parsedStats = parseTCheckerStats(stats);
+
+  
+  const relationshipFulfilled = parsedStats['RELATIONSHIP_FULFILLED'] === 'true';
+  const runningTimeSeconds = parsedStats['RUNNING_TIME_SECONDS'] || '0';
+  const visitedPairOfStates = parseInt(parsedStats['VISITED_PAIR_OF_STATES'] || '0', 10);
   return {
     relationshipFulfilled,
     visitedPairOfStates,
     runningTimeSeconds,
   };
+}
+
+function parseTCheckerStats(stats): Record<string, string> {
+  const lines = stats.split('\n');
+  const parsedStats: Record<string, string> = {};
+
+  for (const line of lines) {
+    const [key, value] = line.split(' ').map((part) => part.trim());
+    if (key && value) {
+      parsedStats[key] = value;
+    }
+  }
+
+  return parsedStats;
+  
 }

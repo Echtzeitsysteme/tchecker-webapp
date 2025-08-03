@@ -14,6 +14,7 @@ import { OpenedSystems } from '../viewmodel/OpenedSystems.ts';
 import UploadButton from './UploadButton.tsx';
 import DownloadButton from './DownloadButton.tsx';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
+import { SimulationModel, SimulationState } from '../viewmodel/SimulationModel.ts';
 
 const drawerWidth = '25%';
 
@@ -30,10 +31,11 @@ export interface AutomatonDrawerProps {
   viewModel: AnalysisViewModel;
   openedSystems: OpenedSystems;
   openedProcesses: OpenedProcesses;
+  simulationModel: SimulationModel;
 }
 
 const AutomatonDrawer: React.FC<AutomatonDrawerProps> = (props) => {
-  const { viewModel, openedSystems, openedProcesses } = props;
+  const { viewModel, openedSystems, openedProcesses, simulationModel } = props;
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
@@ -52,6 +54,7 @@ const AutomatonDrawer: React.FC<AutomatonDrawerProps> = (props) => {
         color="inherit"
         aria-label="open drawer"
         onClick={handleDrawerOpen}
+        disabled={simulationModel.simulationActive}
         edge="start"
         sx={{ ml: 1, mr: 1, ...(open && { display: 'none' }) }}
       >

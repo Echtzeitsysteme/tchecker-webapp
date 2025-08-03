@@ -30,7 +30,6 @@ interface SyntaxCheckErrorDialogProps {
 }
 
 const SyntaxCheckErrorDialog: React.FC<SyntaxCheckErrorDialogProps> = (props: SyntaxCheckErrorDialogProps) => {
-  console.log("Running SyntaxCheckErrorDialog");
   const { checkedSystem, syntaxCheckErrors, open, onClose } = props;
 
   const { t } = useTranslation();
