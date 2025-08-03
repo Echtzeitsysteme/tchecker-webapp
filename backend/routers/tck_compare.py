@@ -11,8 +11,8 @@ router = APIRouter(prefix="/tck_compare", tags=["tck_compare"])
 
 
 class TckCompareBody(BaseModel):
-    first_ta: str
-    second_ta: str
+    first_sysdecl: str
+    second_sysdecl: str
     relationship: int
     block_size: Optional[int] = None
     table_size: Optional[int] = None
@@ -20,24 +20,24 @@ class TckCompareBody(BaseModel):
 @router.put("/")
 async def compare(body: TckCompareBody = Body(...)):
     
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file_first_ta:
-        temp_file_first_ta.write(body.first_ta.encode('utf-8'))
-        temp_file_path_first_ta = temp_file_first_ta.name
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file_second_ta:
-        temp_file_second_ta.write(body.second_ta.encode('utf-8'))
-        temp_file_path_second_ta  = temp_file_second_ta.name
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file_first_sysdecl:
+        temp_file_first_sysdecl.write(body.first_sysdecl.encode('utf-8'))
+        temp_file_path_first_sysdecl = temp_file_first_sysdecl.name
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file_second_sysdecl:
+        temp_file_second_sysdecl.write(body.second_sysdecl.encode('utf-8'))
+        temp_file_path_second_sysdecl  = temp_file_second_sysdecl.name
         
     
     output, result = call_tchecker.call_tchecker_function_in_new_process(
         func_name="tck_compare",
         argtypes=["ctypes.c_char_p", "ctypes.c_char_p", "ctypes.c_int", "ctypes.POINTER(ctypes.c_int)", "ctypes.POINTER(ctypes.c_int)"],
         has_result=True,
-        args=[temp_file_path_first_ta, temp_file_path_second_ta, body.relationship, body.block_size, body.table_size]
+        args=[temp_file_path_first_sysdecl, temp_file_path_second_sysdecl, body.relationship, body.block_size, body.table_size]
     )
 
     # Cleanup
-    os.remove(temp_file_path_first_ta)
-    os.remove(temp_file_path_second_ta)
+    os.remove(temp_file_path_first_sysdecl)
+    os.remove(temp_file_path_second_sysdecl)
 
     resultMap = {
         "stats": output,

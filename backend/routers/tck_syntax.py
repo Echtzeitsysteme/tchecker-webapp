@@ -81,7 +81,7 @@ def to_json(body: str = Body(...)):
 
 
 class CreateSynchronizedProductBody(BaseModel):
-    ta: str
+    sysdecl: str
     process_name: str
 
 @router.put("/create_synchronized_product", summary="Create a synchronized product of timed automata")
@@ -91,7 +91,7 @@ def create_product(body: CreateSynchronizedProductBody = Body(...)):
         raise HTTPException(status_code=422, detail="Request body cannot be empty")
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(body.ta.encode('utf-8'))
+        temp_file.write(body.sysdecl.encode('utf-8'))
         temp_file_path = temp_file.name
         
     

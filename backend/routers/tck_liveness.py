@@ -10,7 +10,7 @@ router = APIRouter(prefix="/tck_liveness", tags=["tck_liveness"])
 
 
 class TckLivenessBody(BaseModel):
-    ta: str
+    sysdecl: str
     labels: str
     algorithm: int
     search_order: int
@@ -22,7 +22,7 @@ class TckLivenessBody(BaseModel):
 async def reach(body: TckLivenessBody = Body(...)):
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(body.ta.encode('utf-8'))
+        temp_file.write(body.sysdecl.encode('utf-8'))
         temp_file_path = temp_file.name
         
     print(temp_file_path)

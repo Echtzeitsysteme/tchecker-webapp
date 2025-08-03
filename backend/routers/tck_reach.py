@@ -10,7 +10,7 @@ router = APIRouter(prefix="/tck_reach", tags=["tck_reach"])
 
 
 class TckReachBody(BaseModel):
-    ta: str
+    sysdecl: str
     labels: str
     algorithm: int
     search_order: int
@@ -22,7 +22,7 @@ class TckReachBody(BaseModel):
 async def reach(body: TckReachBody = Body(...)):
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(body.ta.encode('utf-8'))
+        temp_file.write(body.sysdecl.encode('utf-8'))
         temp_file_path = temp_file.name
         
     print(temp_file_path)
