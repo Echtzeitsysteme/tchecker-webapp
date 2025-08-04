@@ -26,11 +26,16 @@ def check(body: str = Body(...)):
         args=[temp_file_path]
     )
 
-    # Cleanup
-    # os.remove(temp_file_path)
-    
-    print("Output: " + output)
-    print(result)
+    #Cleanup
+    os.remove(temp_file_path)
+
+    #remove last newline and trailing spaces
+    result = result.strip()
+
+    if result.endswith("Syntax OK"):
+        result = {"status": "success", "message": "Syntax is correct"}
+    else:
+        result = {"status": "error", "message": result}
     return result
 
 @router.put("/to_dot", summary="Convert timed automaton to DOT format")
