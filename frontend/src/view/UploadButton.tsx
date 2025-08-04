@@ -54,8 +54,8 @@ const UploadButton: React.FC<OpenedDocs> = (props) => {
           return;
         }
                 
-        if (syntaxCheckResult.length > 0) {
-          setSyntaxCheckError(syntaxCheckResult);
+        if (!syntaxCheckResult.success) {
+          setSyntaxCheckError(syntaxCheckResult.messages);
           return;
         }
 

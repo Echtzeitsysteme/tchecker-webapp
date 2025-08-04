@@ -65,10 +65,10 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
     }
 
     console.log(response);
-    if (response.length === 0) {
+    if (response.success) {
       setSuccessSnackbarOpen(true);
     } else {
-      setSyntaxCheckErrors(response);
+      setSyntaxCheckErrors(response.messages);
     }
   }
 

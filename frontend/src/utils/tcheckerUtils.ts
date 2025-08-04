@@ -138,12 +138,12 @@ export class TCheckerUtils {
     }
   }
 
-  public static async callSyntaxCheckForSystem(system: SystemOptionType): Promise<ErrorResult<string[]>> {
+  public static async callSyntaxCheckForSystem(system: SystemOptionType): Promise<ErrorResult<{success: boolean, messages: string[]}>> {
     const sysdecl = await createTCheckerFile(system);
     return await this.callSyntaxCheck(sysdecl);
   }
 
-  public static async callSyntaxCheck(ta: string): Promise<ErrorResult<string[]>> {
+  public static async callSyntaxCheck(ta: string): Promise<ErrorResult<{success: boolean, messages: string[]}>> {
     const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSyntax)}/check`;
     
     const [response, error] = await tryCatchAsync(() =>fetch(url, {
@@ -161,9 +161,9 @@ export class TCheckerUtils {
       return [null, new Error(`Syntax check failed: ${errorText}`)];
     }
 
-    const responseString = await response!.json();
+    const responseObj = await response!.json() as {status: string, message: string};
 
-    const syntaxErrors = responseString
+    const parsedMessages = responseObj.message
       .split('\n')
       .filter(
         (line: string) =>
@@ -172,7 +172,9 @@ export class TCheckerUtils {
           !line.toLocaleLowerCase().includes('error(s)')
       );
 
-    return [syntaxErrors, null];
+    const success = responseObj.status === 'success';
+
+    return [{success: success, messages: parsedMessages}, null];
   }
 
   public static async callCreateSynchronizedProduct(system: SystemOptionType): Promise<ErrorResult<any>> {
