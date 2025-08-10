@@ -14,7 +14,7 @@ import { OpenedSystems } from '../viewmodel/OpenedSystems.ts';
 import UploadButton from './UploadButton.tsx';
 import DownloadButton from './DownloadButton.tsx';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
-import { SimulationModel, SimulationState } from '../viewmodel/SimulationModel.ts';
+import { SimulationModel } from '../viewmodel/SimulationModel.ts';
 
 const drawerWidth = '25%';
 

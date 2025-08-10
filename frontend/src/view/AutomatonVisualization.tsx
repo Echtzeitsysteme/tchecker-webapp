@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Data, Network, Options } from 'vis-network/peer';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { useMappingUtils } from '../utils/mappingUtils';
@@ -165,24 +165,24 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
     }
   }
 
-  function highlightEdge(edgeId: string) {
-    console.log('Highlighting edge:', edgeId);
-    if (!network || !edgeId) {
-      console.log('Network or edgeId is not defined');
-      return;
-    }
+  // function highlightEdge(edgeId: string) {
+  //   console.log('Highlighting edge:', edgeId);
+  //   if (!network || !edgeId) {
+  //     console.log('Network or edgeId is not defined');
+  //     return;
+  //   }
 
-    if (edgeExists(edgeId)) {
-      network.updateEdge(edgeId, {
-        color: {
-          color: '#3A9BDC',
-          highlight: '#1260cc',
-        }
-      });
-    } else {
-      console.warn(`Edge with ID ${edgeId} does not exist in the network.`);
-    }
-  }
+  //   if (edgeExists(edgeId)) {
+  //     network.updateEdge(edgeId, {
+  //       color: {
+  //         color: '#3A9BDC',
+  //         highlight: '#1260cc',
+  //       }
+  //     });
+  //   } else {
+  //     console.warn(`Edge with ID ${edgeId} does not exist in the network.`);
+  //   }
+  // }
 
 
   function nodeExists(nodeId: string): boolean {
@@ -190,10 +190,10 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
     return nodePath && nodePath.length > 0;
   }
 
-  function edgeExists(edgeId: string): boolean {
-    const edgePath = network?.getBaseEdges(edgeId);
-    return edgePath && edgePath.length > 0;
-  }
+  // function edgeExists(edgeId: string): boolean {
+  //   const edgePath = network?.getBaseEdges(edgeId);
+  //   return edgePath && edgePath.length > 0;
+  // }
 
   return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;
 });

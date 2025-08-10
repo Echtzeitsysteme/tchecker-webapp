@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AnalysisViewModel } from './AnalysisViewModel';
 import { SystemOptionType } from './OpenedSystems';
 import { TCheckerUtils } from '../utils/tcheckerUtils';
 

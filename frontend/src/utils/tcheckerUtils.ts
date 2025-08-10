@@ -1,5 +1,5 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
-import { NextSimulationState, RawSimulationState } from '../viewmodel/SimulationModel';
+import { RawSimulationState } from '../viewmodel/SimulationModel';
 import { getAppConfig } from './appConfigUtils';
 import { createTCheckerFile } from './tckFileUtils';
 import { ErrorResult, tryCatchAsync } from './tryCatchUtil';

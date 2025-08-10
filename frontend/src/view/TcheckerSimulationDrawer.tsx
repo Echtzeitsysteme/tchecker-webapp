@@ -1,5 +1,5 @@
 import { Button } from '@mui/material';
-import { AnalysisState, AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
+import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { PlayArrow, Stop } from '@mui/icons-material';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { IntegerValue, SimulationModel } from '../viewmodel/SimulationModel';
@@ -13,7 +13,7 @@ export interface TCheckerSimulationDrawerProps {
 }
 
 export const TCheckerSimulationDrawer: React.FC<TCheckerSimulationDrawerProps> = (props) => {
-  const { viewModel, openedProcesses, simulationModel } = props;
+  const { simulationModel } = props;
 
   const [locations, setLocations] = React.useState<string[]>([]);
   const [zone, setZone] = React.useState<string>('');

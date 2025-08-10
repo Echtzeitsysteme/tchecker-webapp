@@ -7,7 +7,7 @@ import { OpenedSystems } from '../viewmodel/OpenedSystems';
 import { TCheckerUtils } from '../utils/tcheckerUtils';
 import { ParseUtils } from '../utils/parseUtils';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
-import { AnalysisState, AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
+import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import SyntaxCheckErrorDialog from './SyntaxCheckErrorDialog';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { useTranslation } from 'react-i18next';

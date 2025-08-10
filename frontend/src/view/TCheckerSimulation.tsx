@@ -1,10 +1,9 @@
 import { Box } from '@mui/material';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import AutomatonVisualization from './AutomatonVisualization';
-import TCheckerSimulationDrawer from './TcheckerSimulationDrawer';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { SimulationModel } from '../viewmodel/SimulationModel';
-import { Children, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface TCheckerSimulationProps {
     viewModel: AnalysisViewModel;
