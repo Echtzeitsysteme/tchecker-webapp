@@ -18,7 +18,7 @@ class TckReachBody(BaseModel):
     block_size: Optional[int] = None
     table_size: Optional[int] = None
 
-@router.put("/")
+@router.put("")
 async def reach(body: TckReachBody = Body(...)):
     
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
