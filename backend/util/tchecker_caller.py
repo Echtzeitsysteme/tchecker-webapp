@@ -49,6 +49,12 @@ def main():
             val = py_args[idx]
             if isinstance(val, str):
                 py_args[idx] = val.encode('utf-8')
+        if at is ctypes.POINTER(ctypes.c_int):
+            val = py_args[idx]
+            if isinstance(val, int):
+                py_args[idx] = ctypes.pointer(ctypes.c_int(val))
+            elif isinstance(val, list):
+                py_args[idx] = (ctypes.c_int * len(val))(*val)
 
 
     # 5) call it (any C‑side prints still go to stdout)
