@@ -1,0 +1,185 @@
+name: CI pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  HUSKY: 0
+
+jobs:
+  # Install dependencies and cache
+  install:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache node_modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn --immutable
+
+  # Check linting and formatting
+  static-analysis:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Linting
+        run: yarn eslint . --report-unused-disable-directives
+
+      - name: Check formatting
+        run: yarn prettier --check .
+
+  # Build the project
+  build:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Build the project
+        run: yarn build
+
+  # Run unit tests
+  test:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Run unit tests
+        run: yarn test
+
+  # Run end-to-end tests with Playwright
+  e2e:
+    needs:
+      - static-analysis
+      - build
+      - test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release') || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Playwright dependencies for E2E tests
+        run: yarn playwright install-deps
+
+      - name: Install browsers for E2E tests
+        run: yarn playwright install
+
+      - name: Run E2E tests
+        run: yarn e2e
+
+  # Deploy to GitHub Pages
+#  deploy:
+#    needs:
+#      - e2e
+#    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/release'
+#    concurrency:
+#      group: deploy_gh_pages
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '22'
+#
+#      - name: Restore cache
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            node_modules
+#            ~/.cache/yarn
+#          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+#
+#      - name: Build the project
+#        run: yarn build
+#
+#      - name: Deploy to GitHub Pages
+#        uses: JamesIves/github-pages-deploy-action@v4
+#        with:
+#          folder: dist/timed-automata-analysis

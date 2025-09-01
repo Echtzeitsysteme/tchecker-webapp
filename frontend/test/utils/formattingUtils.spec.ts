@@ -1,0 +1,316 @@
+import { renderHook } from '@testing-library/react';
+import { useFormattingUtils } from '../../src/utils/formattingUtils';
+import { ClockConstraintFixture } from '../fixture/clockConstraintFixture';
+import { ClockConstraint } from '../../src/model/ta/clockConstraint';
+import { Clock } from '../../src/model/ta/clock';
+import { Switch } from '../../src/model/ta/switch';
+import { Location } from '../../src/model/ta/location';
+import { LocationFixture } from '../fixture/locationFixture';
+import { SwitchFixture } from '../fixture/switchFixture';
+import { ClockComparator } from '../../src/model/ta/clockComparator';
+
+describe('formattingUtils', () => {
+  // define and import all util functions once before starting as import is more complicated due to the use of hooks
+  let formatClockConstraint: (clockConstraint?: ClockConstraint, clauseJoinStr?: string) => string | undefined;
+  let formatReset: (clocks?: Clock[], compact?: boolean) => string | undefined;
+  let formatLocationLabelTable: (location: Location) => string;
+  let formatLocationLabelVisual: (location: Location) => string;
+  let formatSwitchTable: (sw: Switch) => string;
+  let formatSwitchLabelVisual: (sw: Switch) => string;
+
+  beforeAll(() => {
+    const { result } = renderHook(() => useFormattingUtils());
+    formatClockConstraint = result.current.formatClockConstraint;
+    formatReset = result.current.formatReset;
+    formatLocationLabelTable = result.current.formatLocationLabelTable;
+    formatLocationLabelVisual = result.current.formatLocationLabelVisual;
+    formatSwitchTable = result.current.formatSwitchTable;
+    formatSwitchLabelVisual = result.current.formatSwitchLabelVisual;
+  });
+
+  test('formatClockConstraint formats clock constraint correctly when constraint has a single clause', () => {
+    // given
+    const clockConstraint = ClockConstraintFixture.withSingleClause();
+    const clause = clockConstraint.clauses[0];
+    const expectedFormatting = `${clause.lhs.name} ${clause.op} ${clause.rhs}`;
+
+    // when
+    const formattedConstraint = formatClockConstraint(clockConstraint);
+
+    // then
+    expect(formattedConstraint).toBe(expectedFormatting);
+  });
+
+  test('formatClockConstraint formats clock constraint correctly when constraint has multiple clauses', () => {
+    // given
+    const clockConstraint = ClockConstraintFixture.withMultipleClauses();
+    const clause0 = clockConstraint.clauses[0];
+    const clauseFormatting0 = `${clause0.lhs.name} ${clause0.op} ${clause0.rhs}`;
+    const clause1 = clockConstraint.clauses[1];
+    const clauseFormatting1 = `${clause1.lhs.name} ${clause1.op} ${clause1.rhs}`;
+    const expectedFormatting = `${clauseFormatting0} ∧ ${clauseFormatting1}`;
+
+    // when
+    const formattedConstraint = formatClockConstraint(clockConstraint);
+
+    // then
+    expect(formattedConstraint).toBe(expectedFormatting);
+  });
+
+  test('formatClockConstraint returns undefined when clock constraint is undefined', () => {
+    // when
+    const formattedConstraint = formatClockConstraint(undefined);
+
+    // then
+    expect(formattedConstraint).toBeUndefined();
+  });
+
+  test('formatClockConstraint returns undefined when clock constraint has no clauses', () => {
+    // given
+    const clockConstraint = ClockConstraintFixture.withEmptyClauses();
+
+    // when
+    const formattedConstraint = formatClockConstraint(clockConstraint);
+
+    // then
+    expect(formattedConstraint).toBeUndefined();
+  });
+
+  test('formatReset formats reset correctly when reset has a single clock', () => {
+    // given
+    const clocks: Clock[] = [{ name: 'c', size: 1 }];
+
+    // when
+    const formattedReset = formatReset(clocks);
+
+    // then
+    expect(formattedReset).toBe('{ c }');
+  });
+
+  test('formatReset formats reset correctly when reset has multiple clocks', () => {
+    // given
+    const clocks: Clock[] = [{ name: 'c1', size: 1 }, { name: 'c2', size: 1 }];
+
+    // when
+    const formattedReset = formatReset(clocks);
+
+    // then
+    expect(formattedReset).toBe('{ c1, c2 }');
+  });
+
+  test('formatReset returns undefined when reset is undefined', () => {
+    // when
+    const formattedReset = formatReset(undefined);
+
+    // then
+    expect(formattedReset).toBeUndefined();
+  });
+
+  test('formatReset formats reset correctly when result should be compact', () => {
+    // given
+    const clocks: Clock[] = [{ name: 'c1', size: 1 }, { name: 'c2', size: 1 }];
+
+    // when
+    const formattedReset = formatReset(clocks, true);
+
+    // then
+    expect(formattedReset).toBe('{c1,c2}');
+  });
+
+  test('formatLocationLabelTable formats location label correctly when there is no invariant', () => {
+    // given
+    const location = LocationFixture.withoutInvariant();
+    const expectedFormatting = location.name;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelTable formats location label correctly when the invariant has a single clause', () => {
+    // given
+    const location = LocationFixture.withInvariant();
+    const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelTable formats location label correctly when the invariant has multiple clauses', () => {
+    // given
+    const location = LocationFixture.initWithMultiClauseInvariant();
+    const expectedFormatting = `${location.name}, ${formatClockConstraint(location.invariant)}`;
+
+    // when
+    const formattedLocation = formatLocationLabelTable(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelVisual formats location label correctly when invariant is defined', () => {
+    // given
+    const location = LocationFixture.withInvariant();
+    const expectedFormatting = `${location.name}\n${formatClockConstraint(location.invariant)}`;
+
+    // when
+    const formattedLocation = formatLocationLabelVisual(location);
+
+    // then
+    expect(formattedLocation).toBe(expectedFormatting);
+  });
+
+  test('formatLocationLabelVisual formats location label correctly when invariant is undefined', () => {
+    // given
+    const location = LocationFixture.withoutInvariant();
+
+    // when
+    const formattedLocation = formatLocationLabelVisual(location);
+
+    // then
+    expect(formattedLocation).toBe(location.name);
+  });
+
+  test('formatSwitchTable formats switch correctly when there is a guard', () => {
+    // given
+    const guard = ClockConstraintFixture.withSingleClause();
+    const sw = SwitchFixture.withResetAndGuard([], guard);
+    const formattedGuard = formatClockConstraint(guard);
+    const expectedFormatting = [sw.source.name, sw.actionLabel, formattedGuard, sw.target.name].join(', ');
+
+    // when
+    const formattedSwitch = formatSwitchTable(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+
+  test('formatSwitchTable formats switch correctly when there is no guard', () => {
+    // given
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
+
+    // when
+    const formattedSwitch = formatSwitchTable(sw);
+
+    // then
+    for (const clockComparator of Object.values(ClockComparator)) {
+      expect(formattedSwitch).not.toContain(clockComparator);
+    }
+  });
+
+  test('formatSwitchTable formats switch correctly when there is a reset', () => {
+    // given
+    const clock: Clock = { name: 'c', size: 1 };
+    const sw = SwitchFixture.withResetAndGuard([clock], undefined);
+    const expectedFormatting = [sw.source.name, sw.actionLabel, `{${clock.name}}`, sw.target.name].join(', ');
+
+    // when
+    const formattedSwitch = formatSwitchTable(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+
+  test('formatSwitchTable formats switch correctly when there is no reset', () => {
+    // given
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
+
+    // when
+    const formattedSwitch = formatSwitchTable(sw);
+
+    // then
+    expect(formattedSwitch).not.toContain('{');
+    expect(formattedSwitch).not.toContain('}');
+  });
+
+  test('formatSwitchTable formats switch correctly when there is a guard and a reset', () => {
+    // given
+    const clock: Clock = { name: 'c', size: 1 };
+    const guard = ClockConstraintFixture.withClockNames(clock.name);
+    const sw = SwitchFixture.withResetAndGuard([clock], guard);
+    const expectedFormatting = [
+      sw.source.name,
+      sw.actionLabel,
+      formatClockConstraint(guard),
+      `{${clock.name}}`,
+      sw.target.name,
+    ].join(', ');
+
+    // when
+    const formattedSwitch = formatSwitchTable(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+
+  test('formatSwitchLabelVisual formats switch correctly when there is a guard', () => {
+    // given
+    const guard = ClockConstraintFixture.withSingleClause();
+    const sw = SwitchFixture.withResetAndGuard([], guard);
+    const formattedGuard = formatClockConstraint(guard);
+    const expectedFormatting = `${sw.actionLabel}\n${formattedGuard}`;
+
+    // when
+    const formattedSwitch = formatSwitchLabelVisual(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+
+  test('formatSwitchLabelVisual formats switch correctly when there is no guard', () => {
+    // given
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
+
+    // when
+    const formattedSwitch = formatSwitchLabelVisual(sw);
+
+    // then
+    for (const clockComparator of Object.values(ClockComparator)) {
+      expect(formattedSwitch).not.toContain(clockComparator);
+    }
+  });
+
+  test('formatSwitchLabelVisual formats switch correctly when there is a reset', () => {
+    // given
+    const clock: Clock = { name: 'c', size: 1 };
+    const sw = SwitchFixture.withResetAndGuard([clock], undefined);
+    const expectedFormatting = `${sw.actionLabel}\n{ ${clock.name} }`;
+
+    // when
+    const formattedSwitch = formatSwitchLabelVisual(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+
+  test('formatSwitchLabelVisual formats switch correctly when there is no reset', () => {
+    // given
+    const sw = SwitchFixture.withResetAndGuard([], undefined);
+
+    // when
+    const formattedSwitch = formatSwitchLabelVisual(sw);
+
+    // then
+    expect(formattedSwitch).not.toContain('{');
+    expect(formattedSwitch).not.toContain('}');
+  });
+
+  test('formatSwitchLabelVisual formats switch correctly when there is a guard and a reset', () => {
+    // given
+    const clock: Clock = { name: 'c', size: 1 };
+    const guard = ClockConstraintFixture.withClockNames(clock.name);
+    const sw = SwitchFixture.withResetAndGuard([clock], guard);
+    const expectedFormatting = [sw.actionLabel, formatClockConstraint(guard), `{ ${clock.name} }`].join('\n');
+
+    // when
+    const formattedSwitch = formatSwitchLabelVisual(sw);
+
+    // then
+    expect(formattedSwitch).toBe(expectedFormatting);
+  });
+});
