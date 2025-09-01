@@ -1,0 +1,39 @@
+{
+  "name" : "init_System",
+  "processes" : [
+    {
+      "pid" : "init_Process",
+      "locations" : [
+        {
+          "id" : "init_Process_init",
+          "attributes" : {
+            "label" : "init",
+            "initial" : "",
+            "invariant" : "x<5",
+            "layout" : "-100,100"            
+          }
+        },
+        {
+          "id" : "init_Process_final",
+          "attributes" : {
+            "label" : "final",
+            "layout" : "100,100"            
+          }
+        }
+      ],
+      "edges" : [
+        {
+          "src" : "init_Process_init",
+          "tgt" : "init_Process_final",
+          "attributes" : {
+            "label" : "start",
+            "provided" : "x>1 && y>=3",
+            "do" : "x=0"            
+          }
+        }
+      ]
+    }
+  ],
+  "sync" : [
+  ]
+}

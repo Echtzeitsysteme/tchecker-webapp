@@ -1,0 +1,14 @@
+digraph init_System {
+  subgraph cluster_init_Process {
+    label="init_Process";
+    init_Process_init[label="init", initial="", invariant="x<5", layout="-100,100"];
+    init_Process_final[label="final", layout="100,100"];
+    init_Process_init -> init_Process_final[label="start", provided="x>1 && y>=3", do="x=0"];
+  }
+  subgraph cluster_synchronizations {
+    label="Synchronizations";
+    node[shape="none"];
+    "
+    ";
+  }
+}
