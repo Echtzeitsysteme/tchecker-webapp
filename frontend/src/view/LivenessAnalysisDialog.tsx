@@ -11,7 +11,7 @@ import { useButtonUtils } from '../utils/buttonUtils';
 import { CircularProgress, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField } from '@mui/material';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses';
 import { OpenedSystems } from '../viewmodel/OpenedSystems';
-import { TCheckerLivenessAlgorithm, TCheckerLivenessCertificate, TCheckerLivenessStats, TCheckerSearchOrder, TCheckerUtils } from '../utils/tcheckerUtils';
+import { TCheckerLivenessAlgorithm, TCheckerLivenessCertificate, TCheckerLivenessStats, TCheckerUtils } from '../utils/tcheckerUtils';
 import StringListInput from './TCheckerLabelsInput';
 import TCheckerErrorDialog from './TCheckerErrorDialog';
 import AbortAnalysisDialog from './AbortAnalysisDialog';
@@ -35,7 +35,6 @@ const LivenessAnalysisDialog = (props: LivenessAnalysisDialogProps) => {
 
     const [formValues, setFormValues] = useState({
         algorithm: 'reach',
-        searchOrder: 'dfs',
         certificate: 'none',
         blockSize: null,
         hashTableSize: null,
@@ -56,7 +55,6 @@ const LivenessAnalysisDialog = (props: LivenessAnalysisDialogProps) => {
         setFormValues((prev) => ({
             ...prev,
             algorithm: 'couvscc',
-            searchOrder: 'dfs',
             certificate: 'none',
             blockSize: null,
             hashTableSize: null,
@@ -98,10 +96,9 @@ const LivenessAnalysisDialog = (props: LivenessAnalysisDialogProps) => {
 
         const [result, error] = await TCheckerUtils.callLivenessAnalysis(
             openedSystems.selectedSystem,
-            formValues.algorithm as TCheckerLivenessAlgorithm,
-            formValues.searchOrder as TCheckerSearchOrder,
-            formValues.certificate as TCheckerLivenessCertificate,
             formValues.labels,
+            formValues.algorithm as TCheckerLivenessAlgorithm,
+            formValues.certificate as TCheckerLivenessCertificate,
             formValues.blockSize as number | null,
             formValues.hashTableSize as number | null,
             abortController.signal
@@ -191,20 +188,6 @@ const LivenessAnalysisDialog = (props: LivenessAnalysisDialogProps) => {
                                 >
                                     <FormControlLabel value="couvscc" control={<Radio />} label="couvscc" />
                                     <FormControlLabel value="ndfs" control={<Radio />} label="ndfs" />
-                                </RadioGroup>
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>{t('tcheckerLivenessAnalysisDialog.form.searchOrder')}</FormLabel>
-                                <RadioGroup
-                                    row
-                                    name="searchOrder"
-                                    value={formValues.searchOrder}
-                                    onChange={handleRadioChange}
-
-                                >
-                                    <FormControlLabel value="dfs" control={<Radio />} label={t('tcheckerLivenessAnalysisDialog.form.searchOrder.dfs')} />
-                                    <FormControlLabel value="bfs" control={<Radio />} label={t('tcheckerLivenessAnalysisDialog.form.searchOrder.bfs')} />
                                 </RadioGroup>
                             </FormControl>
 

@@ -1,9 +1,7 @@
-# ⏰ Timed-Automata Analysis Frontend
+# ⏰ Timed-Automata Analysis
 
 This project is a tool for modeling and analyzing Timed Automata.
-The tool is based on React and TypeScript.
-
-It was originally started by Luth1um [https://github.com/luth1um/timed-automata-analysis](https://github.com/luth1um/timed-automata-analysis)
+The tool is based on React and TypeScript and can be extended easily to also incorporate analysis techniques based on the created models.
 
 ## 🚀 Quick Start
 

@@ -20,7 +20,7 @@ export enum TCheckerReachabilityCertificate {
   graph = 'graph',
   symbolic = 'symbolic',
   concrete = 'concrete',
-  none = 'none',
+  none = 'none'
 }
 
 export enum TCheckerLivenessAlgorithm {
@@ -31,6 +31,7 @@ export enum TCheckerLivenessAlgorithm {
 export enum TCheckerLivenessCertificate {
   graph = 'graph',
   symbolic = 'symbolic',
+  none = 'none'
 }
 
 export interface TCheckerReachabilityStats {
@@ -227,15 +228,14 @@ export class TCheckerUtils {
     // Pass enums as indices
 
     const algorithmIndex = Object.values(TCheckerReachabilityAlgorithm).indexOf(algorithm);
-    const searchOrderIndex = Object.values(TCheckerSearchOrder).indexOf(searchOrder);
     const certificateIndex = Object.values(TCheckerReachabilityCertificate).indexOf(certificate);
 
     const body = {
       sysdecl: sysdecl,
       algorithm: algorithmIndex,
-      search_order: searchOrderIndex,
+      search_order: searchOrder.valueOf(),
       certificate: certificateIndex,
-      labels: labels.join(','),
+      labels: labels,
       block_size: blockSize,
       table_size: tableSize,
     };
@@ -268,10 +268,9 @@ export class TCheckerUtils {
 
   public static async callLivenessAnalysis(
     system: SystemOptionType,
-    algorithm: TCheckerLivenessAlgorithm,
-    searchOrder: TCheckerSearchOrder,
-    certificate: TCheckerLivenessCertificate,
     labels: string[],
+    algorithm: TCheckerLivenessAlgorithm,
+    certificate: TCheckerLivenessCertificate,
     blockSize: number | null,
     tableSize: number | null,
     abortSignal?: AbortSignal
@@ -284,15 +283,13 @@ export class TCheckerUtils {
 
     // Pass enums as indices
     const algorithmIndex = Object.values(TCheckerLivenessAlgorithm).indexOf(algorithm);
-    const searchOrderIndex = Object.values(TCheckerSearchOrder).indexOf(searchOrder);
     const certificateIndex = Object.values(TCheckerLivenessCertificate).indexOf(certificate);
 
     const body = {
       sysdecl: sysdecl,
+      labels: labels,
       algorithm: algorithmIndex,
-      search_order: searchOrderIndex,
       certificate: certificateIndex,
-      labels: labels.join(','),
       block_size: blockSize,
       table_size: tableSize,
     };
@@ -326,6 +323,7 @@ export class TCheckerUtils {
   public static async callCompareAnalysis(
     firstSystem: SystemOptionType,
     secondSystem: SystemOptionType,
+    generateWitness: boolean,
     blockSize: number | null,
     tableSize: number | null,
     abortSignal?: AbortSignal
@@ -340,6 +338,7 @@ export class TCheckerUtils {
     const body = {
       first_sysdecl: firstSysdecl,
       second_sysdecl: secondSysdecl,
+      generate_witness: generateWitness,
       block_size: blockSize,
       table_size: tableSize,
       relationship: 0

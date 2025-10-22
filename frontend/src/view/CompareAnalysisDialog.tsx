@@ -65,6 +65,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         const [result, error] = await TCheckerUtils.callCompareAnalysis(
             openedSystems.systemOptions.find(system => system.label === firstSystem) as SystemOptionType,
             openedSystems.systemOptions.find(system => system.label === secondSystem) as SystemOptionType,
+            false,
             null,
             null,
             abortController.signal

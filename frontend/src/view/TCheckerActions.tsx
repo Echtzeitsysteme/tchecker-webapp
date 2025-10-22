@@ -12,7 +12,7 @@ import SyntaxCheckErrorDialog from './SyntaxCheckErrorDialog';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { useTranslation } from 'react-i18next';
 import LivenessAnalysisDialog from './LivenessAnalysisDialog';
-import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog copy';
+import ReachabilityAnalysisDialog from './ReachabilityAnalysisDialog';
 import CompareAnalysisDialog from './CompareAnalysisDialog';
 import TCheckerErrorDialog from './TCheckerErrorDialog';
 import { SimulationModel } from '../viewmodel/SimulationModel';
@@ -197,7 +197,7 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             onMouseDown={() => startSimulation()}
             variant="contained"
             color="primary">
-            {t('Simulation starten')}
+            {t('tcheckerAction.simulate')}
           </Button>
         </div>
       )}
