@@ -1,4 +1,4 @@
-import { Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel } from '@mui/material';
+import { Radio, RadioGroup, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormLabel, FormControlLabel } from '@mui/material';
 import { OpenedSystems, SystemOptionType } from '../viewmodel/OpenedSystems';
 import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';
@@ -41,18 +41,14 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         setView('form');
     }, [open]);
 
-    const toggleSystemSelection = (systemName: string) => {
-        if (firstSystem === undefined) {
-            setFirstSystem(systemName);
+    // Handle changes in RadioGroups
+    const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('RadioGroup changed:', e.target.name, e.target.value);
+        if (e.target.name == "first system") {
+            setFirstSystem(e.target.value);
         }
-        else if (secondSystem === undefined && systemName !== firstSystem) {
-            setSecondSystem(systemName);
-        }
-        else if (systemName === firstSystem) {
-            setFirstSystem(undefined);
-        }
-        else if (systemName === secondSystem) {
-            setSecondSystem(undefined);
+        else {
+            setSecondSystem(e.target.value)
         }
     };
 
@@ -150,22 +146,37 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                         <div>
                             <div>
                                 <h3>{t('tcheckerCompareAnalysisDialog.selectSystems')}</h3>
-                                {openedSystems.systemOptions.map((system) => (
-                                    <div key={system.label}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={system.label === firstSystem || system.label === secondSystem}
-                                                    onChange={() => toggleSystemSelection(system.label)}
-                                                    color="primary"
-                                                />
-                                            }
-                                            label={system.label}
-                                        />
-                                    </div>
-                                ))}
+                                <FormControl>
+                                    <FormLabel>{t('tcheckerCompareAnalysisDialog.firstSystem')}</FormLabel>
+                                    <RadioGroup
+                                        name="first system"
+                                        value={firstSystem}
+                                        onChange={handleRadioChange}
+                                    >
+                                    {openedSystems.systemOptions.map((system) => (
+                                        <div key={system.label}>
+                                            <FormControlLabel value={system.label} control={<Radio />} label={system.label} />
+                                        </div>
+                                    ))}
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormControl>
+                                    <FormLabel>{t('tcheckerCompareAnalysisDialog.secondSystem')}</FormLabel>
+                                    <RadioGroup
+                                        name="second system"
+                                        value={secondSystem}
+                                        onChange={handleRadioChange}
+                                    >
+                                    {openedSystems.systemOptions.map((system) => (
+                                        <div key={system.label}>
+                                            <FormControlLabel value={system.label} control={<Radio />} label={system.label} />
+                                        </div>
+                                    ))}
+                                    </RadioGroup>
+                                </FormControl>
                             </div>
                             <div>
+                                <h3>{t('tcheckerCompareAnalysisDialog.generateWitness')}</h3>
                                 <FormControlLabel
                                     control={
                                         <Checkbox
@@ -174,7 +185,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                                             color="primary"
                                         />
                                     }
-                                    label={"Generate Witness"}
+                                    label={t('tcheckerCompareAnalysisDialog.generateWitness')}
                                 /> 
                             </div>
                         </div>
@@ -207,7 +218,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => startCompareAnalysis())}
                             variant="contained"
                             color="primary"
-                            disabled={!firstSystem || !secondSystem || firstSystem === secondSystem}
+                            disabled={!firstSystem || !secondSystem}
                         >
                             {loading ? (
                                 <>
