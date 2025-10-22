@@ -1,52 +1,30 @@
-import tempfile
-import os
-from typing import Optional
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
-import util.call_tchecker as call_tchecker
-import asyncio
+from tcheckerpy.tools import tck_liveness
 
 router = APIRouter(prefix="/tck_liveness", tags=["tck_liveness"])
 
-
 class TckLivenessBody(BaseModel):
     sysdecl: str
-    labels: str
+    labels: list[str]
     algorithm: int
     certificate: int
-    block_size: Optional[int] = None
-    table_size: Optional[int] = None
+    block_size: int | None = None
+    table_size: int | None = None
 
 @router.put("")
-async def reach(body: TckLivenessBody = Body(...)):
+async def liveness(body: TckLivenessBody = Body(...)):
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(body.sysdecl.encode('utf-8'))
-        temp_file_path = temp_file.name
-        
-    print(temp_file_path)
-    print(body.labels)
+    if not body or not body.sysdecl:
+        raise HTTPException(status_code=422, detail="Request body and sysdecls cannot be empty")
 
-
-    # Call the TChecker liveness function with following definition:
-    # void tck_liveness(const char * output_filename, const char * sysdecl_filename, const char * labels,
-    #               tck_liveness_algorithm_t algorithm, tck_liveness_certificate_t certificate, int * block_size,
-    #               int * table_size);
-    # output_filename is not included in the argtypes as it is set by the call function when has_result=True
-    output, result = call_tchecker.call_tchecker_function_in_new_process(
-        func_name="tck_liveness",
-        argtypes=["ctypes.c_char_p", "ctypes.c_char_p", "ctypes.c_int", "ctypes.c_int", "ctypes.POINTER(ctypes.c_int)", "ctypes.POINTER(ctypes.c_int)"],
-        has_result=True,
-        args=[temp_file_path, body.labels, body.algorithm, body.certificate, body.block_size, body.table_size]
+    _, stats, certificate = tck_liveness.liveness(
+        body.sysdecl,
+        labels=body.labels,
+        algorithm=tck_liveness.Algorithm(body.algorithm),
+        certificate=tck_liveness.Certificate(body.certificate),
+        block_size=body.block_size,
+        table_size=body.table_size
     )
-
-    # Cleanup
-    os.remove(temp_file_path)
-
-    resultMap = {
-        "stats": output,
-        "certificate": result
-    }
-    print("Output: " + output)
-    
-    return resultMap
+   
+    return {"stats": stats, "certificate": certificate}
