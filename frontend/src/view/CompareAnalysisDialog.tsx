@@ -23,7 +23,8 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
     const [view, setView] = useState<'form' | 'result'>('form');
     const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
     const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
-    const [result, setResult] = useState<TCheckerCompareStats | undefined>(undefined); // Replace 'any' with the actual type of the result if known
+    const [generate_witness, setGenerateWitness] = useState(false);
+    const [result, setResult] = useState<{ stats: TCheckerCompareStats, certificate: string } | null>(null); // Replace 'any' with the actual type of the result if known
     const [loading, setLoading] = useState(false);
     const [abortController, setAbortController] = useState<AbortController | null>(null);
     const [tcheckerError, setTcheckerError] = useState<string | undefined>(undefined);
@@ -33,6 +34,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         if (!open) {
             setFirstSystem(undefined);
             setSecondSystem(undefined);
+            setGenerateWitness(false);
             setResult(undefined);
             setLoading(false);
         }
@@ -65,7 +67,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         const [result, error] = await TCheckerUtils.callCompareAnalysis(
             openedSystems.systemOptions.find(system => system.label === firstSystem) as SystemOptionType,
             openedSystems.systemOptions.find(system => system.label === secondSystem) as SystemOptionType,
-            false,
+            generate_witness,
             null,
             null,
             abortController.signal
@@ -82,7 +84,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
             return;
         }
 
-        setResult(result!.stats);
+        setResult(result);
         setView('result');
     }
 
@@ -98,10 +100,28 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         setView('form');
         setFirstSystem(undefined);
         setSecondSystem(undefined);
+        setGenerateWitness(false);
         setResult(undefined);
         setLoading(false);
         setAbortController(null);
         setTcheckerError(undefined);
+
+    }
+
+    function downloadCertificate() {
+        if (!result) {
+            return;
+        }
+
+        try {
+            const blob = new Blob([result!.certificate]);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${firstSystem}_${secondSystem}_certificate.txt`;
+            a.click();
+        } catch (error) {
+            console.error(error);
+        }
 
     }
 
@@ -120,30 +140,45 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                     {view === 'result' ? (
                         <div>
                             <div>
-                                {t('tcheckerLivenessAnalysisDialog.result.relationshipFulfilled')}: {result?.relationshipFulfilled.toString()}
+                                {t('tcheckerLivenessAnalysisDialog.result.relationshipFulfilled')}: {result?.stats.relationshipFulfilled.toString()}
                             </div>
                             <div>
-                                {t('tcheckerLivenessAnalysisDialog.result.visitedPairOfStates')}: {result?.visitedPairOfStates.toString()}
+                                {t('tcheckerLivenessAnalysisDialog.result.visitedPairOfStates')}: {result?.stats.visitedPairOfStates.toString()}
                             </div>
                         </div>
                     ) : (
                         <div>
-                            <h3>{t('tcheckerCompareAnalysisDialog.selectSystems')}</h3>
-                            {openedSystems.systemOptions.map((system) => (
-                                <div key={system.label}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={system.label === firstSystem || system.label === secondSystem}
-                                                onChange={() => toggleSystemSelection(system.label)}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={system.label}
-                                    />
-                                </div>
-                            ))}
+                            <div>
+                                <h3>{t('tcheckerCompareAnalysisDialog.selectSystems')}</h3>
+                                {openedSystems.systemOptions.map((system) => (
+                                    <div key={system.label}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={system.label === firstSystem || system.label === secondSystem}
+                                                    onChange={() => toggleSystemSelection(system.label)}
+                                                    color="primary"
+                                                />
+                                            }
+                                            label={system.label}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={generate_witness}
+                                            onChange={() => setGenerateWitness(!generate_witness)}
+                                            color="primary"
+                                        />
+                                    }
+                                    label={"Generate Witness"}
+                                /> 
+                            </div>
                         </div>
+                        
                     )}
                 </DialogContent>
 
@@ -158,7 +193,14 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                     </Button>
 
                     {view === 'result' ? (
-                        <></>
+                        <Button
+                            disabled={!result || !result.certificate}
+                            onMouseDown={() => downloadCertificate()}
+                            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+                            variant="contained"
+                        >
+                            {t('tcheckerCompareAnalysisDialog.downloadCertificate')}
+                        </Button>
                     ) : (
                         <Button
                             onMouseDown={() => startCompareAnalysis()}

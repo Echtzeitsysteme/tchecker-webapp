@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
 import { AutomatonManipulation } from './view/AutomatonManipulation';
 import ProcessSelection from './view/ProcessSelection.tsx';
-import AutomatonDrawer from './view/AutomationDrawer.tsx';
+import AutomatonDrawer from './view/AutomatonDrawer.tsx';
 import { useOpenedSystems } from './viewmodel/OpenedSystems.ts';
 import { useOpenedProcesses } from './viewmodel/OpenedProcesses.ts';
 import LayoutButton from './view/LayoutButton.tsx';

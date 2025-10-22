@@ -27,4 +27,4 @@ async def compare(body: TckCompareBody = Body(...)):
         table_size=body.table_size
     )
 
-    return {"stats": stats, "witness": witness}
+    return {"stats": stats, "certificate": witness}

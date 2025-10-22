@@ -172,6 +172,7 @@
   "tcheckerCompareAnalysisDialog.cancel": "Cancel",
   "tcheckerCompareAnalysisDialog.startCompare": "Start Comparison",
   "tcheckerCompareAnalysisDialog.analysisInProgress": "Analyzing...",
+  "tcheckerCompareAnalysisDialog.downloadCertificate": "Download Certificate",
   "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Relationship Fulfilled",
   "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Visited Pairs of States",
   "abortAnalysisDialog.title": "Abort Analysis",
