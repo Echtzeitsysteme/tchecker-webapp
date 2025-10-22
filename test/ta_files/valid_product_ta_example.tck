@@ -1,0 +1,8 @@
+system:init_System
+event:init_Process_start
+clock:1:x
+clock:1:y
+process:init_System
+location:init_System:init{initial: : layout:-100,100 : invariant:x<5}
+location:init_System:final{layout:100,100}
+edge:init_System:init:final:init_Process_start{do:x=0 : provided:x>1 && y>=3}
