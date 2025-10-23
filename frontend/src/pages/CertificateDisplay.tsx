@@ -1,20 +1,20 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
-import AutomatonVisualization from './view/AutomatonVisualization';
+import AutomatonVisualization from '../view/AutomatonVisualization.tsx';
 import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
-import { AutomatonManipulation } from './view/AutomatonManipulation';
-import ProcessSelection from './view/ProcessSelection.tsx';
-import AutomatonDrawer from './view/AutomatonDrawer.tsx';
-import { useOpenedSystems } from './viewmodel/OpenedSystems.ts';
-import { useOpenedProcesses } from './viewmodel/OpenedProcesses.ts';
-import LayoutButton from './view/LayoutButton.tsx';
-import TCheckerSimulation from './view/TCheckerSimulation.tsx';
-import TCheckerSimulationDrawer from './view/TcheckerSimulationDrawer.tsx';
-import { useSimulationModel } from './viewmodel/SimulationModel.ts';
+import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
+import { AutomatonManipulation } from '../view/AutomatonManipulation.tsx';
+import ProcessSelection from '../view/ProcessSelection.tsx';
+import AutomatonDrawer from '../view/AutomatonDrawer.tsx';
+import { useOpenedSystems } from '../viewmodel/OpenedSystems.ts';
+import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
+import LayoutButton from '../view/LayoutButton.tsx';
+import TCheckerSimulation from '../view/TCheckerSimulation.tsx';
+import TCheckerSimulationDrawer from '../view/TcheckerSimulationDrawer.tsx';
+import { useSimulationModel } from '../viewmodel/SimulationModel.ts';
 
-function App() {
+function CertificateDisplay() {
   const viewModel = useAnalysisViewModel();
   const openedSystems = useOpenedSystems();
   const openedProcesses = useOpenedProcesses();
@@ -61,10 +61,9 @@ function App() {
   //   console.log('ViewModelChanged');
   // }, [viewModel])
 
-  
   return (
     <>
-      <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
+      {/* <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
         ⏰ {t('app.title')}
       </h1>
       <Box ref={toolRef} sx={{ display: 'flex', alignItems: 'center' }}>
@@ -110,9 +109,9 @@ function App() {
             </Grid>
           </Grid>
         </Box>
-      )}
+      )} */}
     </>
   );
 }
 
-export default App;
+export default CertificateDisplay;
