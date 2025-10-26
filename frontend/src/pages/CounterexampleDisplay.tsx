@@ -1,7 +1,7 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
 import AutomatonVisualization from '../view/AutomatonVisualization.tsx';
-import { Box, Grid } from '@mui/material';
+import { Box, Grid, Button } from '@mui/material';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ParseUtils } from '../utils/parseUtils.ts';
 import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
@@ -62,7 +62,7 @@ function CounterexampleDisplay() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', height: `${contentHeight}px`, overflow: 'hidden' }}>
+      <Box sx={{ display: 'flex', height: `${6/7 * contentHeight}px`, overflow: 'hidden' }}>
         {firstSystem && firstViewModel ? (
           <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '50%', border: "1px solid grey" }}>
             <h3 style={{ textAlign: 'center' }}>
@@ -83,6 +83,52 @@ function CounterexampleDisplay() {
             <AutomatonVisualization viewModel={secondViewModel} />
           </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '50%', border: "1px solid grey" }}></Grid>)
         }
+      </Box>
+      <Box sx={{ display: 'flex', height: `${1/7 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+          <Button
+              disabled={false}
+              // onMouseDown={() => downloadCertificate()}
+              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              variant="contained"
+          >
+              {t('tcheckerCounterexampleDisplay.button.initalState')}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+          <Button
+              disabled={false}
+              // onMouseDown={() => downloadCertificate()}
+              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              variant="contained"
+          >
+              {t('tcheckerCounterexampleDisplay.button.previousState')}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+          <Button
+              disabled={false}
+              // onMouseDown={() => downloadCertificate()}
+              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              variant="contained"
+          >
+              {t('tcheckerCounterexampleDisplay.button.nextState')}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+          <Button
+              disabled={false}
+              // onMouseDown={() => downloadCertificate()}
+              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              variant="contained"
+          >
+              {t('tcheckerCounterexampleDisplay.button.finalState')}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        </Grid>
       </Box>
     </>
   );

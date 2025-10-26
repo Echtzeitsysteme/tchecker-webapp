@@ -183,6 +183,10 @@
   "abortAnalysisDialog.contentText": "Are you sure you want to abort the analysis?",
   "abortAnalysisDialog.button.cancel": "No",
   "abortAnalysisDialog.button.confirm": "Yes, abort",
-  "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again."
+  "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again.",
+  "tcheckerCounterexampleDisplay.button.initalState": "Go to initial state",
+  "tcheckerCounterexampleDisplay.button.nextState": "Next state",
+  "tcheckerCounterexampleDisplay.button.previousState": "Previous state",
+  "tcheckerCounterexampleDisplay.button.finalState": "Go to final state"
 }
   

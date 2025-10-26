@@ -183,5 +183,9 @@
   "abortAnalysisDialog.contentText": "Sind Sie sicher, dass Sie die Analyse abbrechen möchten?",
   "abortAnalysisDialog.button.cancel": "Nein",
   "abortAnalysisDialog.button.confirm": "Ja, abbrechen",
-  "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut."
+  "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
+  "tcheckerCounterexampleDisplay.button.initalState": "Zu Startzustand springen",
+  "tcheckerCounterexampleDisplay.button.nextState": "Nächster Zustand",
+  "tcheckerCounterexampleDisplay.button.previousState": "Vorheriger Zustand",
+  "tcheckerCounterexampleDisplay.button.finalState": "Zu finalem Zustand springen"
 }
