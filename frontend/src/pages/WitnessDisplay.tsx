@@ -14,7 +14,7 @@ import TCheckerSimulation from '../view/TCheckerSimulation.tsx';
 import TCheckerSimulationDrawer from '../view/TcheckerSimulationDrawer.tsx';
 import { useSimulationModel } from '../viewmodel/SimulationModel.ts';
 
-function CertificateDisplay() {
+function WitnessDisplay() {
   const viewModel = useAnalysisViewModel();
   const openedSystems = useOpenedSystems();
   const openedProcesses = useOpenedProcesses();
@@ -114,4 +114,4 @@ function CertificateDisplay() {
   );
 }
 
-export default CertificateDisplay;
+export default WitnessDisplay;

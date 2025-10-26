@@ -1,6 +1,7 @@
 import { Radio, RadioGroup, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormLabel, FormControlLabel } from '@mui/material';
 import { OpenedSystems, SystemOptionType } from '../viewmodel/OpenedSystems';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { TCheckerCompareStats, TCheckerUtils } from '../utils/tcheckerUtils';
@@ -22,7 +23,9 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
 
     const [view, setView] = useState<'form' | 'result'>('form');
     const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
+    const [firstProduct, setFirstProduct] = useState<string | undefined>(undefined);
     const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
+    const [secondProduct, setSecondProduct] = useState<string | undefined>(undefined);
     const [generateWitness, setGenerateWitness] = useState(false);
     const [result, setResult] = useState<{ stats: TCheckerCompareStats, certificate: string } | null>(null); // Replace 'any' with the actual type of the result if known
     const [loading, setLoading] = useState(false);
@@ -42,13 +45,16 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
     }, [open]);
 
     // Handle changes in RadioGroups
-    const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    async function handleRadioChange (e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
         console.log('RadioGroup changed:', e.target.name, e.target.value);
+        const product = await getSynchronizedProduct(e.target.value);
         if (e.target.name == "first system") {
             setFirstSystem(e.target.value);
+            setFirstProduct(product);
         }
         else {
-            setSecondSystem(e.target.value)
+            setSecondSystem(e.target.value);
+            setSecondProduct(product);
         }
     };
 
@@ -82,6 +88,20 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
 
         setResult(result);
         setView('result');
+    }
+
+    async function getSynchronizedProduct(ta: string) {
+
+        const [result, error] = await TCheckerUtils.callCreateSynchronizedProduct(
+            openedSystems.systemOptions.find(system => system.label === ta) as SystemOptionType
+        );
+
+        if (error) {
+            setTcheckerError(error.message);
+            return;
+        }
+
+        return result;
     }
 
     function handleClose(force: boolean = false) {
@@ -120,14 +140,6 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         }
     }
 
-    function displayCertificate() {
-        if (!result) {
-            return;
-        }
-
-        window.open("/certificate", "_blank");
-        
-    }
 
     function handleAbortAnalysisDialogClose(confirmed: boolean) {
         setAbortAnalysisDialogOpen(false);
@@ -158,7 +170,6 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                                     <FormLabel>{t('tcheckerCompareAnalysisDialog.firstSystem')}</FormLabel>
                                     <RadioGroup
                                         name="first system"
-                                        value={firstSystem}
                                         onChange={handleRadioChange}
                                     >
                                     {openedSystems.systemOptions.map((system) => (
@@ -172,7 +183,6 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                                     <FormLabel>{t('tcheckerCompareAnalysisDialog.secondSystem')}</FormLabel>
                                     <RadioGroup
                                         name="second system"
-                                        value={secondSystem}
                                         onChange={handleRadioChange}
                                     >
                                     {openedSystems.systemOptions.map((system) => (
@@ -222,14 +232,22 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                                 {t('tcheckerCompareAnalysisDialog.downloadCertificate')}
                             </Button>
                             &nbsp;
-                            <Button
-                                disabled={!result || !result.certificate}
-                                onMouseDown={() => displayCertificate()}
-                                onKeyDown={(e) => executeOnKeyboardClick(e.key, () => displayCertificate())}
-                                variant="contained"
+                            <Link 
+                                to={(result.stats.relationshipFulfilled ? "/display-witness" : "/display-counterexample")}
+                                target="_self"
+                                state={{ 
+                                    firstSystem : firstProduct, 
+                                    secondSystem : secondProduct, 
+                                    certificate : result.certificate
+                                }}
                             >
-                                {t('tcheckerCompareAnalysisDialog.displayCertificate')}
-                            </Button>
+                                <Button
+                                    disabled={!result || !result.certificate}
+                                    variant="contained"
+                                >
+                                    {t('tcheckerCompareAnalysisDialog.displayCertificate')}
+                                </Button>
+                            </Link>
                         </div>
                     ) : (
                         <Button

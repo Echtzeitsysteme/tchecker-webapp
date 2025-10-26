@@ -196,7 +196,8 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             style={{ marginTop: '12px' }}
             onMouseDown={() => startSimulation()}
             variant="contained"
-            color="primary">
+            color="primary"
+            disabled={true}>
             {t('tcheckerAction.simulate')}
           </Button>
         </div>
