@@ -1,6 +1,5 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
 import AutomatonVisualization from '../view/AutomatonVisualization.tsx';
 import { Box, Grid } from '@mui/material';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -10,10 +9,9 @@ import { SystemOptionType } from '../viewmodel/OpenedSystems';
 import LayoutButton from '../view/LayoutButton.tsx';
 
 function CounterexampleDisplay() {
-  const location = useLocation();
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
-  const certificate = location.state?.certificate;
+  const certificate = localStorage.getItem("certificate");
 
   const [firstSystem, setFirstSystem] = useState<SystemOptionType | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<SystemOptionType | undefined>(undefined);
@@ -26,12 +24,15 @@ function CounterexampleDisplay() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const parsedDataFirst = await ParseUtils.parseFile(location.state?.firstSystem);
+
+      const parsedDataFirst = await ParseUtils.parseFile(localStorage.getItem("firstSystem"));
       const firstSystem = await ParseUtils.convertToTa(parsedDataFirst);
       setFirstSystem(firstSystem);
-      const parsedDataSecond= await ParseUtils.parseFile(location.state?.secondSystem);
+
+      const parsedDataSecond= await ParseUtils.parseFile(localStorage.getItem("secondSystem"));
       const secondSystem = await ParseUtils.convertToTa(parsedDataSecond);
       setSecondSystem(secondSystem);
+
       // automata should only have one process each since they are products
       firstViewModel.setAutomaton(firstViewModel, firstSystem.processes[0].automaton);
       secondViewModel.setAutomaton(secondViewModel, secondSystem.processes[0].automaton);
@@ -58,10 +59,6 @@ function CounterexampleDisplay() {
 
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
-
-  // useEffect(() => {
-  //   console.log('ViewModelChanged');
-  // }, [viewModel])
 
   return (
     <>

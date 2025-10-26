@@ -1,7 +1,6 @@
 import { Radio, RadioGroup, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormLabel, FormControlLabel } from '@mui/material';
 import { OpenedSystems, SystemOptionType } from '../viewmodel/OpenedSystems';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { TCheckerCompareStats, TCheckerUtils } from '../utils/tcheckerUtils';
@@ -15,7 +14,6 @@ export interface CompareAnalysisDialog {
 
 }
 
-
 const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
     const { open, onClose, openedSystems } = props;
     const { t } = useTranslation();
@@ -23,9 +21,7 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
 
     const [view, setView] = useState<'form' | 'result'>('form');
     const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
-    const [firstProduct, setFirstProduct] = useState<string | undefined>(undefined);
     const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
-    const [secondProduct, setSecondProduct] = useState<string | undefined>(undefined);
     const [generateWitness, setGenerateWitness] = useState(false);
     const [result, setResult] = useState<{ stats: TCheckerCompareStats, certificate: string } | null>(null); // Replace 'any' with the actual type of the result if known
     const [loading, setLoading] = useState(false);
@@ -45,16 +41,13 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
     }, [open]);
 
     // Handle changes in RadioGroups
-    async function handleRadioChange (e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+    function handleRadioChange (e: React.ChangeEvent<HTMLInputElement>): void {
         console.log('RadioGroup changed:', e.target.name, e.target.value);
-        const product = await getSynchronizedProduct(e.target.value);
         if (e.target.name == "first system") {
             setFirstSystem(e.target.value);
-            setFirstProduct(product);
         }
         else {
             setSecondSystem(e.target.value);
-            setSecondProduct(product);
         }
     };
 
@@ -140,6 +133,21 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         }
     }
 
+    async function displayCertificate() {
+        if (!result || !result.certificate) {
+            return;
+        }
+
+        const firstProduct = await getSynchronizedProduct(firstSystem);
+        const secondProduct = await getSynchronizedProduct(secondSystem);
+
+        localStorage.setItem('firstSystem', firstProduct);
+        localStorage.setItem('secondSystem', secondProduct);
+        localStorage.setItem('certificate', result.certificate);
+
+        window.open(result.stats.relationshipFulfilled ? "/display-witness" : "/display-counterexample", "_blank");
+        
+    }
 
     function handleAbortAnalysisDialogClose(confirmed: boolean) {
         setAbortAnalysisDialogOpen(false);
@@ -232,22 +240,14 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
                                 {t('tcheckerCompareAnalysisDialog.downloadCertificate')}
                             </Button>
                             &nbsp;
-                            <Link 
-                                to={(result.stats.relationshipFulfilled ? "/display-witness" : "/display-counterexample")}
-                                target="_self"
-                                state={{ 
-                                    firstSystem : firstProduct, 
-                                    secondSystem : secondProduct, 
-                                    certificate : result.certificate
-                                }}
+                            <Button
+                                disabled={!result || !result.certificate}
+                                onMouseDown={() => displayCertificate()}
+                                onKeyDown={(e) => executeOnKeyboardClick(e.key, () => displayCertificate())}
+                                variant="contained"
                             >
-                                <Button
-                                    disabled={!result || !result.certificate}
-                                    variant="contained"
-                                >
-                                    {t('tcheckerCompareAnalysisDialog.displayCertificate')}
-                                </Button>
-                            </Link>
+                                {t('tcheckerCompareAnalysisDialog.displayCertificate')}
+                            </Button>
                         </div>
                     ) : (
                         <Button
