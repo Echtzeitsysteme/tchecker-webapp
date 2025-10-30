@@ -58,7 +58,7 @@ export const TCheckerSimulation: React.FC<TCheckerSimulationProps> = (props) => 
                 width: '100%',
             }}
         >
-            <AutomatonVisualization viewModel={viewModel} ref={childRef} />
+            <AutomatonVisualization viewModel={viewModel} coloredLoc='' coloredSwitch='' ref={childRef} />
 
         </Box>
     )

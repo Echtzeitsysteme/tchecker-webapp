@@ -105,7 +105,7 @@ function HomePage() {
               <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
             </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
-              <AutomatonVisualization viewModel={viewModel} />
+              <AutomatonVisualization viewModel={viewModel} coloredLoc='' coloredSwitch='' />
             </Grid>
           </Grid>
         </Box>

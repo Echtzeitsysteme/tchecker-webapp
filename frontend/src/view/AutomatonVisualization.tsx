@@ -1,20 +1,23 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+// import { useImperativeHandle} from 'react';
 import { Data, Network, Options } from 'vis-network/peer';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { useMappingUtils } from '../utils/mappingUtils';
 
 interface VisualizationProps {
   viewModel: AnalysisViewModel;
+  coloredLoc: string;
+  coloredSwitch: string;
 }
 
 const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
-  const { viewModel } = props;
+  const { viewModel, coloredLoc, coloredSwitch } = props;
   const { ta, updateLocationCoordinates } = viewModel;
   const { locations } = ta;
   const { mapTaToVisDataModel } = useMappingUtils();
   const networkRef = useRef<HTMLDivElement>(null);
   const [network, setNetwork] = useState<Network | null>(null);
-  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
+  // const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
 
   const data: Data = mapTaToVisDataModel(ta);
 
@@ -29,9 +32,9 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
     }
   });
 
-  useImperativeHandle(ref, () => ({
-    highlightNode: (nodeId: string) => highlightNode(nodeId),
-  }));
+  // useImperativeHandle(ref, () => ({
+  //   highlightNode: (nodeId: string) => highlightNode(nodeId),
+  // }));
 
   useEffect(() => {
     if (!networkRef.current) {
@@ -83,13 +86,19 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
       },
     };
 
-    const network = new Network(networkRef.current, data, options);
-    setNetwork(network);
+    var data = data;
 
-    
+    if (coloredLoc) {
+      data = colorElement(coloredLoc, true);
+    }
+    if (coloredSwitch) {
+      data = colorElement(coloredSwitch, false);
+    }
+
+    const network = new Network(networkRef.current, data, options);
+
     network.on('stabilizationIterationsDone', function () {
 
-    
       const nodePositions = network.getPositions();
       locations.forEach((location) => {
         const locationName = location.name;
@@ -98,9 +107,9 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
         location.setLayout = true;
       });
 
-      if (highlightedNode) {
-        highlightNode(highlightedNode);
-      }
+      // if (highlightedNode) {
+      //   highlightNode(highlightedNode);
+      // }
     });
 
     network.on('click', (params) => {
@@ -130,39 +139,79 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
         });
       }
     });
+    
+    setNetwork(network);
+
   }, [viewModel, mapTaToVisDataModel]);
 
-  function highlightNode(nodeId: string) {
-    console.log('Highlighting node:', nodeId);
-    setHighlightedNode(nodeId);
+  // function highlightNode(nodeId: string) {
+  //   console.log('Highlighting node:', nodeId);
+  //   setHighlightedNode(nodeId);
     
-    if (!network || !nodeId) {
-      console.log('Network or nodeId is not defined');
-      return;
+  //   if (!network || !nodeId) {
+  //     console.log('Network or nodeId is not defined');
+  //     return;
+  //   }
+    
+  //   if (highlightedNode && nodeExists(highlightedNode)) {
+  //     if (highlightedNode !== nodeId) {
+  //       network.updateClusteredNode(highlightedNode, {
+  //         color: {
+  //           background: 'white',
+  //           border: 'black',
+  //         }
+  //       });
+  //     }
+  //   }
+
+
+  //   if (nodeExists(nodeId)) {
+  //     network.updateClusteredNode(nodeId, {
+  //       color: {
+  //         background: '#3A9BDC',
+  //         border: '#1260cc',
+  //       }
+  //     })
+  //   } else {
+  //     console.warn(`Node with ID ${nodeId} does not exist in the network.`);
+  //   }
+  // }
+
+  function colorElement(id: string, isNode: boolean) {
+    const newData = data;
+
+    if (!id) {
+      console.log('nodeId is not defined');
+      return data;
     }
-    
-    if (highlightedNode && nodeExists(highlightedNode)) {
-      if (highlightedNode !== nodeId) {
-        network.updateClusteredNode(highlightedNode, {
-          color: {
-            background: 'white',
-            border: 'black',
+    if (!network) {
+      return data;
+    }
+
+    var elementExists = false;
+    if (isNode) {
+      newData.nodes.forEach((node) => {
+        if (node.id === id) {
+          node.color = {
+            background: '#ffb3d7ff',
+            border: '#ca568cff',
           }
-        });
-      }
-    }
-
-
-    if (nodeExists(nodeId)) {
-      network.updateClusteredNode(nodeId, {
-        color: {
-          background: '#3A9BDC',
-          border: '#1260cc',
+          elementExists = true;
+        }
+      }) 
+    } else {
+      newData.edges.forEach((edge) => {
+        if (edge.id == id) {
+          edge.color = '#ca568cff';
+          elementExists = true;
         }
       })
-    } else {
-      console.warn(`Node with ID ${nodeId} does not exist in the network.`);
     }
+    if (!elementExists) {
+      console.warn(`Element with ID ${id} does not exist in the network.`);
+    }
+    return newData;
+
   }
 
   // function highlightEdge(edgeId: string) {
@@ -185,10 +234,10 @@ const AutomatonVisualization = forwardRef((props: VisualizationProps, ref) => {
   // }
 
 
-  function nodeExists(nodeId: string): boolean {
-    const nodePath = network?.findNode(nodeId)
-    return nodePath && nodePath.length > 0;
-  }
+  // function nodeExists(nodeId: string): boolean {
+  //   const nodePath = network?.findNode(nodeId)
+  //   return nodePath && nodePath.length > 0;
+  // }
 
   // function edgeExists(edgeId: string): boolean {
   //   const edgePath = network?.getBaseEdges(edgeId);

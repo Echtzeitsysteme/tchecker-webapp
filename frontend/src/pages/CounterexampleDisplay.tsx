@@ -10,7 +10,7 @@ import LayoutButton from '../view/LayoutButton.tsx';
 function CounterexampleDisplay() {
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
-  const certificate = localStorage.getItem("certificate");
+  // const certificate = localStorage.getItem("certificate");
 
   const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
@@ -74,7 +74,7 @@ function CounterexampleDisplay() {
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
             {firstViewModel ? (
                 <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-                  <AutomatonVisualization viewModel={firstViewModel} />
+                  <AutomatonVisualization viewModel={firstViewModel} coloredLoc={firstViewModel.ta.locations.filter(location => location.isInitial)[0].name} coloredSwitch='' />
                 </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}></Grid>)
               }
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
@@ -97,7 +97,7 @@ function CounterexampleDisplay() {
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
             {secondViewModel ? (
                 <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-                  <AutomatonVisualization viewModel={secondViewModel} />
+                  <AutomatonVisualization viewModel={secondViewModel} coloredLoc={secondViewModel.ta.locations.filter(location => location.isInitial)[0].name} coloredSwitch='' />
                 </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}></Grid>)
               }
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
@@ -110,9 +110,9 @@ function CounterexampleDisplay() {
         </Box>
       </Box>
       <Box sx={{ display: 'flex', height: `${1/8 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
               disabled={false}
               // onMouseDown={() => downloadCertificate()}
@@ -122,7 +122,7 @@ function CounterexampleDisplay() {
               {t('tcheckerCounterexampleDisplay.button.initalState')}
           </Button>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
               disabled={false}
               // onMouseDown={() => downloadCertificate()}
@@ -132,7 +132,7 @@ function CounterexampleDisplay() {
               {t('tcheckerCounterexampleDisplay.button.previousState')}
           </Button>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
               disabled={false}
               // onMouseDown={() => downloadCertificate()}
@@ -142,7 +142,7 @@ function CounterexampleDisplay() {
               {t('tcheckerCounterexampleDisplay.button.nextState')}
           </Button>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
               disabled={false}
               // onMouseDown={() => downloadCertificate()}
@@ -152,7 +152,7 @@ function CounterexampleDisplay() {
               {t('tcheckerCounterexampleDisplay.button.finalState')}
           </Button>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", "align-items": "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
         </Grid>
       </Box>
     </>
