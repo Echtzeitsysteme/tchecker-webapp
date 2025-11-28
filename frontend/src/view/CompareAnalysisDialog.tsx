@@ -6,6 +6,7 @@ import { useButtonUtils } from '../utils/buttonUtils';
 import { TCheckerCompareStats, TCheckerUtils } from '../utils/tcheckerUtils';
 import TCheckerErrorDialog from './TCheckerErrorDialog';
 import AbortAnalysisDialog from './AbortAnalysisDialog';
+import { createTCheckerFile } from '../utils/tckFileUtils';
 
 export interface CompareAnalysisDialog {
     open: boolean;
@@ -83,20 +84,6 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         setView('result');
     }
 
-    async function getSynchronizedProduct(ta: string) {
-
-        const [result, error] = await TCheckerUtils.callCreateSynchronizedProduct(
-            openedSystems.systemOptions.find(system => system.label === ta) as SystemOptionType
-        );
-
-        if (error) {
-            setTcheckerError(error.message);
-            return;
-        }
-
-        return result;
-    }
-
     function handleClose(force: boolean = false) {
 
         if (!force && loading) {
@@ -138,11 +125,11 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
             return;
         }
 
-        const firstProduct = await getSynchronizedProduct(firstSystem);
-        const secondProduct = await getSynchronizedProduct(secondSystem);
+        const firstDecl = await createTCheckerFile(openedSystems.systemOptions.find(system => system.label === firstSystem) as SystemOptionType);
+        const secondDecl = await createTCheckerFile(openedSystems.systemOptions.find(system => system.label === secondSystem) as SystemOptionType);
 
-        localStorage.setItem('firstSystem', firstProduct);
-        localStorage.setItem('secondSystem', secondProduct);
+        localStorage.setItem('firstSystem', firstDecl);
+        localStorage.setItem('secondSystem', secondDecl);
         localStorage.setItem('certificate', result.certificate);
 
         window.open(result.stats.relationshipFulfilled ? "/display-witness" : "/display-counterexample", "_blank");

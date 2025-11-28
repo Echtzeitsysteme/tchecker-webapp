@@ -5,7 +5,7 @@ import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import { AutomatonManipulation } from '../view/AutomatonManipulation.tsx';
-import ProcessSelection from '../view/ProcessSelection.tsx';
+import ProcessManipulation from '../view/ProcessManipulation.tsx';
 import AutomatonDrawer from '../view/AutomatonDrawer.tsx';
 import { useOpenedSystems } from '../viewmodel/OpenedSystems.ts';
 import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
@@ -68,7 +68,7 @@ function WitnessDisplay() {
       </h1>
       <Box ref={toolRef} sx={{ display: 'flex', alignItems: 'center' }}>
         <AutomatonDrawer viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
-        <ProcessSelection viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
+        <ProcessManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
         <LayoutButton viewModel={viewModel} />
       </Box>
       {simulationModel.simulationActive ? (

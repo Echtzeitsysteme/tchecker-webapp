@@ -6,11 +6,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ParseUtils } from '../utils/parseUtils.ts';
 import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import LayoutButton from '../view/LayoutButton.tsx';
+import ProcessSelection from '../view/ProcessSelection.tsx';
+import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
 
 function CounterexampleDisplay() {
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
   // const certificate = localStorage.getItem("certificate");
+
+  const firstOpenedProcesses = useOpenedProcesses();
+  const secondOpenedProcesses = useOpenedProcesses();
 
   const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
@@ -32,9 +37,13 @@ function CounterexampleDisplay() {
       const secondSystem = await ParseUtils.convertToTa(parsedDataSecond);
       setSecondSystem(secondSystem.label);
 
-      // automata should only have one process each since they are products
       firstViewModel.setAutomaton(firstViewModel, firstSystem.processes[0].automaton);
       secondViewModel.setAutomaton(secondViewModel, secondSystem.processes[0].automaton);
+
+      firstOpenedProcesses.setAutomatonOptions(firstOpenedProcesses, firstSystem.processes);
+      firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
+      secondOpenedProcesses.setAutomatonOptions(secondOpenedProcesses, secondSystem.processes);
+      secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
     };
 
     fetchData();
@@ -64,10 +73,12 @@ function CounterexampleDisplay() {
       <Box sx={{ display: 'flex',  height: `${7/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7/8 * contentHeight}px`, width: '50%', overflow: 'hidden' }}>
           {firstSystem && firstViewModel? (
-            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
               <h3 style={{ textAlign: 'center' }}>
                 {firstSystem}
               </h3>
+              &nbsp;
+              <ProcessSelection viewModel={firstViewModel} openedProcesses={firstOpenedProcesses}/>
               &nbsp;
               <LayoutButton viewModel={firstViewModel} />
             </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '100%', border: "1px solid grey" }}></Grid>) }
@@ -85,12 +96,15 @@ function CounterexampleDisplay() {
             </Grid>
           </Box>
         </Box>
+
         <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7/8 * contentHeight}px`, width: '50%', overflow: 'hidden' }}>
           {secondSystem && secondViewModel? (
-            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
               <h3 style={{ textAlign: 'center' }}>
                 {secondSystem}
               </h3>
+              &nbsp;
+              <ProcessSelection viewModel={secondViewModel} openedProcesses={secondOpenedProcesses}/>
               &nbsp;
               <LayoutButton viewModel={secondViewModel} />
             </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '100%', border: "1px solid grey" }}></Grid>) }
@@ -109,6 +123,7 @@ function CounterexampleDisplay() {
           </Box>
         </Box>
       </Box>
+
       <Box sx={{ display: 'flex', height: `${1/8 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
         </Grid>
@@ -119,7 +134,7 @@ function CounterexampleDisplay() {
               // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
               variant="contained"
           >
-              {t('tcheckerCounterexampleDisplay.button.initalState')}
+              {t('tcheckerCounterexampleDisplay.button.initialState')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>

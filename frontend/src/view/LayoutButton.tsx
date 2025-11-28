@@ -21,7 +21,7 @@ const LayoutButton: React.FC<LayoutButtonProps> = (props) => {
   };
 
   return (
-    <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 0.4, mb: 2.3 }}>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 0.4 }}>
       <Button variant="contained" onClick={adjustLayout}>
         {t('layoutButton.text')}
       </Button>

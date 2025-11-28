@@ -184,7 +184,7 @@
   "abortAnalysisDialog.button.cancel": "Nein",
   "abortAnalysisDialog.button.confirm": "Ja, abbrechen",
   "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
-  "tcheckerCounterexampleDisplay.button.initalState": "Zu Startzustand springen",
+  "tcheckerCounterexampleDisplay.button.initialState": "Zu Startzustand springen",
   "tcheckerCounterexampleDisplay.button.nextState": "Nächster Zustand",
   "tcheckerCounterexampleDisplay.button.previousState": "Vorheriger Zustand",
   "tcheckerCounterexampleDisplay.button.finalState": "Zu finalem Zustand springen"
