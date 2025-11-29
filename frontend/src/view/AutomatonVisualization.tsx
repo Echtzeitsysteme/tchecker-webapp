@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Data, Network, Options } from 'vis-network/peer';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { useMappingUtils } from '../utils/mappingUtils';
@@ -61,8 +61,7 @@ const AutomatonVisualization = (props: VisualizationProps) => {
   const { locations } = ta;
   const { mapTaToVisDataModel } = useMappingUtils();
   const networkRef = useRef<HTMLDivElement>(null);
-  const [network, setNetwork] = useState<Network | null>(null);
-  const data: Data = mapTaToVisDataModel(ta);
+  const data: Data = colorElements(coloredLoc, coloredSwitch, mapTaToVisDataModel(ta));
 
   //disable physics for each node, leaving some enabled, some disabled
   locations.forEach((location) => {
@@ -80,17 +79,7 @@ const AutomatonVisualization = (props: VisualizationProps) => {
       return;
     }
 
-    var newData = data;
-
-    // highlight colored node and edge
-    if (coloredLoc) {
-      newData = colorElement(coloredLoc, true, newData);
-    }
-    if (coloredSwitch) {
-      newData = colorElement(coloredSwitch, false, newData);
-    }
-
-    const network = new Network(networkRef.current, newData, options);
+    const network = new Network(networkRef.current, data, options);
 
     network.on('stabilizationIterationsDone', function () {
       const nodePositions = network.getPositions();
@@ -129,46 +118,30 @@ const AutomatonVisualization = (props: VisualizationProps) => {
         });
       }
     });
-    
-    setNetwork(network);
 
   }, [viewModel, mapTaToVisDataModel]);
 
-  function colorElement(id: string, isNode: boolean, data: Data) {
-
-    const newData = data;
-
-    if (!network) {
-      return data;
-    }
-
-    var elementExists = false;
-
-    if (isNode) {
-      newData.nodes.forEach((node) => {
-        if (node.id === id) {
+  function colorElements(nodeId: string, switchId: string, data: Data) {
+    if (nodeId) {
+      data.nodes.forEach((node) => {
+        if (node.id === nodeId) {
           node.color = {
             background: '#ffb3d7ff',
             border: '#ca568cff'
           }
           node.borderWidth = 4;
-          elementExists = true;
         }
       }) 
-    } else {
-      newData.edges.forEach((edge) => {
-        if (edge.id == id) {
+    } 
+    if (switchId) {
+      data.edges.forEach((edge) => {
+        if (edge.id == switchId) {
           edge.color = '#ca568cff';
-          elementExists = true;
         }
       })
     }
 
-    if (!elementExists) {
-      console.warn(`Element with ID ${id} does not exist in the network.`);
-    }
-
-    return newData;
+    return data;
   }
 
   return <div ref={networkRef} style={{ width: '100%', height: '100%' }} />;

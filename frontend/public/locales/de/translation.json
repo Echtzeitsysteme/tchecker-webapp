@@ -187,5 +187,5 @@
   "tcheckerCounterexampleDisplay.button.initialState": "Zu Startzustand springen",
   "tcheckerCounterexampleDisplay.button.nextState": "Nächster Zustand",
   "tcheckerCounterexampleDisplay.button.previousState": "Vorheriger Zustand",
-  "tcheckerCounterexampleDisplay.button.finalState": "Zu finalem Zustand springen"
+  "tcheckerCounterexampleDisplay.button.swapTA": "TA tauschen"
 }

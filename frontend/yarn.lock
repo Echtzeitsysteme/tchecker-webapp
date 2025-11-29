@@ -1059,6 +1059,33 @@
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-2.0.0.tgz"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
+"@ts-graphviz/adapter@^3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@ts-graphviz/adapter/-/adapter-3.0.5.tgz#e9d62d61697c595ab1c441ef7881214e4f211522"
+  integrity sha512-l6U+jizdkgnwq8Gb4I/Azgr/TGM452ovx2SLxUU/mGZNtrdOol4qi7Gn+d5hP3weBKkUNV9C7j1Xawg4w1DkCw==
+  dependencies:
+    "@ts-graphviz/common" "^3.0.4"
+
+"@ts-graphviz/ast@^3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@ts-graphviz/ast/-/ast-3.0.5.tgz#0caec3aacb91592917362d2d2b7ead9c48f8ca81"
+  integrity sha512-gwrhTWspMU0qIP8V3yLnwUcnV+pJuPRTp5RAzpqYlKcD7NIsMtZfCzN2fzg8SpkJFC5S/9Ajlv7zJy37LhGH6A==
+  dependencies:
+    "@ts-graphviz/common" "^3.0.4"
+
+"@ts-graphviz/common@^3.0.4":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@ts-graphviz/common/-/common-3.0.4.tgz#b13687892920402f26a587417b0ac8f47fda1a15"
+  integrity sha512-lwyjx7FAXLCh4/8bHWHRr45yj1GycoGz747XxF3rbJ2SDDpCC12De0cT06v2EuHqAwpq629+A9VDft5G/wRAIw==
+
+"@ts-graphviz/core@^3.0.6":
+  version "3.0.6"
+  resolved "https://registry.yarnpkg.com/@ts-graphviz/core/-/core-3.0.6.tgz#48b6111d5ea9179380bc89cf59afff0daf1c9dc4"
+  integrity sha512-5g/Tj1xoUgOnB0yhTe4uHR6WTm5zZSm6o79DihTHENOT5/dli70cAI28ousc8hB46N4PKEPqDMR5C/W/jCvtow==
+  dependencies:
+    "@ts-graphviz/ast" "^3.0.5"
+    "@ts-graphviz/common" "^3.0.4"
+
 "@types/aria-query@^5.0.1":
   version "5.0.4"
   resolved "https://registry.npmjs.org/@types/aria-query/-/aria-query-5.0.4.tgz"
@@ -4294,6 +4321,16 @@ ts-api-utils@^1.3.0:
   version "1.3.0"
   resolved "https://registry.npmjs.org/ts-api-utils/-/ts-api-utils-1.3.0.tgz"
   integrity sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==
+
+ts-graphviz@3.0.6:
+  version "3.0.6"
+  resolved "https://registry.yarnpkg.com/ts-graphviz/-/ts-graphviz-3.0.6.tgz#7132b75392e8e3d730ff78663f1cdfb262021058"
+  integrity sha512-NZAbgrRP4HPTgD/w032eQM2P1bEYv+peW+fiw4CreEKwZvqtWm2B7gi4Kon5fzRuP+VP8m7hpIBAWHT5rqEK6w==
+  dependencies:
+    "@ts-graphviz/adapter" "^3.0.5"
+    "@ts-graphviz/ast" "^3.0.5"
+    "@ts-graphviz/common" "^3.0.4"
+    "@ts-graphviz/core" "^3.0.6"
 
 ts-jest@29.2.4:
   version "29.2.4"

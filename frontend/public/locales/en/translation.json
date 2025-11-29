@@ -187,6 +187,6 @@
   "tcheckerCounterexampleDisplay.button.initialState": "Go to initial state",
   "tcheckerCounterexampleDisplay.button.nextState": "Next state",
   "tcheckerCounterexampleDisplay.button.previousState": "Previous state",
-  "tcheckerCounterexampleDisplay.button.finalState": "Go to final state"
+  "tcheckerCounterexampleDisplay.button.swapTA": "Swap TA"
 }
   

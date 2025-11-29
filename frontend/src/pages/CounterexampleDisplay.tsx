@@ -8,17 +8,23 @@ import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import LayoutButton from '../view/LayoutButton.tsx';
 import ProcessSelection from '../view/ProcessSelection.tsx';
 import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
+import { useCertificateParser } from '../parser/CertificateParser.tsx';
+import { /* EdgeModel, */ NodeModel } from 'ts-graphviz';
 
 function CounterexampleDisplay() {
-  const firstViewModel = useAnalysisViewModel();
-  const secondViewModel = useAnalysisViewModel();
-  // const certificate = localStorage.getItem("certificate");
 
-  const firstOpenedProcesses = useOpenedProcesses();
-  const secondOpenedProcesses = useOpenedProcesses();
+  const certificate = useCertificateParser(localStorage.getItem("certificate"));
+  // const relationshipFulfilled = localStorage.getItem("relationshipFulfilled");
 
   const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<string | undefined>(undefined);
+  const firstViewModel = useAnalysisViewModel();
+  const secondViewModel = useAnalysisViewModel();
+  const firstOpenedProcesses = useOpenedProcesses();
+  const secondOpenedProcesses = useOpenedProcesses();
+
+  const [currentNode, setCurrentNode] = useState<NodeModel | undefined>(undefined);
+  // const [currentEdge, setCurrentEdge] = useState<EdgeModel | undefined>(undefined);
 
   const { t } = useTranslation();  
 
@@ -44,6 +50,8 @@ function CounterexampleDisplay() {
       firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
       secondOpenedProcesses.setAutomatonOptions(secondOpenedProcesses, secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
+
+      setCurrentNode(certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0]); // !
     };
 
     fetchData();
@@ -68,26 +76,26 @@ function CounterexampleDisplay() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
+  if(!currentNode)
+    return (<></>)
+
   return (
     <>
       <Box sx={{ display: 'flex',  height: `${7/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7/8 * contentHeight}px`, width: '50%', overflow: 'hidden' }}>
-          {firstSystem && firstViewModel? (
-            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
-              <h3 style={{ textAlign: 'center' }}>
-                {firstSystem}
-              </h3>
-              &nbsp;
-              <ProcessSelection viewModel={firstViewModel} openedProcesses={firstOpenedProcesses}/>
-              &nbsp;
-              <LayoutButton viewModel={firstViewModel} />
-            </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '100%', border: "1px solid grey" }}></Grid>) }
+          <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
+            <h3 style={{ textAlign: 'center' }}>
+              {firstSystem}
+            </h3>
+            &nbsp;
+            <ProcessSelection viewModel={firstViewModel} openedProcesses={firstOpenedProcesses}/>
+            &nbsp;
+            <LayoutButton viewModel={firstViewModel} />
+          </Grid>
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
-            {firstViewModel ? (
-                <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-                  <AutomatonVisualization viewModel={firstViewModel} coloredLoc={firstViewModel.ta.locations.filter(location => location.isInitial)[0].name} coloredSwitch='' />
-                </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}></Grid>)
-              }
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
+              <AutomatonVisualization viewModel={firstViewModel} coloredLoc={currentNode.attributes.get("first_vloc")[0]} coloredSwitch='' />
+            </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
               <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
               {firstViewModel.ta.clocks.map(clock => 
@@ -98,22 +106,19 @@ function CounterexampleDisplay() {
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7/8 * contentHeight}px`, width: '50%', overflow: 'hidden' }}>
-          {secondSystem && secondViewModel? (
-            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
-              <h3 style={{ textAlign: 'center' }}>
-                {secondSystem}
-              </h3>
-              &nbsp;
-              <ProcessSelection viewModel={secondViewModel} openedProcesses={secondOpenedProcesses}/>
-              &nbsp;
-              <LayoutButton viewModel={secondViewModel} />
-            </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '100%', border: "1px solid grey" }}></Grid>) }
+          <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: "center", overflow: 'auto', height: `${1/8 * contentHeight}px`, width: '100%', border: "1px solid grey" }}>
+            <h3 style={{ textAlign: 'center' }}>
+              {secondSystem}
+            </h3>
+            &nbsp;
+            <ProcessSelection viewModel={secondViewModel} openedProcesses={secondOpenedProcesses}/>
+            &nbsp;
+            <LayoutButton viewModel={secondViewModel} />
+          </Grid>
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
-            {secondViewModel ? (
-                <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-                  <AutomatonVisualization viewModel={secondViewModel} coloredLoc={secondViewModel.ta.locations.filter(location => location.isInitial)[0].name} coloredSwitch='' />
-                </Grid>) : (<Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}></Grid>)
-              }
+            <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
+              <AutomatonVisualization viewModel={secondViewModel} coloredLoc={currentNode.attributes.get("second_vloc")[0]} coloredSwitch='' />
+            </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
               <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
               {secondViewModel.ta.clocks.map(clock => 
@@ -129,7 +134,7 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
-              disabled={false}
+              disabled={true}
               // onMouseDown={() => downloadCertificate()}
               // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
               variant="contained"
@@ -139,7 +144,7 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
-              disabled={false}
+              disabled={true}
               // onMouseDown={() => downloadCertificate()}
               // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
               variant="contained"
@@ -149,7 +154,7 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
-              disabled={false}
+              disabled={true}
               // onMouseDown={() => downloadCertificate()}
               // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
               variant="contained"
@@ -159,12 +164,12 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
-              disabled={false}
+              disabled={true}
               // onMouseDown={() => downloadCertificate()}
               // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
               variant="contained"
           >
-              {t('tcheckerCounterexampleDisplay.button.finalState')}
+              {t('tcheckerCounterexampleDisplay.button.swapTA')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
