@@ -7,9 +7,9 @@ import { ParseUtils } from '../utils/parseUtils.ts';
 import { useButtonUtils } from '../utils/buttonUtils';
 import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import LayoutButton from '../view/LayoutButton.tsx';
-import ProcessSelection from '../view/ProcessSelection.tsx';
+import { ProcessSelection } from '../view/ProcessSelection.tsx';
 import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
-import { useCertificateParser } from '../parser/CertificateParser.tsx';
+import { Certificate } from '../parser/CertificateParser.ts';
 import { /* EdgeModel, */ NodeAttributeKey, NodeModel } from 'ts-graphviz';
 
 const firstAttributesMap = new Map<string, NodeAttributeKey>([
@@ -32,7 +32,7 @@ const secondAttributesMap = new Map<string, NodeAttributeKey>([
 
 function CounterexampleDisplay() {
 
-  const certificate = useCertificateParser(localStorage.getItem("certificate"));
+  const certificate = new Certificate(localStorage.getItem("certificate"));
   // const relationshipFulfilled = localStorage.getItem("relationshipFulfilled");
 
   const [firstSystem, setFirstSystem] = useState<string | undefined>(undefined);
@@ -48,6 +48,9 @@ function CounterexampleDisplay() {
 
   const [currentNode, setCurrentNode] = useState<NodeModel | undefined>(undefined);
   // const [currentEdge, setCurrentEdge] = useState<EdgeModel | undefined>(undefined);
+  const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
+
+  const [disableNextStateButton, setDisableNextStateButton] = useState<boolean>(false);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -67,15 +70,17 @@ function CounterexampleDisplay() {
       const secondSystem = await ParseUtils.convertToTa(parsedDataSecond);
       setSecondSystem(secondSystem.label);
 
-      firstViewModel.setAutomaton(firstViewModel, firstSystem.processes[0].automaton);
-      secondViewModel.setAutomaton(secondViewModel, secondSystem.processes[0].automaton);
+      firstViewModel.setAutomaton(firstSystem.processes[0].automaton);
+      secondViewModel.setAutomaton(secondSystem.processes[0].automaton);
 
-      firstOpenedProcesses.setAutomatonOptions(firstOpenedProcesses, firstSystem.processes);
+      firstOpenedProcesses.setAutomatonOptions(firstSystem.processes);
       firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
-      secondOpenedProcesses.setAutomatonOptions(secondOpenedProcesses, secondSystem.processes);
+      secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
-      setCurrentNode(certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0]); // !
+      setCurrentNode(initialNode);
+      if(certificate.getOutgoingEdges(initialNode).length == 0)
+        setDisableNextStateButton(true);
     };
 
     fetchData();
@@ -102,25 +107,34 @@ function CounterexampleDisplay() {
 
   function swapTA() {
 
-    let tmp: any = firstAttributes;
     setFirstAttributes(secondAttributes);
-    setSecondAttributes(tmp);
+    setSecondAttributes(firstAttributes);
 
-    tmp = firstSystem;
     setFirstSystem(secondSystem);
-    setSecondSystem(tmp);
+    setSecondSystem(firstSystem);
 
-    tmp = firstViewModel.ta;
-    firstViewModel.setAutomaton(firstViewModel, secondViewModel.ta);
-    secondViewModel.setAutomaton(secondViewModel, tmp);
+    firstViewModel.setAutomaton(secondViewModel.ta);
+    secondViewModel.setAutomaton(firstViewModel.ta);
 
-    tmp = firstOpenedProcesses.automatonOptions;
-    firstOpenedProcesses.setAutomatonOptions(firstOpenedProcesses, secondOpenedProcesses.automatonOptions);
-    secondOpenedProcesses.setAutomatonOptions(secondOpenedProcesses, tmp);
-    tmp = firstOpenedProcesses.selectedOption;
+    firstOpenedProcesses.setAutomatonOptions(secondOpenedProcesses.automatonOptions);
+    secondOpenedProcesses.setAutomatonOptions(firstOpenedProcesses.automatonOptions);
     firstOpenedProcesses.setSelectedAutomaton(secondOpenedProcesses.selectedOption);
-    secondOpenedProcesses.setSelectedAutomaton(tmp);
+    secondOpenedProcesses.setSelectedAutomaton(firstOpenedProcesses.selectedOption);
 
+    setCurrentNode(initialNode);
+    if(certificate.getOutgoingEdges(initialNode).length == 0)
+      setDisableNextStateButton(true);
+    else
+      setDisableNextStateButton(false);
+
+    return;
+  }
+
+  function handleNextState() {
+    const nextNode = certificate.getOutgoingEdges(currentNode)[0].targets.at(1) as NodeModel;
+    setCurrentNode(nextNode);
+    if(certificate.getOutgoingEdges(nextNode).length == 0)
+      setDisableNextStateButton(true);
   }
 
   if(!currentNode)
@@ -141,12 +155,12 @@ function CounterexampleDisplay() {
           </Grid>
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-              <AutomatonVisualization viewModel={firstViewModel} coloredLoc={currentNode.attributes.get(firstAttributes.get("vloc"))[0]} coloredSwitch='' />
+              <AutomatonVisualization viewModel={firstViewModel} coloredLoc={currentNode.attributes.get(firstAttributes.get("vloc"))[firstOpenedProcesses.automatonOptions.indexOf(firstOpenedProcesses.selectedOption)]} coloredSwitch='' />
             </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
               <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
               {firstViewModel.ta.clocks.map(clock => 
-                (<h4 style={{ textAlign: 'center' }} key={clock.name}> {clock.name} = 0 </h4>)) // !
+                (<h4 style={{ textAlign: 'center' }} key={clock.name}> {clock.name} = {(currentNode.attributes.get(firstAttributes.get("clockval")) as Map<string, string>).get(clock.name)} </h4>))
               }
             </Grid>
           </Box>
@@ -164,12 +178,12 @@ function CounterexampleDisplay() {
           </Grid>
           <Box sx={{ display: 'flex', height: `${6/8 * contentHeight}px`, width: '100%', overflow: 'hidden' }}>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%', width: '80%', border: "1px solid grey" }}>
-              <AutomatonVisualization viewModel={secondViewModel} coloredLoc={currentNode.attributes.get(secondAttributes.get("vloc"))[0]} coloredSwitch='' />
+              <AutomatonVisualization viewModel={secondViewModel} coloredLoc={currentNode.attributes.get(secondAttributes.get("vloc"))[secondOpenedProcesses.automatonOptions.indexOf(secondOpenedProcesses.selectedOption)]} coloredSwitch='' />
             </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'auto', height: '100%', width: '20%', border: "1px solid grey" }}>
               <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
               {secondViewModel.ta.clocks.map(clock => 
-                (<h4 style={{ textAlign: 'center' }} key={clock.name}> {clock.name} = 0 </h4>)) // !
+                (<h4 style={{ textAlign: 'center' }} key={clock.name}> {clock.name} = {(currentNode.attributes.get(secondAttributes.get("clockval")) as Map<string, string>).get(clock.name)} </h4>))
               }
             </Grid>
           </Box>
@@ -201,9 +215,9 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}}>
           <Button
-              disabled={true}
-              // onMouseDown={() => downloadCertificate()}
-              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              disabled={disableNextStateButton}
+              onMouseDown={() => handleNextState()}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState())}
               variant="contained"
           >
               {t('tcheckerCounterexampleDisplay.button.nextState')}

@@ -7,10 +7,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { AutomatonOptionType, OpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
 import { OpenedSystems } from '../viewmodel/OpenedSystems.ts';
 import { Location } from '../model/ta/location.ts';
-import { TimedAutomaton } from '../model/ta/timedAutomaton.ts';
 import { useTranslation } from 'react-i18next';
 import { SimulationModel } from '../viewmodel/SimulationModel.ts';
-import ProcessSelection from './ProcessSelection.tsx';
+import { ProcessSelection } from './ProcessSelection.tsx';
 
 export interface ProcessManipulationProps {
   viewModel: AnalysisViewModel;
@@ -22,7 +21,6 @@ export interface ProcessManipulationProps {
 const ProcessManipulation: React.FC<ProcessManipulationProps> = (props) => {
   const { viewModel, openedProcesses, openedSystems, simulationModel } = props;
   const { t } = useTranslation();
-  const options = openedProcesses.automatonOptions;
 
   const [newProcessName, setNewProcessName] = useState('');
   const [nameIsEmpty, setNameIsEmpty] = useState(false);
@@ -30,7 +28,7 @@ const ProcessManipulation: React.FC<ProcessManipulationProps> = (props) => {
   const [nameErrorMsg, setNameErrorMsg] = useState('');
 
   const addProcess = () => {
-    const isExisting = options.some((option) => newProcessName === option.label);
+    const isExisting = openedProcesses.automatonOptions.some((option) => newProcessName === option.label);
     if (!isExisting && newProcessName.length > 0) {
       const startLoc: Location = {
         name: 'start',
@@ -39,32 +37,40 @@ const ProcessManipulation: React.FC<ProcessManipulationProps> = (props) => {
         yCoordinate: 100,
         setLayout: true,
       };
-      const newTA: TimedAutomaton = { locations: [startLoc], clocks: [], switches: [] };
-      const newOption: AutomatonOptionType = { label: newProcessName.trim(), automaton: newTA };
-      openedProcesses.selectedOption.automaton = viewModel.ta;
-      openedProcesses.addAutomatonOption(openedProcesses, newOption);
-      openedSystems.selectedSystem.processes = openedProcesses.automatonOptions;
-      viewModel.setAutomaton(viewModel, newOption.automaton);
+
+      const newTA: AutomatonOptionType = { label: newProcessName.trim(), automaton: { locations: [startLoc], clocks: [], switches: [] } };
+
+      openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
+      openedProcesses.addAutomatonOption(newTA);
+      openedProcesses.setSelectedAutomaton(newTA);
+      
+      openedSystems.exchangeSelectedOption({...openedSystems.selectedSystem, 
+        processes: openedSystems.selectedSystem.processes.concat(newTA)});
 
       setNewProcessName('');
     }
   };
 
   const deleteProcess = () => {
-    if (options.length > 1) {
-      openedProcesses.deleteAutomatonOption(openedProcesses, openedProcesses.selectedOption);
-      openedSystems.selectedSystem.processes = openedProcesses.automatonOptions;
-      viewModel.setAutomaton(viewModel, openedProcesses.selectedOption.automaton);
+    if (openedProcesses.automatonOptions.length > 1) {
+      openedProcesses.deleteAutomatonOption(openedProcesses.selectedOption);
+      openedSystems.exchangeSelectedOption({...openedSystems.selectedSystem, 
+        processes: openedSystems.selectedSystem.processes.filter((option) => option !== openedProcesses.selectedOption)});
     }
   };
 
   useEffect(() => {
+    viewModel.setAutomaton(openedProcesses.selectedOption.automaton);
+  }, [openedProcesses.selectedOption]);
+
+  useEffect(() => {
     setNameIsEmpty(newProcessName.trim() === '');
-    setNameIsDuplicate(options.some((option) => option.label.toLowerCase() === newProcessName.trim().toLowerCase()));
+    setNameIsDuplicate(openedProcesses.automatonOptions.some((option) => 
+      option.label.toLowerCase() === newProcessName.trim().toLowerCase()));
 
     nameIsEmpty && setNameErrorMsg(t('processSelection.error.emptyName'));
     nameIsDuplicate && setNameErrorMsg(t('processSelection.error.duplicateName'));
-  }, [nameIsDuplicate, nameIsEmpty, newProcessName, options, t]);
+  }, [nameIsDuplicate, nameIsEmpty, newProcessName, openedProcesses.automatonOptions, t]);
 
   const validationError: boolean = useMemo(() => nameIsEmpty || nameIsDuplicate, [nameIsDuplicate, nameIsEmpty]);
 
@@ -91,7 +97,7 @@ const ProcessManipulation: React.FC<ProcessManipulationProps> = (props) => {
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <ProcessSelection viewModel={viewModel} openedProcesses={openedProcesses}/>
-        <Button variant="contained" disabled={options.length === 1} onClick={deleteProcess}>
+        <Button variant="contained" disabled={openedProcesses.automatonOptions.length === 1} onClick={deleteProcess}>
           <DeleteIcon />
           {t('processSelection.button.delete')}
         </Button>

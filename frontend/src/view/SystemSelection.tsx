@@ -21,7 +21,7 @@ const SystemSelection: React.FC<SystemSelectionProps> = (props) => {
   const { t } = useTranslation();
   const options = openedSystems.systemOptions;
   let value = openedSystems.selectedSystem;
-  let optionLabels = openedSystems.getLabels(openedSystems.systemOptions);
+  let optionLabels = openedSystems.getLabels();
 
   const [newSystemName, setNewSystemName] = useState('');
   const [nameIsEmpty, setNameIsEmpty] = useState(false);
@@ -45,13 +45,13 @@ const SystemSelection: React.FC<SystemSelectionProps> = (props) => {
         integers: [],
         synchronizations: [],
       };
-      openedProcesses.selectedOption.automaton = viewModel.ta;
+      openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
       openedSystems.selectedSystem.processes = openedProcesses.automatonOptions;
-      openedSystems.addSystemOption(openedSystems, newOption);
+      openedSystems.addSystemOption(newOption);
       value = newOption;
-      openedProcesses.setAutomatonOptions(openedProcesses, value.processes);
-      viewModel.setAutomaton(viewModel, value.processes[0].automaton);
-      optionLabels = openedSystems.getLabels(openedSystems.systemOptions);
+      openedProcesses.setAutomatonOptions(value.processes);
+      viewModel.setAutomaton(value.processes[0].automaton);
+      optionLabels = openedSystems.getLabels();
       console.log('system after addition', openedSystems);
 
       setNewSystemName('');
@@ -60,10 +60,10 @@ const SystemSelection: React.FC<SystemSelectionProps> = (props) => {
 
   const deleteSystem = () => {
     if (options.length > 1) {
-      openedSystems.deleteSystemOption(openedSystems, openedSystems.selectedSystem);
+      openedSystems.deleteSystemOption(openedSystems.selectedSystem);
       value = openedSystems.selectedSystem;
-      openedProcesses.setAutomatonOptions(openedProcesses, value.processes);
-      viewModel.setAutomaton(viewModel, value.processes[0].automaton);
+      openedProcesses.setAutomatonOptions(value.processes);
+      viewModel.setAutomaton(value.processes[0].automaton);
     }
   };
 
@@ -110,19 +110,19 @@ const SystemSelection: React.FC<SystemSelectionProps> = (props) => {
           value={value.label}
           onChange={(event, newValue) => {
             console.log(event);
-            console.log('Optionen:', options);
+            console.log('options:', options);
 
             //set value and automaton to existing option
             options.forEach((option) => {
               if (option.label === newValue) {
-                openedProcesses.selectedOption.automaton = viewModel.ta;
+                openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
                 console.log('processOptions:', openedProcesses.automatonOptions);
                 value.processes = openedProcesses.automatonOptions;
                 openedSystems.selectedSystem = option;
                 //setValue(option);
                 openedSystems.setSelectedSystem(option);
-                openedProcesses.setAutomatonOptions(openedProcesses, openedSystems.selectedSystem.processes);
-                viewModel.setAutomaton(viewModel, option.processes[0].automaton);
+                openedProcesses.setAutomatonOptions(openedSystems.selectedSystem.processes);
+                viewModel.setAutomaton(option.processes[0].automaton);
                 //console.log("openedSystems after change:",openedSystems);
                 //console.log("openedProcesses after change:", openedProcesses);
               }

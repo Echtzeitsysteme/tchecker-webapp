@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Autocomplete, TextField } from '@mui/material';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
 import { OpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
@@ -9,15 +9,12 @@ export interface ProcessSelectionProps {
   openedProcesses: OpenedProcesses;
 }
 
-const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
+export const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
   const { viewModel, openedProcesses } = props;
   const { t } = useTranslation();
   const options = openedProcesses.automatonOptions;
   let value = openedProcesses.selectedOption;
-  let optionLabels = openedProcesses.getLabels(openedProcesses.automatonOptions);
-
-  useEffect(() => {
-  }, [options, t]);
+  let optionLabels = openedProcesses.getLabels();
 
   return (
     <Autocomplete
@@ -32,9 +29,9 @@ const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
             //set value and automaton to existing option
             options.forEach((option) => {
                 if (option.label === newValue) {
-                    value.automaton = viewModel.ta;
-                    openedProcesses.selectedOption = option;
-                    viewModel.setAutomaton(viewModel, option.automaton);
+                    openedProcesses.exchangeSelectedAutomaton({...value, automaton: viewModel.ta});;
+                    openedProcesses.setSelectedAutomaton(option);
+                    viewModel.setAutomaton(option.automaton);
                 }
             });
         }}
@@ -43,5 +40,3 @@ const ProcessSelection: React.FC<ProcessSelectionProps> = (props) => {
     />
   );
 };
-
-export default ProcessSelection;

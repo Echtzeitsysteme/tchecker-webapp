@@ -224,20 +224,16 @@ const createFile = async (currentSystem: SystemOptionType) => {
 const DownloadButton: React.FC<ActiveModel> = (props) => {
   const { openedSystems, viewModel, openedProcesses } = props;
   const { t } = useTranslation();
-  const currentSystem = openedSystems.selectedSystem;
-  openedProcesses.selectedOption.automaton = viewModel.ta;
-  currentSystem.processes = openedProcesses.automatonOptions;
-  //console.log("Current System:", currentSystem);
-  const fileName = currentSystem.label + '.tck';
 
   const downloadModel = async () => {
     try {
-      const file = await createFile(currentSystem);
+      openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
+      const file = await createFile({...openedSystems.selectedSystem, processes: openedProcesses.automatonOptions});
 
       const blob = new Blob([file]);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = fileName;
+      a.download = openedSystems.selectedSystem.label + '.tck';
       a.click();
     } catch (error) {
       console.error(error);

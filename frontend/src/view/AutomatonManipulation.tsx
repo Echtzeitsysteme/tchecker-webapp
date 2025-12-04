@@ -90,7 +90,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     urgent?: boolean,
     labels?: string[]
   ) => {
-    addLocation(viewModel, locationName, isInitial, invariant, committed, urgent, labels);
+    addLocation(locationName, isInitial, invariant, committed, urgent, labels);
     setLocationAddOpen(false);
   };
 
@@ -106,14 +106,14 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     if (!prevLocationName) {
       throw Error('handleLocationEdit: prevLocationName is empty or undefined');
     }
-    editLocation(viewModel, locationName, prevLocationName, isInitial, invariant, committed, urgent, labels);
+    editLocation(locationName, prevLocationName, isInitial, invariant, committed, urgent, labels);
     setLocationEditOpen(false);
   };
 
   const handleLocationDelete = useCallback(
     (id: number) => {
       const locationName = locations[id].name; // array access is save due to construction of location table
-      removeLocation(viewModel, locationName);
+      removeLocation(locationName);
     },
     [locations, viewModel, removeLocation]
   );
@@ -172,7 +172,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     guard?: ClockConstraint,
     statement?: SwitchStatement
   ) => {
-    addSwitch(viewModel, sourceName, action, resetNames, targetName, guard, statement);
+    addSwitch(sourceName, action, resetNames, targetName, guard, statement);
     setSwitchAddOpen(false);
   };
 
@@ -188,13 +188,13 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     if (!prevSwitch) {
       throw Error('handleSwitchEdit: prevSwitch is null or undefined');
     }
-    editSwitch(viewModel, prevSwitch, sourceName, action, resetNames, targetName, guard, statement);
+    editSwitch(prevSwitch, sourceName, action, resetNames, targetName, guard, statement);
     setSwitchEditOpen(false);
   };
 
   const handleSwitchDelete = useCallback(
     (id: number) => {
-      removeSwitch(viewModel, switches[id]);
+      removeSwitch(switches[id]);
     },
     [viewModel, switches, removeSwitch]
   );
@@ -231,7 +231,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleClockEditClose = () => setClockEditOpen(false);
 
   const handleClockAdd = (clockName: string, size: string) => {
-    addClock(viewModel, clockName, parseInt(size));
+    addClock(clockName, parseInt(size));
     setClockAddOpen(false);
   };
 
@@ -239,7 +239,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     if (!prevClockName) {
       throw Error('handleClockEdit: prevClockName is null or undefined or empty');
     }
-    editClock(viewModel, clockName, parseInt(size), prevClockName);
+    editClock(clockName, parseInt(size), prevClockName);
     setClockEditOpen(false);
   };
 
@@ -249,7 +249,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const deleteClock = useCallback(
     (clock: Clock) => {
       handleClockDeleteClose();
-      removeClock(viewModel, clock);
+      removeClock(clock);
     },
     [removeClock, viewModel]
   );
@@ -297,7 +297,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleIntegerEditClose = () => setIntegerEditOpen(false);
 
   const handleIntegerAdd = (name: string, size: string, min: string, max: string, init: string) => {
-    addInteger(openedSystems, name, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
+    addInteger(name, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
     setIntegerAddOpen(false);
   };
 
@@ -312,14 +312,14 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     if (!prevIntegerName) {
       throw Error('handleIntegerEdit: prevIntegerName is empty or undefined');
     }
-    editInteger(openedSystems, name, prevIntegerName, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
+    editInteger(name, prevIntegerName, parseInt(size), parseInt(min), parseInt(max), parseInt(init));
     setIntegerEditOpen(false);
   };
 
   const handleIntegerDelete = useCallback(
     (id: number) => {
       const integerName = integers[id].name;
-      removeInteger(openedSystems, integerName);
+      removeInteger(integerName);
     },
     [integers, openedSystems, removeInteger]
   );
@@ -372,7 +372,7 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const handleSyncEditClose = () => setSyncEditOpen(false);
 
   const handleSyncAdd = (syncConstraint: SyncConstraint) => {
-    addSync(openedSystems, syncConstraint.syncs);
+    addSync(syncConstraint.syncs);
     setSyncAddOpen(false);
   };
 
@@ -380,14 +380,14 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
     if (!prevSync) {
       throw Error('handleSyncEdit: prevSyncId is empty or undefined');
     }
-    editSync(openedSystems, syncConstraint.syncs, prevSync);
+    editSync(syncConstraint.syncs, prevSync);
     setSyncEditOpen(false);
   };
 
   const handleSyncDelete = useCallback(
     (id: number) => {
       const syncToDelete = synchronizations[id];
-      removeSync(openedSystems, syncToDelete);
+      removeSync(syncToDelete);
     },
     [openedSystems, removeSync, synchronizations]
   );

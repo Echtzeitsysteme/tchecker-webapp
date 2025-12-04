@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { INIT_AUTOMATON } from '../utils/initAutomaton.ts';
 import {TimedAutomaton} from "../model/ta/timedAutomaton.ts";
 
@@ -10,67 +10,65 @@ export interface AutomatonOptionType {
 export interface OpenedProcesses {
   automatonOptions: AutomatonOptionType[];
   selectedOption: AutomatonOptionType;
-  addAutomatonOption: (openedProcesses: OpenedProcesses, automatonOption: AutomatonOptionType) => void;
-  setAutomatonOptions: (openedProcesses: OpenedProcesses, automatonOptions: AutomatonOptionType[]) => void;
-  deleteAutomatonOption: (openedProcesses: OpenedProcesses, automatonOption: AutomatonOptionType) => void;
+  addAutomatonOption: (automatonOption: AutomatonOptionType) => void;
+  setAutomatonOptions: (automatonOptions: AutomatonOptionType[]) => void;
+  deleteAutomatonOption: (automatonOption: AutomatonOptionType) => void;
   setSelectedAutomaton: (automatonOption: AutomatonOptionType) => void;
-  getLabels: (automatonOptions: AutomatonOptionType[]) => string[];
+  exchangeSelectedAutomaton: (automatonOption: AutomatonOptionType) => void;
+  getLabels: () => string[];
 }
 
 export function useOpenedProcesses(): OpenedProcesses {
-  const addAutomatonOption = useCallback((openedProcesses: OpenedProcesses, automatonOption: AutomatonOptionType) => {
-    const automatonOptions = openedProcesses.automatonOptions;
-    automatonOptions.push(automatonOption);
-    setOpenedProcesses({ ...openedProcesses, automatonOptions: automatonOptions, selectedOption: automatonOption });
-  }, []);
 
-  const setAutomatonOptions = useCallback(
-    (openedProcesses: OpenedProcesses, automatonOptions: AutomatonOptionType[]) => {
-      openedProcesses.selectedOption = automatonOptions[0];
-      setOpenedProcesses({ ...openedProcesses, automatonOptions: automatonOptions });
-    },
-    []
-  );
+  const initialOptions: AutomatonOptionType[] = [{ label: 'init_Process', automaton: INIT_AUTOMATON }];
+  const [automatonOptions, setAutomatonOptionsInternal] = useState<AutomatonOptionType[]>(initialOptions);
+  const [selectedOption, setSelectedOption] = useState<AutomatonOptionType>(initialOptions[0]);
 
-  const deleteAutomatonOption = useCallback(
-    (openedProcesses: OpenedProcesses, automatonOption: AutomatonOptionType) => {
-      const options = openedProcesses.automatonOptions;
-      const newOptions = options.filter((option) => option !== automatonOption);
-      console.log('newoptions', newOptions);
-      openedProcesses.selectedOption = newOptions[0]; //<- sollte eig unnötig sein...
-      openedProcesses.automatonOptions = newOptions; //<- sollte eig unnötig sein...
-      setOpenedProcesses({ ...openedProcesses, automatonOptions: newOptions });
-    },
-    []
-  );
+  const addAutomatonOption = useCallback((automatonOption: AutomatonOptionType) => {
+    setAutomatonOptionsInternal(automatonOptions.concat(automatonOption));
+    setSelectedOption(automatonOption);
+  }, [automatonOptions]);
+
+  const setAutomatonOptions = useCallback((automatonOptions: AutomatonOptionType[]) => {
+      setAutomatonOptionsInternal(automatonOptions)
+      setSelectedOption(automatonOptions[0]);
+    }, []);
+
+  const deleteAutomatonOption = useCallback((automatonOption: AutomatonOptionType) => {
+      const newOptions = automatonOptions.filter((option) => option !== automatonOption);
+
+      setAutomatonOptionsInternal(newOptions);
+      setSelectedOption(newOptions[0]);
+    }, [automatonOptions]);
+
 
   const setSelectedAutomaton = useCallback((automatonOption: AutomatonOptionType) => {
     setSelectedOption(automatonOption);
   }, []);
 
-  const getLabels = useCallback((automatonOptions: AutomatonOptionType[]) => {
-    const labels = automatonOptions.map((option) => option.label);
-    return labels;
-  }, []);
+  const exchangeSelectedAutomaton = useCallback((automatonOption: AutomatonOptionType) => {
+    const newAutomatonOptions = [];
+    automatonOptions.forEach(val => val === selectedOption? 
+      newAutomatonOptions.push(automatonOption) : 
+      newAutomatonOptions.push(val));
+    
+    setAutomatonOptionsInternal(newAutomatonOptions);
+    setSelectedAutomaton(automatonOption);
+  }, [automatonOptions, selectedOption]);
 
-  const initialOption: AutomatonOptionType[] = [{ label: 'init_Process', automaton: INIT_AUTOMATON }];
-  const [selectedOption, setSelectedOption] = React.useState<AutomatonOptionType>(initialOption[0]);
 
-  const [openedProcesses, setOpenedProcesses] = useState<OpenedProcesses>({
-    automatonOptions: initialOption,
-    selectedOption: selectedOption,
-    addAutomatonOption: addAutomatonOption,
-    setAutomatonOptions: setAutomatonOptions,
-    deleteAutomatonOption: deleteAutomatonOption,
-    setSelectedAutomaton: setSelectedAutomaton,
-    getLabels: getLabels,
-  });
+  const getLabels = useCallback(() => {
+    return automatonOptions.map((option) => option.label);
+  }, [automatonOptions]);
 
-  /**
-     useEffect(() => {
-     setOpenedProcesses({...openedProcesses});
-     }, [openedProcesses]);
-     **/
-
-  return openedProcesses;
+  return {
+    automatonOptions,
+    selectedOption,
+    addAutomatonOption,
+    setAutomatonOptions,
+    deleteAutomatonOption,
+    setSelectedAutomaton,
+    exchangeSelectedAutomaton,
+    getLabels
+  };
 }

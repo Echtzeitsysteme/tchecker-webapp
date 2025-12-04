@@ -13,11 +13,9 @@ const LayoutButton: React.FC<LayoutButtonProps> = (props) => {
   const { t } = useTranslation();
 
   const adjustLayout = () => {
-    const locs = viewModel.ta.locations;
-    locs.forEach((loc) => {
-      loc.setLayout = false;
-    });
-    viewModel.setAutomaton(viewModel, viewModel.ta);
+    const newLocs = [...viewModel.ta.locations];
+    newLocs.forEach((loc) => loc.setLayout = false);
+    viewModel.setAutomaton({...viewModel.ta, locations: newLocs});
   };
 
   return (

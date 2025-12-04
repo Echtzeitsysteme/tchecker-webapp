@@ -106,13 +106,13 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
     newSystem.label = newSystem.label + '__product';
 
 
-    openedProcesses.selectedOption.automaton = viewModel.ta;
+    openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
     openedSystems.selectedSystem.processes = openedProcesses.automatonOptions;
-    openedSystems.addSystemOption(openedSystems, newSystem);
+    openedSystems.addSystemOption(newSystem);
 
     openedSystems.selectedSystem = newSystem;
-    openedProcesses.setAutomatonOptions(openedProcesses, newSystem.processes);
-    viewModel.setAutomaton(viewModel, openedProcesses.selectedOption.automaton);
+    openedProcesses.setAutomatonOptions(newSystem.processes);
+    viewModel.setAutomaton(openedProcesses.selectedOption.automaton);
 
   }
 

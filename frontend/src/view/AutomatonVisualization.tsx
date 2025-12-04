@@ -63,16 +63,18 @@ const AutomatonVisualization = (props: VisualizationProps) => {
   const networkRef = useRef<HTMLDivElement>(null);
   const data: Data = colorElements(coloredLoc, coloredSwitch, mapTaToVisDataModel(ta));
 
-  //disable physics for each node, leaving some enabled, some disabled
-  locations.forEach((location) => {
-    if (data.nodes) {
-      data.nodes.forEach((node) => {
-        if (node.id === location.name) {
-          node.physics = !location.setLayout;
-        }
-      });
-    }
-  });
+   useEffect(() => {
+    //disable physics for each node, leaving some enabled, some disabled
+    locations.forEach((location) => {
+      if (data.nodes) {
+        data.nodes.forEach((node) => {
+          if (node.id === location.name) {
+            node.physics = !location.setLayout;
+          }
+        });
+      }
+    });
+   }, [locations, data])
 
   useEffect(() => {
     if (!networkRef.current) {
@@ -113,7 +115,7 @@ const AutomatonVisualization = (props: VisualizationProps) => {
         // Update TA model
         ta.locations.forEach((location) => {
           if (location.name === nodeId) {
-            updateLocationCoordinates(viewModel, location.name, nodePosition[nodeId].x, nodePosition[nodeId].y);
+            updateLocationCoordinates(location.name, nodePosition[nodeId].x, nodePosition[nodeId].y);
           }
         });
       }
