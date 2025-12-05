@@ -131,7 +131,12 @@ function CounterexampleDisplay() {
 
   function handleNextState() {
 
-    const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets.at(1) as NodeModel;
+    let nextNodeTarget = currentNode;
+    
+    while(certificate.getOutgoingEdges(nextNodeTarget)[0].attributes.get("delay") == 0)
+      nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
+
+    nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
     const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
     setCurrentNode(nextNode);
