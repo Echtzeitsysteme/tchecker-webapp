@@ -9,6 +9,7 @@ import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
 import { /* EdgeModel, */ NodeAttributeKey, NodeModel } from 'ts-graphviz';
+import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 
 const firstAttributesMap = new Map<string, NodeAttributeKey>([
   ['clockval', 'clockval_1' as NodeAttributeKey],
@@ -33,8 +34,8 @@ function CounterexampleDisplay() {
   const certificate = new Certificate(localStorage.getItem("certificate"));
   // const relationshipFulfilled = localStorage.getItem("relationshipFulfilled");
 
-  const [firstSystemName, setFirstSystem] = useState<string | undefined>(undefined);
-  const [secondSystemName, setSecondSystem] = useState<string | undefined>(undefined);
+  const [firstSystem, setFirstSystem] = useState<SystemOptionType | undefined>(undefined);
+  const [secondSystem, setSecondSystem] = useState<SystemOptionType | undefined>(undefined);
 
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
@@ -62,11 +63,11 @@ function CounterexampleDisplay() {
 
       const parsedDataFirst = await ParseUtils.parseFile(localStorage.getItem("firstSystem"));
       const firstSystem = await ParseUtils.convertToTa(parsedDataFirst);
-      setFirstSystem(firstSystem.label);
+      setFirstSystem(firstSystem);
 
       const parsedDataSecond= await ParseUtils.parseFile(localStorage.getItem("secondSystem"));
       const secondSystem = await ParseUtils.convertToTa(parsedDataSecond);
-      setSecondSystem(secondSystem.label);
+      setSecondSystem(secondSystem);
 
       firstViewModel.setAutomaton(firstSystem.processes[0].automaton);
       secondViewModel.setAutomaton(secondSystem.processes[0].automaton);
@@ -108,8 +109,8 @@ function CounterexampleDisplay() {
     setFirstAttributes(secondAttributes);
     setSecondAttributes(firstAttributes);
 
-    setFirstSystem(secondSystemName);
-    setSecondSystem(firstSystemName);
+    setFirstSystem(secondSystem);
+    setSecondSystem(firstSystem);
 
     firstViewModel.setAutomaton(secondViewModel.ta);
     secondViewModel.setAutomaton(firstViewModel.ta);
@@ -143,10 +144,10 @@ function CounterexampleDisplay() {
   return (
     <>
       <Box sx={{ display: 'flex',  height: `${7/8 * contentHeight}px`, overflow: 'hidden' }}>
-        <TAStateDisplay viewModel={firstViewModel} openedProcesses={firstOpenedProcesses} systemName={firstSystemName} 
-         attributes={firstAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
-        <TAStateDisplay viewModel={secondViewModel} openedProcesses={secondOpenedProcesses} systemName={secondSystemName} 
-         attributes={secondAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
+        <TAStateDisplay viewModel={firstViewModel} openedProcesses={firstOpenedProcesses} system={firstSystem} 
+         attributeNames={firstAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
+        <TAStateDisplay viewModel={secondViewModel} openedProcesses={secondOpenedProcesses} system={secondSystem} 
+         attributeNames={secondAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
       </Box>
 
       <Box sx={{ display: 'flex', height: `${1/8 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>

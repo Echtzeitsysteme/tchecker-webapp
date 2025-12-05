@@ -49,6 +49,10 @@ export class Certificate {
     private parseList(list: string[]) {
 
         let result = [];
+
+        if (list === undefined)
+            return result;
+
         let cur = "";
 
         for(const e of list){
@@ -77,13 +81,31 @@ export class Certificate {
 
             for(const c of assignment){
                 if(c == "=") {
-                    lhs = lhs.concat(cur.substring(0, cur.length - 2));
+                    lhs = lhs.concat(cur);
                     cur = "";
                 } else {
                     cur = cur.concat(c);
                 }
             }
             result = result.set(lhs, cur)
+        }
+
+        // remove _1 and _2 suffix from clock names
+        if(result.delete("Ref Clock")){
+            for(const clockName of Array.from(result.keys())){
+                let newName = "";
+
+                if(clockName.includes("[")){ // clocks of size > 1
+                    const idx = clockName.indexOf("[");
+                    newName = clockName.substring(0, idx - 2).concat(clockName.substring(idx, clockName.length));
+                }
+                else { // clocks of size 1
+                    newName = clockName.substring(0, clockName.length - 2);
+                }
+
+                result = result.set(newName, result.get(clockName));
+                result.delete(clockName);
+            }
         }
 
         return result;
