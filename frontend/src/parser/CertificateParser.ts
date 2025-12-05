@@ -4,7 +4,7 @@ import './custom-attributes.d.ts'
 export class Certificate {
 
     readonly graph: RootGraphModel;
-    private outgoingEdges = new Map<NodeModel, EdgeModel[]>();
+    private outgoingEdges = new Map<string, EdgeModel[]>();
 
     constructor(dot: string) {
 
@@ -31,19 +31,20 @@ export class Certificate {
         })
         // set outgoing edge map
         this.graph.edges.forEach(edge => {
-            if(!this.outgoingEdges.has(edge.targets[0] as NodeModel)){
-                this.outgoingEdges = this.outgoingEdges.set(edge.targets[0] as NodeModel, [edge]);
+            const sourceNodeId = (edge.targets[0] as NodeModel).id
+            if(!this.outgoingEdges.has(sourceNodeId)){
+                this.outgoingEdges = this.outgoingEdges.set(sourceNodeId, [edge]);
             } else {
-                let newEdgeList = this.outgoingEdges.get(edge.targets[0] as NodeModel).concat(edge);
-                this.outgoingEdges = this.outgoingEdges.set(edge.targets[0] as NodeModel, newEdgeList)
+                let newEdgeList = this.outgoingEdges.get(sourceNodeId).concat(edge);
+                this.outgoingEdges = this.outgoingEdges.set(sourceNodeId, newEdgeList)
             }
         })
     }
 
     getOutgoingEdges(node: NodeModel) {
-        if(!this.outgoingEdges.has(node))
+        if(!this.outgoingEdges.has(node.id))
             return [];
-        return this.outgoingEdges.get(node);
+        return this.outgoingEdges.get(node.id);
     }
 
     private parseList(list: string[]) {

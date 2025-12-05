@@ -78,7 +78,7 @@ function CounterexampleDisplay() {
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
       setCurrentNode(initialNode);
-      if(certificate.getOutgoingEdges(initialNode).length == 0)
+      if(certificate.getOutgoingEdges(initialNode).length === 0)
         setDisableNextStateButton(true);
     };
 
@@ -121,7 +121,7 @@ function CounterexampleDisplay() {
     secondOpenedProcesses.setSelectedAutomaton(firstOpenedProcesses.selectedOption);
 
     setCurrentNode(initialNode);
-    if(certificate.getOutgoingEdges(initialNode).length == 0)
+    if(certificate.getOutgoingEdges(initialNode).length === 0)
       setDisableNextStateButton(true);
     else
       setDisableNextStateButton(false);
@@ -130,10 +130,21 @@ function CounterexampleDisplay() {
   }
 
   function handleNextState() {
-    const nextNode = certificate.getOutgoingEdges(currentNode)[0].targets.at(1) as NodeModel;
+
+    const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets.at(1) as NodeModel;
+    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+
     setCurrentNode(nextNode);
-    if(certificate.getOutgoingEdges(nextNode).length == 0)
+    if(certificate.getOutgoingEdges(nextNode).length === 0)
       setDisableNextStateButton(true);
+  }
+
+  function handlegoToInitialState() {
+    setCurrentNode(initialNode);
+    if(certificate.getOutgoingEdges(initialNode).length === 0)
+      setDisableNextStateButton(true);
+    else
+      setDisableNextStateButton(false);
   }
 
   if(!currentNode)
@@ -155,9 +166,9 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
           <Button
-              disabled={true}
-              // onMouseDown={() => downloadCertificate()}
-              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              disabled={currentNode.id === initialNode.id}
+              onMouseDown={() => handlegoToInitialState()}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handlegoToInitialState())}
               variant="contained"
           >
               {t('tcheckerCounterexampleDisplay.button.initialState')}
