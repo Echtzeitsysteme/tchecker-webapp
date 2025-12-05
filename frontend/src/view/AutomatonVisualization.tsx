@@ -63,7 +63,7 @@ const AutomatonVisualization = (props: VisualizationProps) => {
   const networkRef = useRef<HTMLDivElement>(null);
   const data: Data = colorElements(coloredLoc, coloredSwitch, mapTaToVisDataModel(ta));
 
-   useEffect(() => {
+  useEffect(() => {
     //disable physics for each node, leaving some enabled, some disabled
     locations.forEach((location) => {
       if (data.nodes) {

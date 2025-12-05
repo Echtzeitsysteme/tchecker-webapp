@@ -1,18 +1,18 @@
-import './App.css';
+import '../App.css';
 import { useTranslation } from 'react-i18next';
-import AutomatonVisualization from '../view/AutomatonVisualization.tsx';
+import AutomatonVisualization from '../../view/AutomatonVisualization.tsx';
 import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
-import { AutomatonManipulation } from '../view/AutomatonManipulation.tsx';
-import ProcessManipulation from '../view/ProcessManipulation.tsx';
-import AutomatonDrawer from '../view/AutomatonDrawer.tsx';
-import { useOpenedSystems } from '../viewmodel/OpenedSystems.ts';
-import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
-import LayoutButton from '../view/LayoutButton.tsx';
-import TCheckerSimulation from '../view/TCheckerSimulation.tsx';
-import TCheckerSimulationDrawer from '../view/TcheckerSimulationDrawer.tsx';
-import { useSimulationModel } from '../viewmodel/SimulationModel.ts';
+import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
+import { AutomatonManipulation } from '../../view/AutomatonManipulation.tsx';
+import ProcessManipulation from '../../view/ProcessManipulation.tsx';
+import AutomatonDrawer from '../../view/AutomatonDrawer.tsx';
+import { useOpenedSystems } from '../../viewmodel/OpenedSystems.ts';
+import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
+import LayoutButton from '../../view/LayoutButton.tsx';
+import TCheckerSimulation from '../../view/TCheckerSimulation.tsx';
+import TCheckerSimulationDrawer from '../../view/TcheckerSimulationDrawer.tsx';
+import { useSimulationModel } from '../../viewmodel/SimulationModel.ts';
 
 function WitnessDisplay() {
   const viewModel = useAnalysisViewModel();
