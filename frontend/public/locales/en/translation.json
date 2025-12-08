@@ -184,9 +184,9 @@
   "abortAnalysisDialog.button.cancel": "No",
   "abortAnalysisDialog.button.confirm": "Yes, abort",
   "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again.",
-  "tcheckerCounterexampleDisplay.button.initialState": "Go to initial state",
-  "tcheckerCounterexampleDisplay.button.nextState": "Next state",
-  "tcheckerCounterexampleDisplay.button.previousState": "Previous state",
+  "tcheckerCounterexampleDisplay.button.reset": "Reset",
+  "tcheckerCounterexampleDisplay.button.nextStep": "Next step",
+  "tcheckerCounterexampleDisplay.button.previousStep": "Previous step",
   "tcheckerCounterexampleDisplay.button.swapTA": "Swap TA"
 }
   

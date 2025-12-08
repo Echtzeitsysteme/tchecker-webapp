@@ -45,11 +45,11 @@ function CounterexampleDisplay() {
   const [firstAttributes, setFirstAttributes] = useState<Map<string, NodeAttributeKey>>(firstAttributesMap);
   const [secondAttributes, setSecondAttributes] = useState<Map<string, NodeAttributeKey>>(secondAttributesMap);
 
-  const [currentNode, setCurrentNode] = useState<NodeModel | undefined>(undefined);
-  // const [currentEdge, setCurrentEdge] = useState<EdgeModel | undefined>(undefined);
   const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
-
-  const [disableNextStateButton, setDisableNextStateButton] = useState<boolean>(false);
+  const [firstCurrentNode, setFirstCurrentNode] = useState<NodeModel>(initialNode);
+  const [secondCurrentNode, setSecondCurrentNode] = useState<NodeModel>(initialNode);
+  const [firstIsNext, setFirstIsNext] = useState<boolean>(false);
+  // const [currentEdge, setCurrentEdge] = useState<EdgeModel | undefined>(undefined);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -77,9 +77,6 @@ function CounterexampleDisplay() {
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
-      setCurrentNode(initialNode);
-      if(certificate.getOutgoingEdges(initialNode).length === 0)
-        setDisableNextStateButton(true);
     };
 
     fetchData();
@@ -120,39 +117,30 @@ function CounterexampleDisplay() {
     firstOpenedProcesses.setSelectedAutomaton(secondOpenedProcesses.selectedOption);
     secondOpenedProcesses.setSelectedAutomaton(firstOpenedProcesses.selectedOption);
 
-    setCurrentNode(initialNode);
-    if(certificate.getOutgoingEdges(initialNode).length === 0)
-      setDisableNextStateButton(true);
-    else
-      setDisableNextStateButton(false);
-
-    return;
+    setFirstCurrentNode(secondCurrentNode);
+    setSecondCurrentNode(firstCurrentNode);
   }
 
-  function handleNextState() {
+  function handleNextState(first: boolean) {
 
-    let nextNodeTarget = currentNode;
-    
+    let nextNodeTarget = first ? firstCurrentNode : secondCurrentNode;
+    // skip transitions with 0 delay (synchronizations)
     while(certificate.getOutgoingEdges(nextNodeTarget)[0].attributes.get("delay") == 0)
       nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
 
     nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
     const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
-    setCurrentNode(nextNode);
-    if(certificate.getOutgoingEdges(nextNode).length === 0)
-      setDisableNextStateButton(true);
+    first ? setFirstCurrentNode(nextNode) : setSecondCurrentNode(nextNode);
+    setFirstIsNext(!firstIsNext);
   }
 
   function handlegoToInitialState() {
-    setCurrentNode(initialNode);
-    if(certificate.getOutgoingEdges(initialNode).length === 0)
-      setDisableNextStateButton(true);
-    else
-      setDisableNextStateButton(false);
+    setFirstCurrentNode(initialNode);
+    setSecondCurrentNode(initialNode);
   }
 
-  if(!currentNode)
+  if(!firstSystem || !secondSystem)
     return (<h3 style={{ textAlign: 'center' }}>Loading</h3>)
 
   const buttonSx = { display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '100%'}
@@ -161,42 +149,41 @@ function CounterexampleDisplay() {
     <>
       <Box sx={{ display: 'flex',  height: `${7/8 * contentHeight}px`, overflow: 'hidden' }}>
         <TAStateDisplay viewModel={firstViewModel} openedProcesses={firstOpenedProcesses} system={firstSystem} 
-         attributeNames={firstAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
+         attributeNames={firstAttributes} contentHeight={contentHeight} currentNode={firstCurrentNode}/>
         <TAStateDisplay viewModel={secondViewModel} openedProcesses={secondOpenedProcesses} system={secondSystem} 
-         attributeNames={secondAttributes} contentHeight={contentHeight} currentNode={currentNode}/>
+         attributeNames={secondAttributes} contentHeight={contentHeight} currentNode={secondCurrentNode}/>
       </Box>
-
       <Box sx={{ display: 'flex', height: `${1/8 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
           <Button
-              disabled={currentNode.id === initialNode.id}
+              disabled={firstCurrentNode.id === initialNode.id && secondCurrentNode.id === initialNode.id}
               onMouseDown={() => handlegoToInitialState()}
               onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handlegoToInitialState())}
               variant="contained"
           >
-              {t('tcheckerCounterexampleDisplay.button.initialState')}
+              {t('tcheckerCounterexampleDisplay.button.reset')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
           <Button
-              disabled={true}
-              // onMouseDown={() => downloadCertificate()}
-              // onKeyDown={(e) => executeOnKeyboardClick(e.key, () => downloadCertificate())}
+              disabled={!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length === 0}
+              onMouseDown={() => handleNextState(true)}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState(true))}
               variant="contained"
           >
-              {t('tcheckerCounterexampleDisplay.button.previousState')}
+              {t('tcheckerCounterexampleDisplay.button.nextStep')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
           <Button
-              disabled={disableNextStateButton}
-              onMouseDown={() => handleNextState()}
-              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState())}
+              disabled={firstIsNext || certificate.getOutgoingEdges(secondCurrentNode).length === 0}
+              onMouseDown={() => handleNextState(false)}
+              onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState(false))}
               variant="contained"
           >
-              {t('tcheckerCounterexampleDisplay.button.nextState')}
+              {t('tcheckerCounterexampleDisplay.button.nextStep')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={buttonSx}>
