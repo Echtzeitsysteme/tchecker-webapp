@@ -1,4 +1,4 @@
-import { fromDot, EdgeModel, NodeModel, RootGraphModel, EdgeAttributeKey, NodeAttributeKey } from 'ts-graphviz';
+import { fromDot, Edge, EdgeModel, NodeModel, RootGraphModel, EdgeAttributeKey, NodeAttributeKey, /* toDot, */ Digraph } from 'ts-graphviz';
 import './custom-attributes.d.ts'
 
 export class Certificate {
@@ -10,7 +10,46 @@ export class Certificate {
 
         // console.log(dot)
 
-        this.graph = fromDot(dot);
+        const originalGraph = fromDot(dot);
+
+        // copy graph without 0 delay (synchronization) transitions
+        this.graph = new Digraph();
+
+        // get all sync transitions
+        let syncEdges = new Map<string, string>();
+        for(const edge of originalGraph.edges)
+            if(edge.attributes.get("delay") == 0)
+                syncEdges.set((edge.targets[0] as NodeModel).id, (edge.targets[1] as NodeModel).id);
+
+        // only add nodes that are not a source node of a sync transition
+        for(const node of originalGraph.nodes)
+            if(!syncEdges.get(node.id))
+                this.graph.addNode(node);
+
+        for(const edge of originalGraph.edges) {
+            // do not add sync transitions
+            if(edge.attributes.get("delay") == 0)
+                continue;
+
+            const sourceNodeId = (edge.targets[0] as NodeModel).id;
+            const targetNodeId = (edge.targets[1] as NodeModel).id;
+            
+            // redirect edges to source nodes of sync transitions to their respective target nodes
+            if(syncEdges.get(targetNodeId)){
+                const sourceNode = originalGraph.nodes.filter(node => node.id === sourceNodeId)[0];
+                const targetNode = originalGraph.nodes.filter(node => node.id === syncEdges.get(targetNodeId))[0];
+
+                const newEdge = new Edge([sourceNode, targetNode], {});
+                for(const att of edge.attributes.values){
+                    newEdge.attributes.set(att[0], att[1])
+                }
+
+                this.graph.addEdge(newEdge);
+            } else // add all other edges
+                this.graph.addEdge(edge);
+        }
+
+        // console.log(toDot(this.graph))
 
         // parse attributes
         this.graph.edges.forEach(async edge => {

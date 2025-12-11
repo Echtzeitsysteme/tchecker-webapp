@@ -23,7 +23,7 @@ declare module '@ts-graphviz/common' {
       second_intval: string[] | Map<string, string>;
       second_vloc: string[];
       // edges
-      delay: Double;
+      delay: number;
       first_vedge: string[];
       first_vedge_do: string[];
       first_vedge_prov: string[];

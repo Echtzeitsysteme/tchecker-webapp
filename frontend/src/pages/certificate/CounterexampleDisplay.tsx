@@ -10,7 +10,7 @@ import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
 import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
-import { /* EdgeModel, */ NodeAttributeKey, NodeModel } from 'ts-graphviz';
+import { NodeAttributeKey, NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 
 const firstAttributesMap = new Map<string, NodeAttributeKey>([
@@ -51,10 +51,9 @@ function CounterexampleDisplay() {
   const [firstCurrentNode, setFirstCurrentNode] = useState<NodeModel>(initialNode);
   const [secondCurrentNode, setSecondCurrentNode] = useState<NodeModel>(initialNode);
 
-  // last item is current node of second (since second starts)
-  const [visitedNodes, setVisitedNodes] = useState<NodeModel[]>([initialNode]);
+  const [firstVisitedNodes, setFirstVisitedNodes] = useState<NodeModel[]>([initialNode]);
+  const [secondVisitedNodes, setSecondVisitedNodes] = useState<NodeModel[]>([initialNode]);
   const [firstIsNext, setFirstIsNext] = useState<boolean>(false);
-  // const [currentEdge, setCurrentEdge] = useState<EdgeModel | undefined>(undefined);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -62,6 +61,15 @@ function CounterexampleDisplay() {
   // calculate size of content elements so that content always fits the window size
   const headerRef = useRef<HTMLHeadingElement>(null);
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
+
+  function getNextAction(node: NodeModel) {
+    // actions are identical for all outgoing edges of a node
+    const nextEdgeAttributes = certificate.getOutgoingEdges(node)[0].attributes;
+
+    return nextEdgeAttributes.get("first_vedge").length > 0 ? 
+      nextEdgeAttributes.get("first_vedge").toString() : 
+      ("Delay of ").concat(nextEdgeAttributes.get("delay").toString());
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +89,6 @@ function CounterexampleDisplay() {
       firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
-
     };
 
     fetchData();
@@ -124,40 +131,57 @@ function CounterexampleDisplay() {
 
     setFirstCurrentNode(secondCurrentNode);
     setSecondCurrentNode(firstCurrentNode);
-  }
 
-  function handleNextState(first: boolean) {
+    setFirstVisitedNodes(secondVisitedNodes);
+    setSecondVisitedNodes(firstVisitedNodes);
 
-    let nextNodeTarget = first ? firstCurrentNode : secondCurrentNode;
-    if(!first)
-      setVisitedNodes(visitedNodes.concat(nextNodeTarget));
-    // skip transitions with 0 delay (synchronizations)
-    while(certificate.getOutgoingEdges(nextNodeTarget)[0].attributes.get("delay") == 0)
-      nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
-
-    nextNodeTarget = certificate.getOutgoingEdges(nextNodeTarget)[0].targets.at(1) as NodeModel;
-    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
-
-    first ? setFirstCurrentNode(nextNode) : setSecondCurrentNode(nextNode);
     setFirstIsNext(!firstIsNext);
   }
 
-  function handleGoToInitialState() {
-    setFirstCurrentNode(initialNode);
-    setSecondCurrentNode(initialNode);
-    setVisitedNodes([initialNode])
+  function handleNextState() {
+
+    const currentNode = firstIsNext ? firstCurrentNode : secondCurrentNode;
+  
+    const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets[1] as NodeModel;
+    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+
+    if(firstIsNext) {
+      setFirstCurrentNode(nextNode);
+      setFirstVisitedNodes(firstVisitedNodes.concat(nextNode));
+    } else {
+      setSecondCurrentNode(nextNode);
+      setSecondVisitedNodes(secondVisitedNodes.concat(nextNode));
+    }
+
+    setFirstIsNext(!firstIsNext);
   }
 
   function handlePreviousStep() {
+
+    const visitedNodes = firstIsNext ? secondVisitedNodes : firstVisitedNodes;
+    const previousNode = visitedNodes[visitedNodes.length - 2];
+    const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
+
     if(firstIsNext){
-      setFirstIsNext(false);
-      setSecondCurrentNode(visitedNodes[visitedNodes.length - 2]);
-      const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
-      setVisitedNodes(newVisitedNodes);
+      setSecondCurrentNode(previousNode);
+      setSecondVisitedNodes(newVisitedNodes);
     } else {
-      setFirstIsNext(true);
-      setFirstCurrentNode(visitedNodes[visitedNodes.length - 2]);
+      setFirstCurrentNode(previousNode);
+      setFirstVisitedNodes(newVisitedNodes);
     }
+
+    setFirstIsNext(!firstIsNext);
+  }
+
+  function handleReset() {
+    setFirstCurrentNode(initialNode);
+    setSecondCurrentNode(initialNode);
+    setFirstVisitedNodes([initialNode]);
+    setSecondVisitedNodes([initialNode]);
+    setFirstIsNext(false);
+  }
+
+  function handleChooseTransitions() {
   }
 
   if(!firstSystem || !secondSystem)
@@ -189,8 +213,8 @@ function CounterexampleDisplay() {
         &nbsp;
         <Button
           disabled={firstCurrentNode.id === initialNode.id && secondCurrentNode.id === initialNode.id}
-          onMouseDown={() => handleGoToInitialState()}
-          onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleGoToInitialState())}
+          onMouseDown={() => handleReset()}
+          onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleReset())}
           variant="contained"
         >
           {t('tcheckerCounterexampleDisplay.button.reset')}
@@ -220,25 +244,39 @@ function CounterexampleDisplay() {
         />
       </Box>
       <Box sx={{ display: 'flex', height: `${1/10 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '40%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
+          <h3> {firstIsNext ? ("Action: ").concat(getNextAction(firstCurrentNode)) : ""}</h3>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
+          <Button
+            disabled={!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length === 0}
+            onMouseDown={() => handleChooseTransitions()}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleChooseTransitions())}
+            variant="contained"
+          >
+            Choose transitions
+          </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length === 0}
-            onMouseDown={() => handleNextState(true)}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState(true))}
+            onMouseDown={() => handleNextState()}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState())}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
           </Button>
         </Grid>
-        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '40%'}}>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
+          <h3> {!firstIsNext ? ("Action: ").concat(getNextAction(secondCurrentNode)) : ""}</h3>
+        </Grid>
+        <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={firstIsNext || certificate.getOutgoingEdges(secondCurrentNode).length === 0}
-            onMouseDown={() => handleNextState(false)}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState(false))}
+            onMouseDown={() => handleNextState()}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState())}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
