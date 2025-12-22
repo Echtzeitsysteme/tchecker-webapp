@@ -24,7 +24,7 @@ export interface TCheckerActionsProps {
   simulationModel: SimulationModel;
 }
 export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
-  const { viewModel, openedSystems, openedProcesses, simulationModel } = props;
+  const { viewModel, openedSystems, openedProcesses/* , simulationModel */ } = props;
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
@@ -116,10 +116,9 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
 
   }
 
-  function startSimulation(): void {
-    simulationModel.startSimulation(openedSystems.selectedSystem);
-    
-  }
+  // function startSimulation(): void {
+  //   simulationModel.startSimulation(openedSystems.selectedSystem);
+  // }
 
   function handleSnackbarClose(_: React.SyntheticEvent<any> | Event, reason: SnackbarCloseReason) {
     if (reason === 'clickaway') {
@@ -192,14 +191,14 @@ export const TCheckerActions: React.FC<TCheckerActionsProps> = (props) => {
             color="primary">
             {t('tcheckerAction.compareAnalysis')}
           </Button>
-          <Button
+          {/* <Button
             style={{ marginTop: '12px' }}
             onMouseDown={() => startSimulation()}
             variant="contained"
             color="primary"
             disabled={true}>
             {t('tcheckerAction.simulate')}
-          </Button>
+          </Button> */}
         </div>
       )}
 

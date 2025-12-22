@@ -59,7 +59,7 @@ export class Certificate {
             }
         })
         this.graph.nodes.forEach(async node => {
-            for(const attribute of ['first_vloc', 'second_vloc']) {
+            for(const attribute of ['first_vloc', 'second_vloc', 'final_edge']) {
                 const list = this.parseList(node.attributes.get(attribute as NodeAttributeKey.values) as string[]);
                 node.attributes.set(attribute as NodeAttributeKey.values, list);
             }

@@ -63,6 +63,14 @@ function CounterexampleDisplay() {
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
 
   function getNextAction(node: NodeModel) {
+
+    if (certificate.getOutgoingEdges(node).length === 0) {
+      if (node.attributes.get("final_edge"))
+        return node.attributes.get("final_edge");
+      else
+        return node.attributes.get("final_delay").toString();
+    }
+
     // actions are identical for all outgoing edges of a node
     const nextEdgeAttributes = certificate.getOutgoingEdges(node)[0].attributes;
 
@@ -140,37 +148,42 @@ function CounterexampleDisplay() {
 
   function handleNextState() {
 
-    const currentNode = firstIsNext ? firstCurrentNode : secondCurrentNode;
-  
-    const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets[1] as NodeModel;
-    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
-
-    if(firstIsNext) {
-      setFirstCurrentNode(nextNode);
-      setFirstVisitedNodes(firstVisitedNodes.concat(nextNode));
-    } else {
-      setSecondCurrentNode(nextNode);
-      setSecondVisitedNodes(secondVisitedNodes.concat(nextNode));
-    }
-
     setFirstIsNext(!firstIsNext);
+
+    const currentNode = firstIsNext ? firstCurrentNode : secondCurrentNode;
+
+    if(certificate.getOutgoingEdges(currentNode).length !== 0) {
+
+      const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets[1] as NodeModel;
+      const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+
+      if(firstIsNext) {
+        setFirstCurrentNode(nextNode);
+        setFirstVisitedNodes(firstVisitedNodes.concat(nextNode));
+      } else {
+        setSecondCurrentNode(nextNode);
+        setSecondVisitedNodes(secondVisitedNodes.concat(nextNode));
+      }
+    }
   }
 
   function handlePreviousStep() {
 
-    const visitedNodes = firstIsNext ? secondVisitedNodes : firstVisitedNodes;
-    const previousNode = visitedNodes[visitedNodes.length - 2];
-    const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
-
-    if(firstIsNext){
-      setSecondCurrentNode(previousNode);
-      setSecondVisitedNodes(newVisitedNodes);
-    } else {
-      setFirstCurrentNode(previousNode);
-      setFirstVisitedNodes(newVisitedNodes);
-    }
-
     setFirstIsNext(!firstIsNext);
+
+    if(!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length !== 0) {
+      const visitedNodes = firstIsNext ? secondVisitedNodes : firstVisitedNodes;
+      const previousNode = visitedNodes[visitedNodes.length - 2];
+      const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
+
+      if(firstIsNext){
+        setSecondCurrentNode(previousNode);
+        setSecondVisitedNodes(newVisitedNodes);
+      } else {
+        setFirstCurrentNode(previousNode);
+        setFirstVisitedNodes(newVisitedNodes);
+      }
+    }
   }
 
   function handleReset() {
@@ -245,7 +258,11 @@ function CounterexampleDisplay() {
       </Box>
       <Box sx={{ display: 'flex', height: `${1/10 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
-          <h3> {firstIsNext ? ("Action: ").concat(getNextAction(firstCurrentNode)) : ""}</h3>
+          <h3> {firstIsNext ? 
+            (certificate.getOutgoingEdges(firstCurrentNode).length === 0 ? 
+              "No equivalent transition possible":
+              (("Action: ").concat(getNextAction(firstCurrentNode)))
+            ) : ""}</h3>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -274,7 +291,7 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={firstIsNext || certificate.getOutgoingEdges(secondCurrentNode).length === 0}
+            disabled={firstIsNext}
             onMouseDown={() => handleNextState()}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleNextState())}
             variant="contained"
