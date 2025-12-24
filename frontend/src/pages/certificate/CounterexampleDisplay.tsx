@@ -3,32 +3,33 @@ import { useTranslation } from 'react-i18next';
 import { Box, Grid, Button, IconButton } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, createContext } from 'react';
 import { ParseUtils } from '../../utils/parseUtils.ts';
 import { useButtonUtils } from '../../utils/buttonUtils.ts';
 import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
 import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
-import { NodeAttributeKey, NodeModel } from 'ts-graphviz';
+import { EdgeAttributeKey, NodeAttributeKey, NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
+import ChooseTransitionsDialog from './ChooseTransitionsDialog.tsx';
 
-const firstAttributesMap = new Map<string, NodeAttributeKey>([
+const firstAttributesMap = new Map<string, NodeAttributeKey | EdgeAttributeKey>([
   ['clockval', 'clockval_1' as NodeAttributeKey],
   ['intval', 'first_intval' as NodeAttributeKey],
   ['vloc', 'first_vloc' as NodeAttributeKey],
-  ['vedge', 'first_vedge' as NodeAttributeKey],
-  ['vedge_do', 'first_vedge_do' as NodeAttributeKey],
-  ['vedge_prov', 'first_vedge_prov' as NodeAttributeKey],
+  ['vedge', 'first_vedge' as EdgeAttributeKey],
+  ['vedge_do', 'first_vedge_do' as EdgeAttributeKey],
+  ['vedge_prov', 'first_vedge_prov' as EdgeAttributeKey],
 ]);
 
-const secondAttributesMap = new Map<string, NodeAttributeKey>([
+const secondAttributesMap = new Map<string, NodeAttributeKey | EdgeAttributeKey>([
   ['clockval', 'clockval_2' as NodeAttributeKey],
   ['intval', 'second_intval' as NodeAttributeKey],
   ['vloc', 'second_vloc' as NodeAttributeKey],
-  ['vedge', 'second_vedge' as NodeAttributeKey],
-  ['vedge_do', 'second_vedge_do' as NodeAttributeKey],
-  ['vedge_prov', 'second_vedge_prov' as NodeAttributeKey],
+  ['vedge', 'second_vedge' as EdgeAttributeKey],
+  ['vedge_do', 'second_vedge_do' as EdgeAttributeKey],
+  ['vedge_prov', 'second_vedge_prov' as EdgeAttributeKey],
 ]);
 
 function CounterexampleDisplay() {
@@ -44,8 +45,8 @@ function CounterexampleDisplay() {
   const firstOpenedProcesses = useOpenedProcesses();
   const secondOpenedProcesses = useOpenedProcesses();
 
-  const [firstAttributes, setFirstAttributes] = useState<Map<string, NodeAttributeKey>>(firstAttributesMap);
-  const [secondAttributes, setSecondAttributes] = useState<Map<string, NodeAttributeKey>>(secondAttributesMap);
+  const [firstAttributes, setFirstAttributes] = useState<Map<string, NodeAttributeKey | EdgeAttributeKey>>(firstAttributesMap);
+  const [secondAttributes, setSecondAttributes] = useState<Map<string, NodeAttributeKey | EdgeAttributeKey>>(secondAttributesMap);
 
   const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
   const [firstCurrentNode, setFirstCurrentNode] = useState<NodeModel>(initialNode);
@@ -55,12 +56,17 @@ function CounterexampleDisplay() {
   const [secondVisitedNodes, setSecondVisitedNodes] = useState<NodeModel[]>([initialNode]);
   const [firstIsNext, setFirstIsNext] = useState<boolean>(false);
 
+  const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
+
+  const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
 
   // calculate size of content elements so that content always fits the window size
   const headerRef = useRef<HTMLHeadingElement>(null);
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
+  
+  const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
 
   function getNextAction(node: NodeModel) {
 
@@ -154,16 +160,18 @@ function CounterexampleDisplay() {
 
     if(certificate.getOutgoingEdges(currentNode).length !== 0) {
 
-      const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[0].targets[1] as NodeModel;
+      const nextNodeTarget = certificate.getOutgoingEdges(currentNode)[nextEdgeIdx].targets[1] as NodeModel;
       const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+
+      let newSecondVisitedNodes = secondVisitedNodes.concat(nextNode);
 
       if(firstIsNext) {
         setFirstCurrentNode(nextNode);
         setFirstVisitedNodes(firstVisitedNodes.concat(nextNode));
-      } else {
-        setSecondCurrentNode(nextNode);
-        setSecondVisitedNodes(secondVisitedNodes.concat(nextNode));
+        newSecondVisitedNodes = newSecondVisitedNodes.filter((_, idx) => idx !== newSecondVisitedNodes.length - 2);
       }
+      setSecondCurrentNode(nextNode);
+      setSecondVisitedNodes(newSecondVisitedNodes);      
     }
   }
 
@@ -192,9 +200,6 @@ function CounterexampleDisplay() {
     setFirstVisitedNodes([initialNode]);
     setSecondVisitedNodes([initialNode]);
     setFirstIsNext(false);
-  }
-
-  function handleChooseTransitions() {
   }
 
   if(!firstSystem || !secondSystem)
@@ -266,9 +271,9 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length === 0}
-            onMouseDown={() => handleChooseTransitions()}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleChooseTransitions())}
+            disabled={!firstIsNext || certificate.getOutgoingEdges(firstCurrentNode).length === 0 || certificate.getOutgoingEdges(firstCurrentNode)[0].attributes.get("first_vedge").length === 0}
+            onMouseDown={() => setChooseTransitionsOpen(true)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
           >
             Choose transitions
@@ -300,6 +305,18 @@ function CounterexampleDisplay() {
           </Button>
         </Grid>
       </Box>
+      
+      <ChooseTransitionContext.Provider value={{nextEdgeIdx, setNextEdgeIdx}}>
+        <ChooseTransitionsDialog 
+          open={chooseTransitionsOpen} 
+          onClose={() => setChooseTransitionsOpen(false)} 
+          edgeOptions={certificate.getOutgoingEdges(firstCurrentNode)}
+          attributeNames={firstAttributes}
+          context={ChooseTransitionContext}
+          graph={certificate.graph}
+        >
+        </ChooseTransitionsDialog>
+      </ChooseTransitionContext.Provider>
     </>
   );
 }
