@@ -5,14 +5,14 @@ import { OpenedProcesses } from '../../viewmodel/OpenedProcesses';
 import LayoutButton from '../../view/LayoutButton.tsx';
 import { ProcessSelection } from '../../view/ProcessSelection.tsx';
 import AutomatonVisualization from '../../view/AutomatonVisualization.tsx';
-import { NodeAttributeKey, NodeModel, EdgeAttributeKey } from 'ts-graphviz';
+import { NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 
 interface StateDisplayProps {
   viewModel: AnalysisViewModel;
   openedProcesses: OpenedProcesses;
   system: SystemOptionType;
-  attributeNames: Map<string, NodeAttributeKey | EdgeAttributeKey>;
+  isFirst: boolean;
   contentHeight: number;
   currentNode: NodeModel;
   cornerElement: JSX.Element;
@@ -20,7 +20,7 @@ interface StateDisplayProps {
 
 const TAStateDisplay = (props: StateDisplayProps) => {
 
-  const { viewModel, openedProcesses, system, attributeNames, contentHeight, currentNode, cornerElement } = props;
+  const { viewModel, openedProcesses, system, isFirst, contentHeight, currentNode, cornerElement } = props;
 
   const { t } = useTranslation();
 
@@ -43,21 +43,21 @@ const TAStateDisplay = (props: StateDisplayProps) => {
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflow: 'hidden', width: '80%', border: "1px solid grey" }}>
               <AutomatonVisualization 
                 viewModel={viewModel} 
-                coloredLoc={currentNode.attributes.get(attributeNames.get("vloc") as NodeAttributeKey)[openedProcesses.automatonOptions.indexOf(openedProcesses.selectedOption)]} 
+                coloredLoc={currentNode.attributes.get(isFirst ? "first_vloc" : "second_vloc")[openedProcesses.automatonOptions.indexOf(openedProcesses.selectedOption)]} 
                 coloredSwitch='' />
             </Grid>
             <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7.75/10 * contentHeight}px`, width: '20%', overflow: 'hidden' }}>
               <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'auto', height: '50%', width: '100%', border: "1px solid grey" }}>
                 <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
-                {Array.from((currentNode.attributes.get(attributeNames.get("clockval") as NodeAttributeKey) as Map<string, string>).keys()).map(clock => 
+                {Array.from((currentNode.attributes.get(isFirst ? "clockval_1" : "clockval_2") as Map<string, string>).keys()).map(clock => 
                   (<h4 style={{ textAlign: 'center' }} key={clock}> 
-                  {clock} = {(currentNode.attributes.get(attributeNames.get("clockval") as NodeAttributeKey) as Map<string, string>).get(clock)} </h4>))}
+                  {clock} = {(currentNode.attributes.get(isFirst ? "clockval_1" : "clockval_2") as Map<string, string>).get(clock)} </h4>))}
               </Grid>
               <Grid item xs={12} sm={8} md={9} lg={9} sx={{overflowY: 'auto', height: '50%', width: '100%', border: "1px solid grey" }}>
                 <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.integerPlural')} </h4>
-                {Array.from((currentNode.attributes.get(attributeNames.get("intval") as NodeAttributeKey) as Map<string, string>).keys()).map(val => 
+                {Array.from((currentNode.attributes.get(isFirst ? "first_intval" : "second_intval") as Map<string, string>).keys()).map(val => 
                   (<h4 style={{ textAlign: 'center' }} key={val}> 
-                  {val} = {(currentNode.attributes.get(attributeNames.get("intval") as NodeAttributeKey) as Map<string, string>).get(val)} </h4>))
+                  {val} = {(currentNode.attributes.get(isFirst ? "first_intval" : "second_intval") as Map<string, string>).get(val)} </h4>))
                 }
               </Grid>
             </Box>

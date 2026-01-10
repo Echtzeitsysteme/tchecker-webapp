@@ -1,4 +1,4 @@
-import { fromDot, Edge, EdgeModel, NodeModel, RootGraphModel, EdgeAttributeKey, NodeAttributeKey, /* toDot, */ Digraph } from 'ts-graphviz';
+import { fromDot, Edge, EdgeModel, NodeModel, RootGraphModel,/*  EdgeAttributeKey, */ NodeAttributeKey, toDot, Digraph } from 'ts-graphviz';
 import './custom-attributes.d.ts'
 
 export class Certificate {
@@ -49,15 +49,9 @@ export class Certificate {
                 this.graph.addEdge(edge);
         }
 
-        // console.log(toDot(this.graph))
+        console.log(toDot(this.graph))
 
         // parse attributes
-        this.graph.edges.forEach(async edge => {
-            for(const attribute of ['first_vedge', 'first_vedge_do', 'first_vedge_prov', 'second_vedge', 'second_vedge_do', 'second_vedge_prov']) {
-                const list = this.parseList(edge.attributes.get(attribute as EdgeAttributeKey.values) as string[]);
-                edge.attributes.set(attribute as EdgeAttributeKey.values, list);
-            }
-        })
         this.graph.nodes.forEach(async node => {
             for(const attribute of ['first_vloc', 'second_vloc', 'final_edge']) {
                 const list = this.parseList(node.attributes.get(attribute as NodeAttributeKey.values) as string[]);

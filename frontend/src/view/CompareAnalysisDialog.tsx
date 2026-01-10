@@ -131,7 +131,6 @@ const CompareAnalysisDialog: React.FC<CompareAnalysisDialog> = (props) => {
         localStorage.setItem('firstSystem', firstDecl);
         localStorage.setItem('secondSystem', secondDecl);
         localStorage.setItem('certificate', result.certificate);
-        localStorage.setItem('relationshipFulfilled', String(result.stats.relationshipFulfilled));
 
         window.open(result.stats.relationshipFulfilled ? "/display-witness" : "/display-counterexample", "_blank");
         

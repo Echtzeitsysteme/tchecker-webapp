@@ -25,12 +25,12 @@ declare module '@ts-graphviz/common' {
       second_vloc: string[];
       // edges
       delay: number;
-      first_vedge: string[];
-      first_vedge_do: string[];
-      first_vedge_prov: string[];
-      second_vedge: string[];
-      second_vedge_do: string[];
-      second_vedge_prov: string[];
+      first_vedge: string;
+      first_vedge_do: string;
+      first_vedge_prov: string;
+      second_vedge: string;
+      second_vedge_do: string;
+      second_vedge_prov: string;
     }
   }
 }
