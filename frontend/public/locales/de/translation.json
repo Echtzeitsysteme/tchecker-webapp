@@ -184,8 +184,8 @@
   "abortAnalysisDialog.button.cancel": "Nein",
   "abortAnalysisDialog.button.confirm": "Ja, abbrechen",
   "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
-  "tcheckerCounterexampleDisplay.button.reset": "Zurücksetzen",
+  "tcheckerCounterexampleDisplay.button.reset": "Neustart",
   "tcheckerCounterexampleDisplay.button.nextStep": "Nächster Schritt",
   "tcheckerCounterexampleDisplay.button.previousStep": "Vorheriger Schritt",
-  "tcheckerCounterexampleDisplay.button.swapTA": "TA tauschen"
+  "tcheckerCounterexampleDisplay.button.chooseTransitions": "Transitionen wählen"
 }

@@ -185,8 +185,8 @@
   "abortAnalysisDialog.button.confirm": "Yes, abort",
   "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again.",
   "tcheckerCounterexampleDisplay.button.reset": "Reset",
-  "tcheckerCounterexampleDisplay.button.nextStep": "Next step",
-  "tcheckerCounterexampleDisplay.button.previousStep": "Previous step",
-  "tcheckerCounterexampleDisplay.button.swapTA": "Swap TA"
+  "tcheckerCounterexampleDisplay.button.nextStep": "Next Step",
+  "tcheckerCounterexampleDisplay.button.previousStep": "Previous Step",
+  "tcheckerCounterexampleDisplay.button.chooseTransitions": "Choose Transitions"
 }
   

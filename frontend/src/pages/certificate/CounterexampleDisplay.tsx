@@ -1,6 +1,6 @@
 import '../App.css';
 import { useTranslation } from 'react-i18next';
-import { Box, Grid, Button, IconButton } from '@mui/material';
+import { Box, Grid, Button, CircularProgress, IconButton } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useEffect, useLayoutEffect, useRef, useState, createContext } from 'react';
 import { ParseUtils } from '../../utils/parseUtils.ts';
@@ -141,7 +141,6 @@ function CounterexampleDisplay() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
-
   function handlePlayerNextState() {
 
     const playerNode = previousNode();
@@ -189,10 +188,13 @@ function CounterexampleDisplay() {
     setPlayerTurn(false);
     setNextEdgeIdx(0); // just for pretty display
     setGameOver(false);
+    setNextRoundOpen(true);
   }
 
   if(!firstSystem || !secondSystem)
-    return (<h3 style={{ textAlign: 'center' }}>Loading</h3>)
+    return (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress size='20px' color='inherit' />
+            </div>)
 
   const firstCornerElement = 
     <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', alignItems: 'center', 
@@ -246,7 +248,7 @@ function CounterexampleDisplay() {
       <Box sx={{ display: 'flex', height: `${1/10 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <h3> {(playerTurn && getPlayerIsFirst(previousNode())) || (!playerTurn && !getPlayerIsFirst(currentNode())) ? 
-            ("Action: ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
+            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -257,7 +259,7 @@ function CounterexampleDisplay() {
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
           >
-            Choose transitions
+            {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
@@ -274,7 +276,7 @@ function CounterexampleDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <h3> {(playerTurn && !getPlayerIsFirst(previousNode())) || (!playerTurn && getPlayerIsFirst(currentNode())) ? 
-            ("Action: ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
+            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -285,7 +287,7 @@ function CounterexampleDisplay() {
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
           >
-            Choose transitions
+            {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
