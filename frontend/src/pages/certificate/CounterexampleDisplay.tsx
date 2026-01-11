@@ -12,8 +12,8 @@ import { Certificate } from '../../parser/CertificateParser.ts';
 import { NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
-import NextRoundDialog from './dialogs/NextRoundDialog.tsx';
-import GameOverDialog from './dialogs/GameOverDialog.tsx';
+import NextRoundDialog from './dialogs/NextRoundDialogCounterexample.tsx';
+import GameOverDialog from './dialogs/GameOverDialogCounterexample.tsx';
 
 function CounterexampleDisplay() {
 

@@ -19,8 +19,7 @@ const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
             <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="md">
                 <DialogContent>
                     <div>
-                        <title>YOU LOST!</title>
-
+                        <h3><center>YOU LOST!</center></h3>
                         <p>
                         The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the {playerIsFirst ? "right" : "left"} timed automaton.
                         <br></br>
