@@ -253,8 +253,7 @@ function CounterexampleDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
             disabled={gameOver || !playerTurn 
-                      || !getPlayerIsFirst(previousNode())
-                      || certificate.getOutgoingEdges(previousNode()).length === 0}
+                      || !getPlayerIsFirst(previousNode())}
             onMouseDown={() => setChooseTransitionsOpen(true)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
@@ -281,8 +280,7 @@ function CounterexampleDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
             disabled={gameOver || !playerTurn 
-                      || getPlayerIsFirst(previousNode())
-                      || certificate.getOutgoingEdges(previousNode()).length === 0}
+                      || getPlayerIsFirst(previousNode())}
             onMouseDown={() => setChooseTransitionsOpen(true)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"

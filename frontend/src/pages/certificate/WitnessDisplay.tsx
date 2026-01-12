@@ -12,8 +12,8 @@ import { Certificate } from '../../parser/CertificateParser.ts';
 import { NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
-import NextRoundDialog from './dialogs/NextRoundDialogCounterexample.tsx';
-import GameOverDialog from './dialogs/GameOverDialogCounterexample.tsx';
+import NextRoundDialog from './dialogs/NextRoundDialogWitness.tsx';
+import GameOverDialog from './dialogs/GameOverDialogWitness.tsx';
 
 function WitnessDisplay() {
 
@@ -32,7 +32,9 @@ function WitnessDisplay() {
   const currentNode = () => visitedNodes[visitedNodes.length - 1];
   const previousNode = () => visitedNodes[visitedNodes.length - 2];
 
-  const [playerTurn, setPlayerTurn] = useState<boolean>(false);
+  const [playerTurn, setPlayerTurn] = useState<boolean>(true);
+  // with player is first meaning the player controls the left TA in the next step
+  const [playerIsFirst, setPlayerIsFirst] = useState<boolean>(true);
   const [gameOver, setGameOver] = useState<boolean>(false);
 
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
@@ -48,56 +50,6 @@ function WitnessDisplay() {
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
   const [gameOverOpen, setGameOverOpen] = useState<boolean>(false);
-
-  function getNextAction(node: NodeModel) {
-
-    if (certificate.getOutgoingEdges(node).length === 0) {
-      if (node.attributes.get("final_edge"))
-        return node.attributes.get("final_edge");
-      else
-        return node.attributes.get("final_delay").toString();
-    }
-
-    // actions are identical for all outgoing edges of a node
-    const nextEdgeAttributes = certificate.getOutgoingEdges(node)[0].attributes;
-
-    return nextEdgeAttributes.get("first_vedge") ? 
-      nextEdgeAttributes.get("first_vedge") : 
-      ("Delay of ").concat(nextEdgeAttributes.get("delay").toString());
-  }
-
-  // with player is first meaning the player controls the left TA in the next step
-  function getPlayerIsFirst(node: NodeModel) {
-
-    // in deterministic cases it does not matter which TA the opponent controls
-    if (certificate.getOutgoingEdges(node).length === 1) 
-      return true;
-
-    if (certificate.getOutgoingEdges(node).length === 0)
-      return node.attributes.get("final") === "second";
-
-    const edge_0 = certificate.getOutgoingEdges(node)[0];
-    const node_0 = certificate.graph.nodes.filter(node => node.id === (edge_0.targets[1] as NodeModel).id)[0].attributes;
-    const edge_1 = certificate.getOutgoingEdges(node)[1];
-    const node_1 = certificate.graph.nodes.filter(node => node.id === (edge_1.targets[1] as NodeModel).id)[0].attributes;
-
-    const playerIsFirst = (node_0.get("clockval_2") === node_1.get("clockval_2") &&
-                           node_0.get("second_intval") === node_1.get("second_intval") &&
-                           node_0.get("second_vloc") === node_1.get("second_vloc") &&
-                           edge_0.attributes.get("second_vedge_prov") === edge_1.attributes.get("second_vedge_prov") &&
-                           edge_0.attributes.get("second_vedge_do") === edge_1.attributes.get("second_vedge_do"))
-    
-    if(playerIsFirst &&
-      node_0.get("clockval_1") === node_1.get("clockval_1") &&
-      node_0.get("first_intval") === node_1.get("first_intval") &&
-      node_0.get("first_vloc") === node_1.get("first_vloc") &&
-      edge_0.attributes.get("first_vedge_prov") === edge_1.attributes.get("first_vedge_prov") &&
-      edge_0.attributes.get("first_vedge_do") === edge_1.attributes.get("first_vedge_do")
-    )
-      console.warn("Successors of node are identical")
-
-    return playerIsFirst;
-  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -143,7 +95,7 @@ function WitnessDisplay() {
 
   function handlePlayerNextState() {
 
-    const playerNode = previousNode();
+    const playerNode = currentNode();
 
     const nextNodeTarget = certificate.getOutgoingEdges(playerNode)[nextEdgeIdx].targets[1] as NodeModel;
     const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
@@ -154,8 +106,14 @@ function WitnessDisplay() {
     setVisitedNodes(newVisitedNodes);
     setNextEdgeIdx(0); // just for pretty display
     setPlayerTurn(false);
-    
-    if(certificate.getOutgoingEdges(nextNode).length !== 0){
+  }
+
+  function handleOpponentNextState() {
+
+    setVisitedNodes(visitedNodes.concat(currentNode()));
+    setPlayerTurn(true);
+
+    if(certificate.getOutgoingEdges(currentNode()).length !== 0){
       setNextRoundOpen(true);
     } else{
       setGameOverOpen(true);
@@ -163,21 +121,12 @@ function WitnessDisplay() {
     }
   }
 
-  function handleOpponentNextState() {
-
-    const nextNodeTarget = certificate.getOutgoingEdges(currentNode())[0].targets[1] as NodeModel;
-    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
-    
-    setVisitedNodes(visitedNodes.concat(nextNode));
-    setPlayerTurn(true);
-  }
-
   function handlePreviousStep() {
 
     setPlayerTurn(!playerTurn);
     setGameOver(false);
 
-    if(playerTurn) {
+    if(!playerTurn) {
       const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
       setVisitedNodes(newVisitedNodes);
     }
@@ -185,7 +134,7 @@ function WitnessDisplay() {
 
   function handleReset() {
     setVisitedNodes([initialNode]);
-    setPlayerTurn(false);
+    setPlayerTurn(true);
     setNextEdgeIdx(0); // just for pretty display
     setGameOver(false);
     setNextRoundOpen(true);
@@ -204,7 +153,7 @@ function WitnessDisplay() {
     <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', 
       justifyContent: "center", overflow: 'auto', height: `${1.25/10 * contentHeight}px`, width: '20%', border: "1px solid grey" }}>
         <IconButton
-          disabled={currentNode().id === initialNode.id && !playerTurn}
+          disabled={currentNode().id === initialNode.id && playerTurn}
           onMouseDown={() => handlePreviousStep()}
           onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handlePreviousStep())}
           aria-label={t('tcheckerCounterexampleDisplay.button.previousStep')}
@@ -214,7 +163,7 @@ function WitnessDisplay() {
         </IconButton>
         &nbsp;
         <Button
-          disabled={currentNode().id === initialNode.id && !playerTurn}
+          disabled={currentNode().id === initialNode.id && playerTurn}
           onMouseDown={() => handleReset()}
           onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleReset())}
           variant="contained"
@@ -232,7 +181,7 @@ function WitnessDisplay() {
           system={firstSystem}
           isFirst={true}
           contentHeight={contentHeight} 
-          currentNode={playerTurn && getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()}
+          currentNode={playerTurn && playerIsFirst ? currentNode() : (previousNode() || initialNode)} // TODO: Clockvals
           cornerElement={firstCornerElement}
         />
         <TAStateDisplay 
@@ -241,20 +190,18 @@ function WitnessDisplay() {
           system={secondSystem}
           isFirst={false}
           contentHeight={contentHeight} 
-          currentNode={playerTurn && !getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()}
+          currentNode={playerTurn && !playerIsFirst ? currentNode() : (previousNode() || initialNode)}
           cornerElement={secondCornerElement}
         />
       </Box>
       <Box sx={{ display: 'flex', height: `${1/10 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
-          <h3> {(playerTurn && getPlayerIsFirst(previousNode())) || (!playerTurn && !getPlayerIsFirst(currentNode())) ? 
-            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
+          {/* <h3> {(playerTurn && playerIsFirst) || (!playerTurn && !playerIsFirst) ? 
+            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3> */}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={gameOver || !playerTurn 
-                      || !getPlayerIsFirst(previousNode())
-                      || certificate.getOutgoingEdges(previousNode()).length === 0}
+            disabled={gameOver || !playerTurn}
             onMouseDown={() => setChooseTransitionsOpen(true)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
@@ -264,25 +211,21 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={gameOver 
-                      || (playerTurn && !getPlayerIsFirst(previousNode())) 
-                      || (!playerTurn && getPlayerIsFirst(currentNode()))}
-            onMouseDown={() => playerTurn ? handlePlayerNextState() : handleOpponentNextState()}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => playerTurn ? handlePlayerNextState() : handleOpponentNextState())}
+            disabled={gameOver || (!playerTurn && playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(true)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(true)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
-          <h3> {(playerTurn && !getPlayerIsFirst(previousNode())) || (!playerTurn && getPlayerIsFirst(currentNode())) ? 
-            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3>
+          {/* <h3> {(playerTurn && !getPlayerIsFirst(previousNode())) || (!playerTurn && getPlayerIsFirst(currentNode())) ? 
+            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3> */}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={gameOver || !playerTurn 
-                      || getPlayerIsFirst(previousNode())
-                      || certificate.getOutgoingEdges(previousNode()).length === 0}
+            disabled={gameOver || !playerTurn}
             onMouseDown={() => setChooseTransitionsOpen(true)}
             onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
             variant="contained"
@@ -292,11 +235,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={gameOver 
-                      || (playerTurn && getPlayerIsFirst(previousNode())) 
-                      || (!playerTurn && !getPlayerIsFirst(currentNode()))}
-            onMouseDown={() => playerTurn ? handlePlayerNextState() : handleOpponentNextState()}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => playerTurn ? handlePlayerNextState() : handleOpponentNextState())}
+            disabled={gameOver || (!playerTurn && !playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(false)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(false)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -308,8 +249,8 @@ function WitnessDisplay() {
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
-          edgeOptions={certificate.getOutgoingEdges(visitedNodes.length === 1 ? initialNode : previousNode())}
-          playerIsFirst={getPlayerIsFirst(previousNode() || initialNode)} // initialNode should never be used in practice
+          edgeOptions={certificate.getOutgoingEdges(currentNode())} // TODO
+          playerIsFirst={playerIsFirst}
           context={ChooseTransitionContext}
           graph={certificate.graph}
         >
@@ -319,17 +260,16 @@ function WitnessDisplay() {
       <NextRoundDialog 
         open={nextRoundOpen} 
         onClose={() => setNextRoundOpen(false)} 
-        opponentEdge={certificate.getOutgoingEdges(currentNode())[0]}
-        playerIsFirst={getPlayerIsFirst(currentNode())}
+        opponentEdge={certificate.getOutgoingEdges(currentNode())[nextEdgeIdx]} // TODO
+        playerIsFirst={playerIsFirst}
         graph={certificate.graph}
       >
       </NextRoundDialog>
 
       <GameOverDialog 
         open={gameOverOpen} 
-        onClose={() => setGameOverOpen(false)} 
-        finalSymbol={currentNode().attributes.get("final_edge")}
-        playerIsFirst={getPlayerIsFirst(currentNode())}
+        onClose={() => setGameOverOpen(false)}
+        playerIsFirst={playerIsFirst}
       >
       </GameOverDialog>
 

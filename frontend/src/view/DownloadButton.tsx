@@ -19,7 +19,9 @@ const DownloadButton: React.FC<ActiveModel> = (props) => {
   const downloadModel = async () => {
     try {
       openedProcesses.exchangeSelectedAutomaton({...openedProcesses.selectedOption, automaton: viewModel.ta});
-      const file = await createTCheckerFile({...openedSystems.selectedSystem, processes: openedProcesses.automatonOptions});
+      const file = await createTCheckerFile({...openedSystems.selectedSystem, 
+        processes: openedProcesses.automatonOptions.map(automaton => automaton === openedProcesses.selectedOption ? 
+          {...openedProcesses.selectedOption, automaton: viewModel.ta} : automaton)});
 
       const blob = new Blob([file]);
       const a = document.createElement('a');

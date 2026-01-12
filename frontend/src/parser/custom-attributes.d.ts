@@ -3,7 +3,7 @@ import { $keywords } from '@ts-graphviz/common';
 declare module '@ts-graphviz/common' {
   
   export namespace NodeAttributeKey {
-    export interface $values extends $keywords<'clockval_1' | 'clockval_2' | 'final' | 'final_delay' | 'final_edge' | 'initial' | 'first_intval' | 'first_vloc' | 'second_intval' | 'second_vloc'> {}
+    export interface $values extends $keywords<'clockval_1' | 'clockval_2' | 'final' | 'final_delay' | 'final_edge' | 'initial' | 'first_intval' | 'first_vloc' | 'second_intval' | 'second_vloc' | 'zones'> {}
   }
 
   export namespace EdgeAttributeKey {
@@ -23,6 +23,7 @@ declare module '@ts-graphviz/common' {
       initial: boolean;
       second_intval: string[] | Map<string, string>;
       second_vloc: string[];
+      zones: string;
       // edges
       delay: number;
       first_vedge: string;
