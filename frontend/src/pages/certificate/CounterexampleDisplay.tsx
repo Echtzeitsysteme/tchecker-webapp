@@ -33,7 +33,7 @@ function CounterexampleDisplay() {
   const previousNode = () => visitedNodes[visitedNodes.length - 2];
 
   const [playerTurn, setPlayerTurn] = useState<boolean>(false);
-  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [gameOver, setGameOver] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length === 0);
 
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
 
@@ -46,8 +46,8 @@ function CounterexampleDisplay() {
   
   const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
-  const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
-  const [gameOverOpen, setGameOverOpen] = useState<boolean>(false);
+  const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length > 0);
+  const [gameOverOpen, setGameOverOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length === 0);
 
   function getNextAction(node: NodeModel) {
 
@@ -326,7 +326,9 @@ function CounterexampleDisplay() {
       <GameOverDialog 
         open={gameOverOpen} 
         onClose={() => setGameOverOpen(false)} 
-        finalSymbol={currentNode().attributes.get("final_edge")}
+        finalSymbol={currentNode().attributes.get("final_edge").length === 0 ? 
+          ("Delay of ").concat(currentNode().attributes.get("final_delay").toString()) : 
+          currentNode().attributes.get("final_edge")}
         playerIsFirst={getPlayerIsFirst(currentNode())}
       >
       </GameOverDialog>

@@ -9,7 +9,7 @@ export interface GameOverDialog {
     playerIsFirst: boolean;
 }
 
-const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
+const GameOverDialog: React.FC<GameOverDialog> = (props) => {
 
     const { open, onClose, finalSymbol, playerIsFirst } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
@@ -21,9 +21,9 @@ const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
                     <div>
                         <h3><center>YOU LOST!</center></h3>
                         <p>
-                        The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the {playerIsFirst ? "right" : "left"} timed automaton.
+                        The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the timed automaton on the {playerIsFirst ? "right" : "left"}-hand side.
                         <br></br>
-                        In the {playerIsFirst ? "left" : "right"} automaton, there is no transition available for this action.
+                        In the automaton on the {playerIsFirst ? "left" : "right"}, there is no transition available for this action.
                         </p>
                     </div>
                 </DialogContent>
@@ -42,4 +42,4 @@ const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
     )
 };
 
-export default NextRoundDialog;
+export default GameOverDialog;

@@ -8,7 +8,7 @@ export interface GameOverDialog {
     playerIsFirst: boolean;
 }
 
-const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
+const GameOverDialog: React.FC<GameOverDialog> = (props) => {
 
     const { open, onClose, /* playerIsFirst */ } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
@@ -41,4 +41,4 @@ const NextRoundDialog: React.FC<GameOverDialog> = (props) => {
     )
 };
 
-export default NextRoundDialog;
+export default GameOverDialog;
