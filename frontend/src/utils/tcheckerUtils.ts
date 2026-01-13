@@ -165,6 +165,7 @@ export class TCheckerUtils {
     const responseObj = await response!.json() as {status: string, message: string};
 
     const parsedMessages = responseObj.message
+      .toString()
       .split('\n')
       .filter(
         (line: string) =>

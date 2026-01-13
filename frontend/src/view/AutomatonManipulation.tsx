@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnalysisViewModel } from '../viewmodel/AnalysisViewModel';
 import { Tooltip, Typography } from '@mui/material';
 import ElementTable, { ElementRowData } from './ElementTable';
@@ -68,6 +68,17 @@ export const AutomatonManipulation: React.FC<ManipulationProps> = (props) => {
   const [syncAddOpen, setSyncAddOpen] = useState(false);
   const [syncEditOpen, setSyncEditOpen] = useState(false);
   const [syncToEdit, setSyncToEdit] = useState<SyncConstraint | undefined>(undefined);
+
+  useEffect(() => {
+    const newProcess = {...openedProcesses.selectedOption, automaton: viewModel.ta};
+    const newSystem = {...openedSystems.selectedSystem, 
+        processes: openedProcesses.automatonOptions.map(automaton => 
+          automaton === openedProcesses.selectedOption ? newProcess : automaton)};
+
+    openedSystems.exchangeSelectedOption(newSystem);
+    openedProcesses.exchangeSelectedAutomaton(newProcess);
+  }, [viewModel.ta]);
+
 
   // ===== manipulate locations ================================================
 

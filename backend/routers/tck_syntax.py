@@ -14,7 +14,7 @@ def check(body: str = Body(...)):
         tck_syntax.check(body)
         return {"status": "success", "message": "Syntax is correct"}
     except Exception as e:
-        return {"status": "error", "message": e}
+        return {"status": "error", "message": str(e)}
 
 @router.put("/to_dot", summary="Convert timed automaton to DOT format")
 def to_dot(body: str = Body(...)):
