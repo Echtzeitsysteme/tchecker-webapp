@@ -327,7 +327,9 @@ function CounterexampleDisplay() {
         open={gameOverOpen} 
         onClose={() => setGameOverOpen(false)} 
         finalSymbol={currentNode().attributes.get("final_edge").length === 0 ? 
-          ("Delay of ").concat(currentNode().attributes.get("final_delay").toString()) : 
+          (currentNode().attributes.get("final_delay") ? 
+            ("Delay of ").concat(currentNode().attributes.get("final_delay").toString()) :
+            "ERROR") : 
           currentNode().attributes.get("final_edge")}
         playerIsFirst={getPlayerIsFirst(currentNode())}
       >
