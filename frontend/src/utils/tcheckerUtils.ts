@@ -1,5 +1,4 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
-import { RawSimulationState } from '../viewmodel/SimulationModel';
 import { getAppConfig } from './appConfigUtils';
 import { createTCheckerFile } from './tckFileUtils';
 import { ErrorResult, tryCatchAsync } from './tryCatchUtil';
@@ -371,13 +370,44 @@ export class TCheckerUtils {
     }, null];
   }
 
-  public static async callSimulate(system: SystemOptionType, startingState: RawSimulationState): Promise<ErrorResult<string>> {
+  public static async callSimulateOneStep(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; zone: string;}): Promise<ErrorResult<string>> {
     const sysdecl = await createTCheckerFile(system);
-    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/simulate`;
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/one_step`;
 
     const body = {
       sysdecl: sysdecl,
       starting_state: startingState ? JSON.stringify(startingState) : null,
+    };
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Simulation failed: ${errorText}`)];
+    }
+
+    const simulationResult = await response!.text();
+    return [simulationResult, null];
+  }
+
+  public static async callSimulateRandomized(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; zone: string;}, nsteps: number): Promise<ErrorResult<string>> {
+    const sysdecl = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/randomized`;
+
+    const body = {
+      sysdecl: sysdecl,
+      starting_state: startingState ? JSON.stringify(startingState) : null,
+      nsteps: nsteps
     };
 
     const [response, error] = await tryCatchAsync(() => fetch(url, {

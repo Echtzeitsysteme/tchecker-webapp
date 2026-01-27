@@ -15,12 +15,13 @@ interface StateDisplayProps {
   isFirst: boolean;
   contentHeight: number;
   currentNode: NodeModel;
+  clockvals: Map<string, string>;
   cornerElement: JSX.Element;
 }
 
 const TAStateDisplay = (props: StateDisplayProps) => {
 
-  const { viewModel, openedProcesses, system, isFirst, contentHeight, currentNode, cornerElement } = props;
+  const { viewModel, openedProcesses, system, isFirst, contentHeight, currentNode, clockvals, cornerElement } = props;
 
   const { t } = useTranslation();
 
@@ -49,9 +50,9 @@ const TAStateDisplay = (props: StateDisplayProps) => {
             <Box sx={{ display: 'flex', flexDirection: 'column', height: `${7.75/10 * contentHeight}px`, width: '20%', overflow: 'hidden' }}>
               <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'auto', height: '50%', width: '100%', border: "1px solid grey" }}>
                 <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.clockPlural')} </h4>
-                {Array.from((currentNode.attributes.get(isFirst ? "clockval_1" : "clockval_2") as Map<string, string>).keys()).map(clock => 
+                {Array.from(clockvals.keys()).map(clock => 
                   (<h4 style={{ textAlign: 'center' }} key={clock}> 
-                  {clock} = {(currentNode.attributes.get(isFirst ? "clockval_1" : "clockval_2") as Map<string, string>).get(clock)} </h4>))}
+                  {clock} = {clockvals.get(clock)} </h4>))}
               </Grid>
               <Grid item xs={12} sm={8} md={9} lg={9} sx={{overflowY: 'auto', height: '50%', width: '100%', border: "1px solid grey" }}>
                 <h4 style={{ textAlign: 'center' }}> {t('manipulation.table.integerPlural')} </h4>

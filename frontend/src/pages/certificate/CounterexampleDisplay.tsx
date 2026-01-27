@@ -14,6 +14,7 @@ import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
 import NextRoundDialog from './dialogs/NextRoundDialogCounterexample.tsx';
 import GameOverDialog from './dialogs/GameOverDialogCounterexample.tsx';
+import { TCheckerUtils } from '../../utils/tcheckerUtils.ts';
 
 function CounterexampleDisplay() {
 
@@ -21,6 +22,7 @@ function CounterexampleDisplay() {
 
   const [firstSystem, setFirstSystem] = useState<SystemOptionType | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<SystemOptionType | undefined>(undefined);
+  const [successorStateMapFirst, setSuccessorStateMapFirst] = useState<Map<NodeModel, number> | undefined>(undefined);
 
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
@@ -69,9 +71,8 @@ function CounterexampleDisplay() {
   // with player is first meaning the player controls the left TA in the next step
   function getPlayerIsFirst(node: NodeModel) {
 
-    // in deterministic cases it does not matter which TA the opponent controls
     if (certificate.getOutgoingEdges(node).length === 1) 
-      return true;
+      return successorStateMapFirst.get(node) > 1;
 
     if (certificate.getOutgoingEdges(node).length === 0)
       return node.attributes.get("final") === "second";
@@ -117,6 +118,40 @@ function CounterexampleDisplay() {
       firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
+
+      // compute number of successor states of first TA for certificate nodes with exactly one successor node
+      // this is needed to check which TA the player controls
+      let successorStateMap = new Map<NodeModel, number>();
+
+      for(const node of certificate.graph.nodes.filter(node => certificate.getOutgoingEdges(node).length === 1)) {
+
+        const vloc = ("<").concat(node.attributes.get("first_vloc").join(",")).concat(">");
+
+        let intval = "";
+        for(const [lhs, rhs] of node.attributes.get("first_intval") as Map<string, string>)
+          intval = intval.concat(lhs).concat("=").concat(rhs);
+
+        let zone = "(";
+        for(const [lhs, rhs] of node.attributes.get("clockval_1") as Map<string, string>) {
+          if(rhs.includes("/")) {
+            const [numerator, denominator] = rhs.split("/");
+            const lowerBound = parseInt((+numerator / +denominator).toString());
+
+            zone = zone.concat(lhs).concat(">").concat(lowerBound.toString()).concat(" && ");
+            zone = zone.concat(lhs).concat("<").concat((lowerBound + 1).toString()).concat(" && ");
+          } else {
+            zone = zone.concat(lhs).concat("==").concat(rhs).concat(" && ");
+          }
+        }
+        zone = zone.substring(0, zone.length - 4).concat(")");
+
+        const state = {"intval": intval, "labels": "", "vloc": vloc, "zone": zone};
+        const successorStates = JSON.parse((await TCheckerUtils.callSimulateOneStep(firstSystem, state))[0]);
+
+        successorStateMap = successorStateMap.set(node, successorStates.next.length);
+      }
+
+      setSuccessorStateMapFirst(successorStateMap);
     };
 
     fetchData();
@@ -191,7 +226,7 @@ function CounterexampleDisplay() {
     setNextRoundOpen(true);
   }
 
-  if(!firstSystem || !secondSystem)
+  if(!firstSystem || !secondSystem || !successorStateMapFirst)
     return (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CircularProgress size='20px' color='inherit' />
             </div>)
@@ -233,6 +268,7 @@ function CounterexampleDisplay() {
           isFirst={true}
           contentHeight={contentHeight} 
           currentNode={playerTurn && getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()}
+          clockvals={((playerTurn && getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()).attributes.get("clockval_1") as Map<string, string>)}
           cornerElement={firstCornerElement}
         />
         <TAStateDisplay 
@@ -242,6 +278,7 @@ function CounterexampleDisplay() {
           isFirst={false}
           contentHeight={contentHeight} 
           currentNode={playerTurn && !getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()}
+          clockvals={((playerTurn && !getPlayerIsFirst(previousNode()) ? previousNode() : currentNode()).attributes.get("clockval_2") as Map<string, string>)}
           cornerElement={secondCornerElement}
         />
       </Box>

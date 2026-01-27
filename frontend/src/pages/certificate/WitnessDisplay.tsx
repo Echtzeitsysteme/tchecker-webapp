@@ -22,6 +22,9 @@ function WitnessDisplay() {
   const [firstSystem, setFirstSystem] = useState<SystemOptionType | undefined>(undefined);
   const [secondSystem, setSecondSystem] = useState<SystemOptionType | undefined>(undefined);
 
+  const [firstClockVals, setFirstClockVals] = useState<Map<string, string> | undefined>(undefined);
+  const [secondClockVals, setSecondClockVals] = useState<Map<string, string> | undefined>(undefined);
+
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
   const firstOpenedProcesses = useOpenedProcesses();
@@ -51,6 +54,16 @@ function WitnessDisplay() {
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
   const [gameOverOpen, setGameOverOpen] = useState<boolean>(false);
 
+  function getInitialClockVals(system: SystemOptionType) {
+    let result = new Map<string, string>();
+
+    for(const process of system.processes)
+      for(const clock of process.automaton.clocks)
+        result = result.set(clock.name, "0");
+
+    return result;
+  }
+
   useEffect(() => {
     const fetchData = async () => {
 
@@ -69,6 +82,9 @@ function WitnessDisplay() {
       firstOpenedProcesses.setSelectedAutomaton(firstSystem.processes[0]);
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
+
+      setFirstClockVals(getInitialClockVals(firstSystem));
+      setSecondClockVals(getInitialClockVals(secondSystem));
     };
 
     fetchData();
@@ -138,6 +154,9 @@ function WitnessDisplay() {
     setNextEdgeIdx(0); // just for pretty display
     setGameOver(false);
     setNextRoundOpen(true);
+
+    setFirstClockVals(getInitialClockVals(firstSystem));
+    setSecondClockVals(getInitialClockVals(secondSystem));
   }
 
   if(!firstSystem || !secondSystem)
@@ -181,7 +200,8 @@ function WitnessDisplay() {
           system={firstSystem}
           isFirst={true}
           contentHeight={contentHeight} 
-          currentNode={playerTurn && playerIsFirst ? currentNode() : (previousNode() || initialNode)} // TODO: Clockvals
+          currentNode={playerTurn && playerIsFirst ? currentNode() : (previousNode() || initialNode)}
+          clockvals={firstClockVals}
           cornerElement={firstCornerElement}
         />
         <TAStateDisplay 
@@ -191,6 +211,7 @@ function WitnessDisplay() {
           isFirst={false}
           contentHeight={contentHeight} 
           currentNode={playerTurn && !playerIsFirst ? currentNode() : (previousNode() || initialNode)}
+          clockvals={secondClockVals}
           cornerElement={secondCornerElement}
         />
       </Box>

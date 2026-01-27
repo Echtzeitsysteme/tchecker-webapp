@@ -19,7 +19,7 @@ const GameOverDialog: React.FC<GameOverDialog> = (props) => {
             <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="md">
                 <DialogContent>
                     <div>
-                        <h3><center>YOU LOST!</center></h3>
+                        <h3><center>Distinguishing transition found</center></h3>
                         <p>
                         The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the timed automaton on the {playerIsFirst ? "right" : "left"}-hand side.
                         <br></br>
