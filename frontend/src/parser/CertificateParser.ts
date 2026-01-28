@@ -80,6 +80,30 @@ export class Certificate {
         return this.outgoingEdges.get(node.id);
     }
 
+    nodeToStateJSON(locs: string[], intvals: Map<string, string>, clockvals: Map<string, string>) {
+        const vloc = ("<").concat(locs.join(",")).concat(">");
+        
+        let intval = "";
+        for(const [lhs, rhs] of intvals)
+            intval = intval.concat(lhs).concat("=").concat(rhs);
+
+        let zone = "(";
+        for(const [lhs, rhs] of clockvals) {
+            if(rhs.includes("/") || rhs.includes(".")) {
+                const [numerator, denominator] = rhs.split("/");
+                const lowerBound = parseInt((rhs.includes("/")? +numerator / +denominator : +rhs).toString());
+
+                zone = zone.concat(lhs).concat(">").concat(lowerBound.toString()).concat(" && ");
+                zone = zone.concat(lhs).concat("<").concat((lowerBound + 1).toString()).concat(" && ");
+            } else {
+                zone = zone.concat(lhs).concat("==").concat(rhs).concat(" && ");
+            }
+        }
+        zone = zone.substring(0, zone.length - 4).concat(")");
+
+        return {"intval": intval, "labels": "", "vloc": vloc, "zone": zone};
+    }
+
     private parseList(list: string[]) {
 
         let result = [];

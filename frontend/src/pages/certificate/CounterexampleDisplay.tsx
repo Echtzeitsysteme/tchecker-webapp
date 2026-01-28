@@ -125,27 +125,11 @@ function CounterexampleDisplay() {
 
       for(const node of certificate.graph.nodes.filter(node => certificate.getOutgoingEdges(node).length === 1)) {
 
-        const vloc = ("<").concat(node.attributes.get("first_vloc").join(",")).concat(">");
-
-        let intval = "";
-        for(const [lhs, rhs] of node.attributes.get("first_intval") as Map<string, string>)
-          intval = intval.concat(lhs).concat("=").concat(rhs);
-
-        let zone = "(";
-        for(const [lhs, rhs] of node.attributes.get("clockval_1") as Map<string, string>) {
-          if(rhs.includes("/")) {
-            const [numerator, denominator] = rhs.split("/");
-            const lowerBound = parseInt((+numerator / +denominator).toString());
-
-            zone = zone.concat(lhs).concat(">").concat(lowerBound.toString()).concat(" && ");
-            zone = zone.concat(lhs).concat("<").concat((lowerBound + 1).toString()).concat(" && ");
-          } else {
-            zone = zone.concat(lhs).concat("==").concat(rhs).concat(" && ");
-          }
-        }
-        zone = zone.substring(0, zone.length - 4).concat(")");
-
-        const state = {"intval": intval, "labels": "", "vloc": vloc, "zone": zone};
+        const state = certificate.nodeToStateJSON(
+          node.attributes.get("first_vloc"),
+          node.attributes.get("first_intval") as Map<string, string>, 
+          node.attributes.get("clockval_1") as Map<string, string>
+        );
         const successorStates = JSON.parse((await TCheckerUtils.callSimulateOneStep(firstSystem, state))[0]);
 
         successorStateMap = successorStateMap.set(node, successorStates.next.length);

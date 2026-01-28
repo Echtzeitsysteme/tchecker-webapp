@@ -14,6 +14,8 @@ import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
 import NextRoundDialog from './dialogs/NextRoundDialogWitness.tsx';
 import GameOverDialog from './dialogs/GameOverDialogWitness.tsx';
+import { TCheckerUtils } from '../../utils/tcheckerUtils.ts';
+import InvalidDelayDialog from './dialogs/InvalidDelayDialog.tsx';
 
 function WitnessDisplay() {
 
@@ -53,6 +55,7 @@ function WitnessDisplay() {
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
   const [gameOverOpen, setGameOverOpen] = useState<boolean>(false);
+  const [invalidDelayOpen, setInvalidDelayOpen] = useState<boolean>(false);
 
   function getInitialClockVals(system: SystemOptionType) {
     let result = new Map<string, string>();
@@ -109,7 +112,7 @@ function WitnessDisplay() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
-  function handlePlayerNextState() {
+  async function handlePlayerNextState() {
 
     const playerNode = currentNode();
 
@@ -122,13 +125,28 @@ function WitnessDisplay() {
 
       setVisitedNodes(newVisitedNodes);
     } else {
+
       let newClockVals = new Map<string, string>();
-      for(const [clock, value] of playerIsFirst? firstClockVals : secondClockVals) { // TODO: invarianten checken
+      for(const [clock, value] of playerIsFirst? firstClockVals : secondClockVals) {
         newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
       }
+
+      const newState = certificate.nodeToStateJSON(
+        playerNode.attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
+        playerNode.attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
+        newClockVals
+      );
+      
+      // check if delay violates invariant
+      const stateIsValidResponse = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState);
+      if(stateIsValidResponse[0] === "") {
+        setInvalidDelayOpen(true);
+        return;
+      }
+
       playerIsFirst? setFirstClockVals(newClockVals) : setSecondClockVals(newClockVals);
     }
-    
+
     setNextEdgeIdx(0); // just for pretty display
     setPlayerTurn(false);
   }
@@ -304,6 +322,12 @@ function WitnessDisplay() {
       >
       </GameOverDialog>
 
+      <InvalidDelayDialog
+        open={invalidDelayOpen}
+        onClose={() => setInvalidDelayOpen(false)}
+        delay={-(nextEdgeIdx + 1)}
+      >
+      </InvalidDelayDialog>
     </>
   );
 }
