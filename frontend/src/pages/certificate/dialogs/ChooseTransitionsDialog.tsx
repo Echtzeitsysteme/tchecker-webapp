@@ -1,5 +1,5 @@
-import { Radio, RadioGroup, Button, Dialog, DialogActions, DialogContent, FormControl, FormControlLabel } from '@mui/material';
-import React, { useContext } from 'react';
+import { Radio, RadioGroup, Grid, Button, Dialog, DialogActions, DialogContent, FormControl, FormControlLabel, TextField } from '@mui/material';
+import React, { useContext, useState } from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
 import { EdgeModel, RootGraphModel } from 'ts-graphviz';
 import { getEdgeAsString } from '../EdgeFormatting';
@@ -18,40 +18,71 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
     const { open, onClose, edgeOptions, playerIsFirst, context, graph } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
-    const {nextEdgeIdx, setNextEdgeIdx} = useContext(context);
+    const {setNextEdgeIdx} = useContext(context);
+    const [currentIdx, setCurrentIdx] = useState<number>(0);
+    const [delay, setDelay] = useState<number>(0);
 
-    function handleRadioChange (e: React.ChangeEvent<HTMLInputElement>): void {
-        console.log('RadioGroup changed:', e.target.value);
-        setNextEdgeIdx(+e.target.value)
-    };
+    function handleClose() {
+        setNextEdgeIdx(currentIdx === -1 ? -(delay + 1) : currentIdx); 
+        onClose();
+    }
+
+    const selectDelay = <div>
+        <Grid container spacing={1} sx={{alignItems: "center"}}>
+            <Grid item>
+                <b>Delay of </b>
+            </Grid>
+            <Grid item>
+                <TextField
+                  margin="dense"
+                  label="Delay"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  value={delay}
+                  onChange={(e) => setDelay(+e.target.value)}
+                  InputProps={{ inputProps: { min: 0 } }}
+                />
+            </Grid>
+        </Grid>
+    </div>
+
+    const setDelayOption = <div key={0}>
+                                <FormControlLabel 
+                                    value={-1} 
+                                    checked={-1 === currentIdx}
+                                    control={<Radio />} 
+                                    label={selectDelay} 
+                                />
+                            </div>
 
     return (
         <>
-            <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="md">
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogContent>
                     <div>
                         <FormControl>
                             <RadioGroup
-                                onChange={handleRadioChange}
+                                onChange={(e) => setCurrentIdx(+e.target.value)}
                             >
                             {edgeOptions.map((edge, idx) => (
                                 <div key={getEdgeAsString(edge, graph, playerIsFirst)}>
                                     <FormControlLabel 
                                         value={idx} 
-                                        checked={idx === nextEdgeIdx}
+                                        checked={idx === currentIdx}
                                         control={<Radio />} 
                                         label={<b>{getEdgeAsString(edge, graph, playerIsFirst)}</b>} 
                                     />
                                 </div>
-                            ))}
+                            )).concat(graph.nodes[0].attributes.get("zones")? setDelayOption : [])}
                             </RadioGroup>
                         </FormControl>
                     </div>
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        onMouseDown={() => onClose()}
-                        onKeyDown={(e) => executeOnKeyboardClick(e.key, () => onClose())}
+                        onMouseDown={handleClose}
+                        onKeyDown={(e) => executeOnKeyboardClick(e.key, handleClose)}
                         variant="contained"
                         color="error"
                     >

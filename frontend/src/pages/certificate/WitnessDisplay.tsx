@@ -113,21 +113,31 @@ function WitnessDisplay() {
 
     const playerNode = currentNode();
 
-    const nextNodeTarget = certificate.getOutgoingEdges(playerNode)[nextEdgeIdx].targets[1] as NodeModel;
-    const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+    if(nextEdgeIdx >= 0) { // TODO: resets
+      const nextNodeTarget = certificate.getOutgoingEdges(playerNode)[nextEdgeIdx].targets[1] as NodeModel;
+      const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
-    let newVisitedNodes = [...visitedNodes];
-    newVisitedNodes[visitedNodes.length - 1] = nextNode;
+      let newVisitedNodes = [...visitedNodes];
+      newVisitedNodes[visitedNodes.length - 1] = nextNode;
 
-    setVisitedNodes(newVisitedNodes);
+      setVisitedNodes(newVisitedNodes);
+    } else {
+      let newClockVals = new Map<string, string>();
+      for(const [clock, value] of playerIsFirst? firstClockVals : secondClockVals) { // TODO: invarianten checken
+        newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
+      }
+      playerIsFirst? setFirstClockVals(newClockVals) : setSecondClockVals(newClockVals);
+    }
+    
     setNextEdgeIdx(0); // just for pretty display
     setPlayerTurn(false);
   }
 
-  function handleOpponentNextState() {
+  function handleOpponentNextState(playerIsFirst: boolean) {
 
     setVisitedNodes(visitedNodes.concat(currentNode()));
     setPlayerTurn(true);
+    setPlayerIsFirst(playerIsFirst);
 
     if(certificate.getOutgoingEdges(currentNode()).length !== 0){
       setNextRoundOpen(true);
@@ -233,8 +243,8 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={gameOver || (!playerTurn && playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(true)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(true)})}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(true)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(true)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -257,8 +267,8 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={gameOver || (!playerTurn && !playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(false)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(); setPlayerIsFirst(false)})}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(false)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(false)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -270,7 +280,7 @@ function WitnessDisplay() {
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
-          edgeOptions={certificate.getOutgoingEdges(currentNode())} // TODO
+          edgeOptions={certificate.getOutgoingEdges(currentNode())}
           playerIsFirst={playerIsFirst}
           context={ChooseTransitionContext}
           graph={certificate.graph}
@@ -281,7 +291,7 @@ function WitnessDisplay() {
       <NextRoundDialog 
         open={nextRoundOpen} 
         onClose={() => setNextRoundOpen(false)} 
-        opponentEdge={certificate.getOutgoingEdges(currentNode())[nextEdgeIdx]} // TODO
+        opponentEdge={certificate.getOutgoingEdges(currentNode())[nextEdgeIdx]}
         playerIsFirst={playerIsFirst}
         graph={certificate.graph}
       >
