@@ -40,7 +40,7 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
                   fullWidth
                   variant="outlined"
                   value={delay}
-                  onChange={(e) => setDelay(+e.target.value)}
+                  onChange={(e) => {setDelay(+e.target.value); setCurrentIdx(-1)}}
                   InputProps={{ inputProps: { min: 0 } }}
                 />
             </Grid>

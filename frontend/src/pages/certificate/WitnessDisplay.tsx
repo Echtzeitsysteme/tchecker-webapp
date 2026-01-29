@@ -40,8 +40,9 @@ function WitnessDisplay() {
   const [playerTurn, setPlayerTurn] = useState<boolean>(true);
   // with player is first meaning the player controls the left TA in the next step
   const [playerIsFirst, setPlayerIsFirst] = useState<boolean>(true);
+  const [disableOpponentButtons, setDisableOpponentButtons] = useState<boolean>(false);
 
-  const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
+  const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(certificate.getOutgoingEdges(initialNode).length === 0 ? -1 : 0);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -155,15 +156,24 @@ function WitnessDisplay() {
       playerIsFirst? setFirstClockVals(newClockVals) : setSecondClockVals(newClockVals);
     }
 
-    setNextEdgeIdx(0); // just for pretty display
     setPlayerTurn(false);
     setPlayerIsFirst(playerIsFirst);
+    setDisableOpponentButtons(false);
   }
 
-  function handleOpponentNextState(playerIsFirst: boolean) {
+  function handleOpponentNextState() {
+
+    if(nextEdgeIdx < 0) {
+      let newClockVals = new Map<string, string>();
+      for(const [clock, value] of playerIsFirst? secondClockVals : firstClockVals) {
+        newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
+      }
+
+      playerIsFirst? setSecondClockVals(newClockVals) : setFirstClockVals(newClockVals);
+    }
 
     setPlayerTurn(true);
-    setPlayerIsFirst(playerIsFirst);
+    setNextEdgeIdx(certificate.getOutgoingEdges(currentNode()).length === 0 ? -1 : 0); // just for pretty display
     setNextRoundOpen(true);
   }
 
@@ -180,11 +190,18 @@ function WitnessDisplay() {
   function handleReset() {
     setVisitedNodes([initialNode]);
     setPlayerTurn(true);
-    setNextEdgeIdx(0); // just for pretty display
+    setNextEdgeIdx(certificate.getOutgoingEdges(initialNode).length === 0 ? -1 : 0); // just for pretty display
     setNextRoundOpen(true);
 
     setFirstClockVals(getInitialClockVals(firstSystem));
     setSecondClockVals(getInitialClockVals(secondSystem));
+    setDisableOpponentButtons(false);
+  }
+
+  function handleChooseTransitions(playerIsFirst: boolean) {
+    setChooseTransitionsOpen(true); 
+    setPlayerIsFirst(playerIsFirst); 
+    setDisableOpponentButtons(true);
   }
 
   if(!firstSystem || !secondSystem)
@@ -250,9 +267,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={!playerTurn}
-            onMouseDown={() => {setChooseTransitionsOpen(true); setPlayerIsFirst(true)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {setChooseTransitionsOpen(true); setPlayerIsFirst(true)})}
+            disabled={!playerTurn || (disableOpponentButtons && !playerIsFirst)}
+            onMouseDown={() => handleChooseTransitions(true)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleChooseTransitions(true))}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
@@ -260,9 +277,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={(!playerTurn && playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState(true)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState(true)})}
+            disabled={(!playerTurn && playerIsFirst) || (disableOpponentButtons && !playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState()}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState()})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -274,9 +291,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={!playerTurn}
-            onMouseDown={() => {setChooseTransitionsOpen(true); setPlayerIsFirst(false)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {setChooseTransitionsOpen(true); setPlayerIsFirst(false)})}
+            disabled={!playerTurn || (disableOpponentButtons && playerIsFirst)}
+            onMouseDown={() => handleChooseTransitions(false)}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleChooseTransitions(false))}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
@@ -284,9 +301,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={(!playerTurn && !playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState(false)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState(false)})}
+            disabled={(!playerTurn && !playerIsFirst) || (disableOpponentButtons && playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState()}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState()})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
