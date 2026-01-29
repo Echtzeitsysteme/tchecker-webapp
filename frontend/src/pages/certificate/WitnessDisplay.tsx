@@ -9,13 +9,13 @@ import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
 import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
-import { NodeModel } from 'ts-graphviz';
+import { EdgeModel, NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
 import NextRoundDialog from './dialogs/NextRoundDialogWitness.tsx';
-import GameOverDialog from './dialogs/GameOverDialogWitness.tsx';
 import { TCheckerUtils } from '../../utils/tcheckerUtils.ts';
 import InvalidDelayDialog from './dialogs/InvalidDelayDialog.tsx';
+import { getEdgeAsString } from './EdgeFormatting.ts';
 
 function WitnessDisplay() {
 
@@ -40,7 +40,6 @@ function WitnessDisplay() {
   const [playerTurn, setPlayerTurn] = useState<boolean>(true);
   // with player is first meaning the player controls the left TA in the next step
   const [playerIsFirst, setPlayerIsFirst] = useState<boolean>(true);
-  const [gameOver, setGameOver] = useState<boolean>(false);
 
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
 
@@ -54,7 +53,6 @@ function WitnessDisplay() {
   const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
-  const [gameOverOpen, setGameOverOpen] = useState<boolean>(false);
   const [invalidDelayOpen, setInvalidDelayOpen] = useState<boolean>(false);
 
   function getInitialClockVals(system: SystemOptionType) {
@@ -65,6 +63,21 @@ function WitnessDisplay() {
         result = result.set(clock.name, "0");
 
     return result;
+  }
+
+  function removeEquivalentEdges(edges: EdgeModel[], playerIsFirst: boolean) {
+
+    let uniqueEdges = [];
+
+    for(const edge of edges) {
+      if(!uniqueEdges.find(uniqueEdge => 
+        getEdgeAsString(uniqueEdge, certificate.graph, playerIsFirst) === getEdgeAsString(edge, certificate.graph, playerIsFirst)
+      )) {
+        uniqueEdges = uniqueEdges.concat(edge);
+      }
+    }
+
+    return uniqueEdges;
   }
 
   useEffect(() => {
@@ -112,18 +125,13 @@ function WitnessDisplay() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
-  async function handlePlayerNextState() {
-
-    const playerNode = currentNode();
-
+  async function handlePlayerNextState(playerIsFirst: boolean) {
+    
     if(nextEdgeIdx >= 0) { // TODO: resets
-      const nextNodeTarget = certificate.getOutgoingEdges(playerNode)[nextEdgeIdx].targets[1] as NodeModel;
+      const nextNodeTarget = certificate.getOutgoingEdges(currentNode())[nextEdgeIdx].targets[1] as NodeModel;
       const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
-      let newVisitedNodes = [...visitedNodes];
-      newVisitedNodes[visitedNodes.length - 1] = nextNode;
-
-      setVisitedNodes(newVisitedNodes);
+      setVisitedNodes(visitedNodes.concat(nextNode));
     } else {
 
       let newClockVals = new Map<string, string>();
@@ -132,8 +140,8 @@ function WitnessDisplay() {
       }
 
       const newState = certificate.nodeToStateJSON(
-        playerNode.attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
-        playerNode.attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
+        currentNode().attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
+        currentNode().attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
         newClockVals
       );
       
@@ -149,26 +157,19 @@ function WitnessDisplay() {
 
     setNextEdgeIdx(0); // just for pretty display
     setPlayerTurn(false);
+    setPlayerIsFirst(playerIsFirst);
   }
 
   function handleOpponentNextState(playerIsFirst: boolean) {
 
-    setVisitedNodes(visitedNodes.concat(currentNode()));
     setPlayerTurn(true);
     setPlayerIsFirst(playerIsFirst);
-
-    if(certificate.getOutgoingEdges(currentNode()).length !== 0){
-      setNextRoundOpen(true);
-    } else{
-      setGameOverOpen(true);
-      setGameOver(true);
-    }
+    setNextRoundOpen(true);
   }
 
   function handlePreviousStep() {
 
     setPlayerTurn(!playerTurn);
-    setGameOver(false);
 
     if(!playerTurn) {
       const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
@@ -180,7 +181,6 @@ function WitnessDisplay() {
     setVisitedNodes([initialNode]);
     setPlayerTurn(true);
     setNextEdgeIdx(0); // just for pretty display
-    setGameOver(false);
     setNextRoundOpen(true);
 
     setFirstClockVals(getInitialClockVals(firstSystem));
@@ -228,7 +228,7 @@ function WitnessDisplay() {
           system={firstSystem}
           isFirst={true}
           contentHeight={contentHeight} 
-          currentNode={playerTurn && playerIsFirst ? currentNode() : (previousNode() || initialNode)}
+          currentNode={!playerTurn && !playerIsFirst ? (previousNode() || initialNode) : currentNode()}
           clockvals={firstClockVals}
           cornerElement={firstCornerElement}
         />
@@ -238,7 +238,7 @@ function WitnessDisplay() {
           system={secondSystem}
           isFirst={false}
           contentHeight={contentHeight} 
-          currentNode={playerTurn && !playerIsFirst ? currentNode() : (previousNode() || initialNode)}
+          currentNode={!playerTurn && playerIsFirst ? (previousNode() || initialNode) : currentNode()}
           clockvals={secondClockVals}
           cornerElement={secondCornerElement}
         />
@@ -250,9 +250,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={gameOver || !playerTurn}
-            onMouseDown={() => setChooseTransitionsOpen(true)}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
+            disabled={!playerTurn}
+            onMouseDown={() => {setChooseTransitionsOpen(true); setPlayerIsFirst(true)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {setChooseTransitionsOpen(true); setPlayerIsFirst(true)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
@@ -260,9 +260,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={gameOver || (!playerTurn && playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(true)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(true)})}
+            disabled={(!playerTurn && playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState(true)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState(true)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -274,9 +274,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
-            disabled={gameOver || !playerTurn}
-            onMouseDown={() => setChooseTransitionsOpen(true)}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => setChooseTransitionsOpen(true))}
+            disabled={!playerTurn}
+            onMouseDown={() => {setChooseTransitionsOpen(true); setPlayerIsFirst(false)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {setChooseTransitionsOpen(true); setPlayerIsFirst(false)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.chooseTransitions')}
@@ -284,9 +284,9 @@ function WitnessDisplay() {
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
-            disabled={gameOver || (!playerTurn && !playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(false)}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState(false)})}
+            disabled={(!playerTurn && !playerIsFirst)}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState(false)}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState(false)})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -298,7 +298,7 @@ function WitnessDisplay() {
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
-          edgeOptions={certificate.getOutgoingEdges(currentNode())}
+          edgeOptions={removeEquivalentEdges(certificate.getOutgoingEdges(currentNode()), playerIsFirst)}
           playerIsFirst={playerIsFirst}
           context={ChooseTransitionContext}
           graph={certificate.graph}
@@ -314,13 +314,6 @@ function WitnessDisplay() {
         graph={certificate.graph}
       >
       </NextRoundDialog>
-
-      <GameOverDialog 
-        open={gameOverOpen} 
-        onClose={() => setGameOverOpen(false)}
-        playerIsFirst={playerIsFirst}
-      >
-      </GameOverDialog>
 
       <InvalidDelayDialog
         open={invalidDelayOpen}

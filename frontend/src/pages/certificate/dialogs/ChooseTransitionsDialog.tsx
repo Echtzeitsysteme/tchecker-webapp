@@ -19,7 +19,7 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
     const { executeOnKeyboardClick } = useButtonUtils();
 
     const {setNextEdgeIdx} = useContext(context);
-    const [currentIdx, setCurrentIdx] = useState<number>(0);
+    const [currentIdx, setCurrentIdx] = useState<number>(edgeOptions.length === 0 ? -1 : 0);
     const [delay, setDelay] = useState<number>(0);
 
     function handleClose() {
@@ -47,14 +47,14 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
         </Grid>
     </div>
 
-    const setDelayOption = <div key={0}>
-                                <FormControlLabel 
-                                    value={-1} 
-                                    checked={-1 === currentIdx}
-                                    control={<Radio />} 
-                                    label={selectDelay} 
-                                />
-                            </div>
+    const setDelayOption = <div key={-1}>
+        <FormControlLabel 
+            value={-1} 
+            checked={-1 === currentIdx || edgeOptions.length === 0}
+            control={<Radio />} 
+            label={selectDelay} 
+        />
+    </div>
 
     return (
         <>
