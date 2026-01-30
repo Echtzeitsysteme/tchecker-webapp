@@ -43,6 +43,7 @@ function WitnessDisplay() {
   const [disableOpponentButtons, setDisableOpponentButtons] = useState<boolean>(false);
 
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(certificate.getOutgoingEdges(initialNode).length === 0 ? -1 : 0);
+  const [successorStates, setSuccessorStates] = useState(null);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -66,19 +67,40 @@ function WitnessDisplay() {
     return result;
   }
 
-  function removeEquivalentEdges(edges: EdgeModel[], playerIsFirst: boolean) {
+  function reduceEdgeOptions(edges: EdgeModel[]) {
 
-    let uniqueEdges = [];
+    if(!successorStates)
+      return null;
+
+    let edgeOptions = [];
 
     for(const edge of edges) {
-      if(!uniqueEdges.find(uniqueEdge => 
-        getEdgeAsString(uniqueEdge, certificate.graph, playerIsFirst) === getEdgeAsString(edge, certificate.graph, playerIsFirst)
-      )) {
-        uniqueEdges = uniqueEdges.concat(edge);
-      }
+      // do not add duplicates to options
+      if(edgeOptions.find(edgeOption => 
+        getEdgeAsString(edgeOption, certificate.graph, playerIsFirst) === getEdgeAsString(edge, certificate.graph, playerIsFirst)
+      ))
+        continue;
+
+      // only add edge to options if it is enabled (guard and invariant of target location are fulfilled <==> edge is element of successor states)
+      const edgeTarget = edge.targets[1] as NodeModel;
+      const targetVloc = ("<").concat(certificate.graph.nodes.filter(node => 
+          node.id === edgeTarget.id)[0].attributes.get(playerIsFirst? "first_vloc" : "second_vloc"
+        ).join(",")).concat(">");
+
+      const vedge = edge.attributes.get(playerIsFirst? "first_vedge" : "second_vedge");
+      const guard = edge.attributes.get(playerIsFirst? "first_vedge_prov" : "second_vedge_prov");
+      const reset = edge.attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do");
+
+      if(successorStates.find(state =>
+        state.state.vloc === targetVloc &&
+        state.transition.vedge === vedge &&
+        state.transition.guard === (guard ? guard : "") &&
+        state.transition.reset === (reset ? reset : "")
+      ))
+        edgeOptions = edgeOptions.concat(edge);
     }
 
-    return uniqueEdges;
+    return edgeOptions;
   }
 
   useEffect(() => {
@@ -102,6 +124,14 @@ function WitnessDisplay() {
 
       setFirstClockVals(getInitialClockVals(firstSystem));
       setSecondClockVals(getInitialClockVals(secondSystem));
+
+      // const initialState = certificate.nodeToStateJSON(
+      //   initialNode.attributes.get("first_vloc"),
+      //   initialNode.attributes.get("first_intval") as Map<string, string>,
+      //   getInitialClockVals(firstSystem)
+      // );
+
+      // setSuccessorStates(getValidSuccessorStates(initialNode, firstClockVals, true));
     };
 
     fetchData();
@@ -147,8 +177,8 @@ function WitnessDisplay() {
       );
       
       // check if delay violates invariant
-      const stateIsValidResponse = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState);
-      if(stateIsValidResponse[0] === "") {
+      const successorStates = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState);
+      if(successorStates[0] === "") {
         setInvalidDelayOpen(true);
         return;
       }
@@ -196,12 +226,46 @@ function WitnessDisplay() {
     setFirstClockVals(getInitialClockVals(firstSystem));
     setSecondClockVals(getInitialClockVals(secondSystem));
     setDisableOpponentButtons(false);
+    setSuccessorStates(null);
   }
 
-  function handleChooseTransitions(playerIsFirst: boolean) {
+  async function handleChooseTransitions(playerIsFirst: boolean) {
     setChooseTransitionsOpen(true); 
     setPlayerIsFirst(playerIsFirst); 
     setDisableOpponentButtons(true);
+
+    const state = certificate.nodeToStateJSON(
+      currentNode().attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
+      currentNode().attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
+      playerIsFirst? firstClockVals : secondClockVals
+    );
+    
+    // find valid successor states
+    const successorStatesResponse = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, state);
+
+    console.log(state)
+    console.log(successorStatesResponse)
+
+    const successorStates = JSON.parse(successorStatesResponse[0]).next; 
+
+    // for each successor state, check if current clock values fulfill guard of according transition
+    // tck-simulate returns all possible future successor states (after some delay) and therefore does not catch if a clock value is too low
+    // we check whether the guard is fulfilled by checking if tck-simulate throws an error for zone "guard && current clock values"
+    let guardFulfillingStates = [];
+    for(const successorState of successorStates) {
+
+      const guardCheckerState = JSON.parse(JSON.stringify(state));
+
+      // adjust zone
+      const guard = successorState.transition.guard;
+      guardCheckerState.zone = guard === "" ? state.zone : guard.concat(" && ").concat(state.zone);
+
+      const guardIsFulfilled = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, guardCheckerState);
+      if(guardIsFulfilled[0] !== "")
+        guardFulfillingStates = guardFulfillingStates.concat(successorState);
+    }
+
+    setSuccessorStates(guardFulfillingStates);
   }
 
   if(!firstSystem || !secondSystem)
@@ -314,8 +378,8 @@ function WitnessDisplay() {
       <ChooseTransitionContext.Provider value={{nextEdgeIdx, setNextEdgeIdx}}>
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
-          onClose={() => setChooseTransitionsOpen(false)} 
-          edgeOptions={removeEquivalentEdges(certificate.getOutgoingEdges(currentNode()), playerIsFirst)}
+          onClose={() => {setChooseTransitionsOpen(false); setSuccessorStates(null)}} 
+          edgeOptions={reduceEdgeOptions(certificate.getOutgoingEdges(currentNode()))}
           playerIsFirst={playerIsFirst}
           context={ChooseTransitionContext}
           graph={certificate.graph}

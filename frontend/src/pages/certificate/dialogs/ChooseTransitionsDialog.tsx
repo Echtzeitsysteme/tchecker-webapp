@@ -1,4 +1,4 @@
-import { Radio, RadioGroup, Grid, Button, Dialog, DialogActions, DialogContent, FormControl, FormControlLabel, TextField } from '@mui/material';
+import { Radio, RadioGroup, Grid, Button, CircularProgress, Dialog, DialogActions, DialogContent, FormControl, FormControlLabel, TextField } from '@mui/material';
 import React, { useContext, useState } from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
 import { EdgeModel, RootGraphModel } from 'ts-graphviz';
@@ -17,6 +17,28 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
 
     const { open, onClose, edgeOptions, playerIsFirst, context, graph } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
+
+    if(!edgeOptions)
+        return (
+        <>
+            <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+                <DialogContent>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CircularProgress size='20px' color='inherit' />
+                    </div>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onMouseDown={onClose}
+                        onKeyDown={(e) => executeOnKeyboardClick(e.key, onClose)}
+                        variant="contained"
+                        color="error"
+                    >
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>)
 
     const {setNextEdgeIdx} = useContext(context);
     const [currentIdx, setCurrentIdx] = useState<number>(edgeOptions.length === 0 ? -1 : 0);

@@ -85,7 +85,8 @@ export class Certificate {
         
         let intval = "";
         for(const [lhs, rhs] of intvals)
-            intval = intval.concat(lhs).concat("=").concat(rhs);
+            intval = intval.concat(lhs).concat("=").concat(rhs).concat(",");
+        intval = intval.substring(0, intval.length - 1);
 
         let zone = "(";
         for(const [lhs, rhs] of clockvals) {
