@@ -67,6 +67,21 @@ function WitnessDisplay() {
     return result;
   }
 
+  function resetClockVals(clockVals: Map<string, string>, resets: string) {
+
+    let newClockVals = new Map<string, string>(clockVals);
+
+    for(const clock of newClockVals.keys()) {
+      const clockName = clock.replace(".", "\.");
+      const regex = new RegExp(`^.*${clockName}\\s*=\\s*0.*$`);
+
+      if(regex.test(resets))
+        newClockVals = newClockVals.set(clock, "0");
+    }
+
+    return newClockVals;
+  }
+
   useEffect(() => {
     const fetchData = async () => {
 
@@ -128,14 +143,9 @@ function WitnessDisplay() {
       const nextNodeTarget = edgeOptions[nextEdgeIdx].targets[1] as NodeModel;
       const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
-      // check if clocks are reset by transition and set according clock values to 0
-      for(const [clock, _] of newClockVals) {
-        const clockName = clock.replace(".", "\.");
-        const regex = new RegExp(`^${clockName}\\s*=\\s*0$`);
-
-        if(regex.test(edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do")))
-          newClockVals = newClockVals.set(clock, "0");
-      }
+      // check which clocks are reset by transition and set according clock values to 0
+      const resets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do");
+      newClockVals = resetClockVals(newClockVals, resets);
 
       setVisitedNodes(visitedNodes.concat(nextNode));
     } else {
@@ -151,8 +161,8 @@ function WitnessDisplay() {
       );
       
       // check if delay violates invariant
-      const successorStates = await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState);
-      if(successorStates[0] === "") {
+      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState))[0] === "";
+      if(invariantIsViolated) {
         setInvalidDelayOpen(true);
         return;
       }
@@ -168,13 +178,11 @@ function WitnessDisplay() {
     let newClockVals = new Map<string, string>(playerIsFirst? secondClockVals : firstClockVals);
 
     if(nextEdgeIdx >= 0 && edgeOptions.length > 0) {
-      for(const [clock, _] of newClockVals) {
-        const clockName = clock.replace(".", "\.");
-        const regex = new RegExp(`^${clockName}\\s*=\\s*0$`);
 
-        if(regex.test(edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "second_vedge_do" : "first_vedge_do")))
-          newClockVals = newClockVals.set(clock, "0");
-      }
+      // check which clocks are reset by transition and set according clock values to 0
+      const resets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "second_vedge_do" : "first_vedge_do");
+      newClockVals = resetClockVals(newClockVals, resets);
+
     } else {
       for(const [clock, value] of newClockVals) 
         newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
@@ -212,7 +220,7 @@ function WitnessDisplay() {
     setPlayerIsFirst(first); 
     setSelectAutomatonStage(false);
 
-    const state = certificate.nodeToStateJSON(
+    const currentState = certificate.nodeToStateJSON(
       currentNode().attributes.get(first? "first_vloc" : "second_vloc"),
       currentNode().attributes.get(first? "first_intval" : "second_intval") as Map<string, string>,
       first? firstClockVals : secondClockVals
@@ -230,30 +238,35 @@ function WitnessDisplay() {
         continue;
 
       // check if guard and invariant of target location are fulfilled
-      const checkerState = JSON.parse(JSON.stringify(state));
-
+      const guardCheckerState = JSON.parse(JSON.stringify(currentState));
       const guard = edge.attributes.get(first? "first_vedge_prov" : "second_vedge_prov");
-      let constraints = guard? [guard] : [];
+
+      guardCheckerState.zone = (!guard || (guard === "")) ? currentState.zone : guard.concat(" && ").concat(currentState.zone);
+
+      const guardIsViolated = (await TCheckerUtils.callSimulateOneStep(first? firstSystem : secondSystem, guardCheckerState))[0] === "";
+      if(guardIsViolated)
+        continue;
 
       const edgeTargetNode = edge.targets[1] as NodeModel;
       const edgeTarget = certificate.graph.nodes.filter(node => node.id === edgeTargetNode.id)[0];
 
-      edgeTarget.attributes.get(first? "first_vloc" : "second_vloc").forEach((loc, idx) => {
-        const locInv = (first? firstSystem : secondSystem).processes[idx].automaton.locations.filter(location => location.name === loc)[0].invariant;
-        if(locInv){
-          constraints = constraints.concat(locInv.clauses.map(clause => clause.lhs.name.concat(clause.op).concat(clause.rhs.toString())));
-          constraints = constraints.concat(locInv.freeClauses.map(clause => clause.term));
-        }
-      })
+      let newClockVals = new Map<string, string>(playerIsFirst? firstClockVals : secondClockVals);
 
-      const constraint = constraints.join(" && ");
-      checkerState.zone = constraint === "" ? state.zone : constraint.concat(" && ").concat(state.zone);
+      // check which clocks are reset by transition and set according clock values to 0
+      const resets = edge.attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do");
+      newClockVals = resetClockVals(newClockVals, resets);
 
-      const edgeIsEnabled = await TCheckerUtils.callSimulateOneStep(first? firstSystem : secondSystem, checkerState);
+      const invariantCheckerState = certificate.nodeToStateJSON(
+        edgeTarget.attributes.get(first? "first_vloc" : "second_vloc"),
+        edgeTarget.attributes.get(first? "first_intval" : "second_intval") as Map<string, string>,
+        newClockVals
+      );
 
-      if(edgeIsEnabled[0] !== "")
-        edgeOptions = edgeOptions.concat(edge);
-    
+      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(first? firstSystem : secondSystem, invariantCheckerState))[0] === "";
+      if(invariantIsViolated)
+        continue;
+
+      edgeOptions = edgeOptions.concat(edge);
     }
 
     setEdgeOptions(edgeOptions);
@@ -404,7 +417,7 @@ function WitnessDisplay() {
       <NextRoundDialog 
         open={nextRoundOpen} 
         onClose={() => {setNextRoundOpen(false); setEdgeOptions(null)}} 
-        opponentEdge={certificate.getOutgoingEdges(previousNode())[nextEdgeIdx]}
+        opponentEdge={edgeOptions? edgeOptions[nextEdgeIdx] : null}
         playerIsFirst={playerIsFirst}
         graph={certificate.graph}
       >
