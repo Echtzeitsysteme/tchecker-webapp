@@ -353,8 +353,9 @@ function WitnessDisplay() {
       {selectAutomatonStage ? automatonSelectingButtons :
       (<Box sx={{ display: 'flex', height: `${1/10 * contentHeight}px`, overflow: 'hidden', border: "1px solid grey" }}>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
-          {/* <h3> {(playerTurn && playerIsFirst) || (!playerTurn && !playerIsFirst) ? 
-            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3> */}
+          {<h3> {((playerTurn && playerIsFirst) || (!playerTurn && !playerIsFirst)) && edgeOptions ? 
+            t('switchDialog.input.action').concat(": ").concat(nextEdgeIdx < 0 ? ("Delay of ").concat((-nextEdgeIdx - 1).toString()) : 
+            edgeOptions[nextEdgeIdx].attributes.get("first_vedge")) : ""}</h3>}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -377,8 +378,9 @@ function WitnessDisplay() {
           </Button>
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
-          {/* <h3> {(playerTurn && !getPlayerIsFirst(previousNode())) || (!playerTurn && getPlayerIsFirst(currentNode())) ? 
-            t('switchDialog.input.action').concat(": ").concat(getNextAction(playerTurn ? previousNode() : currentNode())) : ""}</h3> */}
+          {<h3> {((playerTurn && !playerIsFirst) || (!playerTurn && playerIsFirst)) && edgeOptions ? 
+            t('switchDialog.input.action').concat(": ").concat(nextEdgeIdx < 0 ? ("Delay of ").concat((-nextEdgeIdx - 1).toString()) : 
+            edgeOptions[nextEdgeIdx].attributes.get("second_vedge")) : ""}</h3>}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
