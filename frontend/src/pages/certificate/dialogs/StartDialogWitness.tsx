@@ -2,16 +2,14 @@ import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import React from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
 
-export interface GameOverDialog {
+export interface StartDialog {
     open: boolean;
     onClose: () => void;
-    finalSymbol: string;
-    playerIsFirst: boolean;
 }
 
-const GameOverDialog: React.FC<GameOverDialog> = (props) => {
+const StartDialog: React.FC<StartDialog> = (props) => {
 
-    const { open, onClose, finalSymbol, playerIsFirst } = props;
+    const { open, onClose } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
     return (
@@ -19,14 +17,17 @@ const GameOverDialog: React.FC<GameOverDialog> = (props) => {
             <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="md">
                 <DialogContent>
                     <div>
-                        <h3><center>Distinguishing transition found</center></h3>
-                        
                         <p>
-                        The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the timed automaton on the {playerIsFirst ? "right" : "left"}-hand side.
+                        Please select which timed automaton you want to take a step in.
                         </p>
 
                         <p>
-                        In the automaton on the {playerIsFirst ? "left" : "right"}, there is no transition available for this action.
+                        You can then choose a transition by clicking on the corresponding button and confirm your choice 
+                        with the next step button.
+                        </p>
+
+                        <p>
+                        To view the counterstep of your opponent, click the next step button on the other side.
                         </p>
                     </div>
                 </DialogContent>
@@ -45,4 +46,4 @@ const GameOverDialog: React.FC<GameOverDialog> = (props) => {
     )
 };
 
-export default GameOverDialog;
+export default StartDialog;

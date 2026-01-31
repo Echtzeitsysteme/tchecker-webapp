@@ -16,6 +16,7 @@ import NextRoundDialog from './dialogs/NextRoundDialogWitness.tsx';
 import { TCheckerUtils } from '../../utils/tcheckerUtils.ts';
 import InvalidDelayDialog from './dialogs/InvalidDelayDialog.tsx';
 import { getEdgeAsString } from './EdgeFormatting.ts';
+import StartDialog from './dialogs/StartDialogWitness.tsx';
 
 function WitnessDisplay() {
 
@@ -54,7 +55,8 @@ function WitnessDisplay() {
   
   const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
-  const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(true);
+  const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(false);
+  const [startOpen, setStartOpen] = useState<boolean>(true);
   const [invalidDelayOpen, setInvalidDelayOpen] = useState<boolean>(false);
 
   function getInitialClockVals(system: SystemOptionType) {
@@ -207,12 +209,12 @@ function WitnessDisplay() {
   function handleReset() {
     setVisitedNodes([initialNode]);
     setPlayerTurn(true);
-    setNextRoundOpen(true);
+
+    setStartOpen(true);
+    setSelectAutomatonStage(true);
 
     setFirstClockVals(getInitialClockVals(firstSystem));
     setSecondClockVals(getInitialClockVals(secondSystem));
-    setSelectAutomatonStage(true);
-    setEdgeOptions(null);
   }
 
   async function handleSelectAutomaton(first: boolean) {
@@ -424,6 +426,12 @@ function WitnessDisplay() {
         graph={certificate.graph}
       >
       </NextRoundDialog>
+
+      <StartDialog 
+        open={startOpen} 
+        onClose={() => {setStartOpen(false); setEdgeOptions(null)}}
+      >
+      </StartDialog>
 
       <InvalidDelayDialog
         open={invalidDelayOpen}

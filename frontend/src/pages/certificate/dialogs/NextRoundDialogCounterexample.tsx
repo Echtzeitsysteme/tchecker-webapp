@@ -31,7 +31,9 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                         
                         <p>
                         You can view this step by clicking the next step button on the {playerIsFirst ? "right" : "left"}.
-                        <br></br>
+                        </p>
+
+                        <p>
                         Please choose a counterstep for the timed automaton on the {playerIsFirst ? "left" : "right"} by selecting a
                         transition and confirming with the next step button.
                         </p>

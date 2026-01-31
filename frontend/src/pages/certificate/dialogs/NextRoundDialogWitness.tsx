@@ -22,7 +22,7 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
             <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="md">
                 <DialogContent>
                     <div>
-                        {/* <p>
+                        <p>
                         The opponent has chosen to take the following transition in the timed automaton
                         on the {playerIsFirst ? "right" : "left"} handside:
                         </p>
@@ -30,11 +30,17 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                         <p style={{ textAlign: 'center' }}><b>{!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge, graph, !playerIsFirst)}</b></p>
                         
                         <p>
-                        You can view this step by clicking the according button on the {playerIsFirst ? "right" : "left"}.
-                        <br></br>
-                        Please choose a counterstep for the {playerIsFirst ? "left" : "right"} timed automaton by selecting a
-                        transition and confirming with the button on the {playerIsFirst ? "left" : "right"}.
-                        </p> */}
+                        Please select which timed automaton to take your next step in.
+                        </p>
+
+                        <p>
+                        You can then choose a transition by clicking on the corresponding button and confirm your choice 
+                        with the next step button.
+                        </p>
+
+                        <p>
+                        To view the counterstep of your opponent, click the next step button on the other side.
+                        </p>
                     </div>
                 </DialogContent>
                 <DialogActions>
