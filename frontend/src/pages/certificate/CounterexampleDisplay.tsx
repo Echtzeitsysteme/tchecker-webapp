@@ -46,7 +46,7 @@ function CounterexampleDisplay() {
   const headerRef = useRef<HTMLHeadingElement>(null);
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
   
-  const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
+  const ChooseTransitionContext = createContext({setNextEdgeIdx});
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length > 0);
   const [gameOverOpen, setGameOverOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length === 0);
@@ -323,7 +323,7 @@ function CounterexampleDisplay() {
         </Grid>
       </Box>
       
-      <ChooseTransitionContext.Provider value={{nextEdgeIdx, setNextEdgeIdx}}>
+      <ChooseTransitionContext.Provider value={{setNextEdgeIdx}}>
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 

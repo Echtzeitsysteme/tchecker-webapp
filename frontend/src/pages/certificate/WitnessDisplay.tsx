@@ -25,18 +25,19 @@ function WitnessDisplay() {
   const [firstSystem, setFirstSystem] = useState<SystemOptionType>(undefined);
   const [secondSystem, setSecondSystem] = useState<SystemOptionType>(undefined);
 
-  const [firstClockVals, setFirstClockVals] = useState<Map<string, string>>(undefined);
-  const [secondClockVals, setSecondClockVals] = useState<Map<string, string>>(undefined);
-
   const firstViewModel = useAnalysisViewModel();
   const secondViewModel = useAnalysisViewModel();
   const firstOpenedProcesses = useOpenedProcesses();
   const secondOpenedProcesses = useOpenedProcesses();
 
   const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
-  const [visitedNodes, setVisitedNodes] = useState<NodeModel[]>([initialNode]);
-  const currentNode = () => visitedNodes[visitedNodes.length - 1];
-  const previousNode = () => visitedNodes[visitedNodes.length - 2];
+  const [currentNode, setCurrentNode] = useState<NodeModel>(initialNode);
+
+  const [firstClockVals, setFirstClockVals] = useState<Map<string, string>>(undefined);
+  const [secondClockVals, setSecondClockVals] = useState<Map<string, string>>(undefined);
+
+  // one state being [node, firstClockVals, secondClockVals, playerIsFirst, nextEdgeIdx, edgeOptions]
+  const [visitedStates, setVisitedStates] = useState<[NodeModel, Map<string, string>, Map<string, string>, boolean, number, EdgeModel[]][]>(undefined);
 
   const [playerTurn, setPlayerTurn] = useState<boolean>(true);
   // with player is first meaning the player controls the left TA in the next step
@@ -44,7 +45,7 @@ function WitnessDisplay() {
   const [selectAutomatonStage, setSelectAutomatonStage] = useState<boolean>(true);
 
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
-  const [edgeOptions, setEdgeOptions] = useState<EdgeModel[]>(null);
+  const [edgeOptions, setEdgeOptions] = useState<EdgeModel[]>([]);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -103,16 +104,13 @@ function WitnessDisplay() {
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
-      setFirstClockVals(getInitialClockVals(firstSystem));
-      setSecondClockVals(getInitialClockVals(secondSystem));
+      const initialFirstClockVals = getInitialClockVals(firstSystem);
+      const initialSecondClockVals = getInitialClockVals(secondSystem);
 
-      // const initialState = certificate.nodeToStateJSON(
-      //   initialNode.attributes.get("first_vloc"),
-      //   initialNode.attributes.get("first_intval") as Map<string, string>,
-      //   getInitialClockVals(firstSystem)
-      // );
+      setFirstClockVals(initialFirstClockVals);
+      setSecondClockVals(initialSecondClockVals);
 
-      // setSuccessorStates(getValidSuccessorStates(initialNode, firstClockVals, true));
+      setVisitedStates([[initialNode, initialFirstClockVals, initialSecondClockVals, true, 0, []]]);
     };
 
     fetchData();
@@ -137,98 +135,112 @@ function WitnessDisplay() {
     return () => window.removeEventListener('resize', updateContentHeight);
   }, []);
 
-  async function handlePlayerNextState(playerIsFirst: boolean) {
+  async function handlePlayerNextState() {
 
-    let newClockVals = new Map<string, string>(playerIsFirst? firstClockVals : secondClockVals);
+    let playerNewClockVals = new Map<string, string>(playerIsFirst ? firstClockVals : secondClockVals);
+    let opponentNewClockVals = new Map<string, string>(playerIsFirst ? secondClockVals : firstClockVals);
     
     if(nextEdgeIdx >= 0 && edgeOptions.length > 0) {
       const nextNodeTarget = edgeOptions[nextEdgeIdx].targets[1] as NodeModel;
       const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
 
       // check which clocks are reset by transition and set according clock values to 0
-      const resets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do");
-      newClockVals = resetClockVals(newClockVals, resets);
+      const playerResets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst ? "first_vedge_do" : "second_vedge_do");
+      playerNewClockVals = resetClockVals(playerNewClockVals, playerResets);
 
-      setVisitedNodes(visitedNodes.concat(nextNode));
+      const opponentResets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst ? "second_vedge_do" : "first_vedge_do");
+      opponentNewClockVals = resetClockVals(opponentNewClockVals, opponentResets);
+
+      setCurrentNode(nextNode);
     } else {
 
-      for(const [clock, value] of newClockVals) {
-        newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
+      for(const [clock, value] of playerNewClockVals) {
+        playerNewClockVals = playerNewClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
+      }
+
+      for(const [clock, value] of opponentNewClockVals) {
+        opponentNewClockVals = opponentNewClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
       }
 
       const newState = certificate.nodeToStateJSON(
-        currentNode().attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
-        currentNode().attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
-        newClockVals
+        currentNode.attributes.get(playerIsFirst ? "first_vloc" : "second_vloc"),
+        currentNode.attributes.get(playerIsFirst ? "first_intval" : "second_intval") as Map<string, string>,
+        playerNewClockVals
       );
       
       // check if delay violates invariant
-      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(playerIsFirst? firstSystem : secondSystem, newState))[0] === "";
+      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(playerIsFirst ? firstSystem : secondSystem, newState))[0] === "";
       if(invariantIsViolated) {
         setInvalidDelayOpen(true);
         return;
       }
     }
 
-    playerIsFirst? setFirstClockVals(newClockVals) : setSecondClockVals(newClockVals);
+    setFirstClockVals(playerIsFirst ? playerNewClockVals : opponentNewClockVals);
+    setSecondClockVals(playerIsFirst ? opponentNewClockVals : playerNewClockVals);
     setPlayerTurn(false);
-    setPlayerIsFirst(playerIsFirst);
   }
 
   function handleOpponentNextState() {
-
-    let newClockVals = new Map<string, string>(playerIsFirst? secondClockVals : firstClockVals);
-
-    if(nextEdgeIdx >= 0 && edgeOptions.length > 0) {
-
-      // check which clocks are reset by transition and set according clock values to 0
-      const resets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst? "second_vedge_do" : "first_vedge_do");
-      newClockVals = resetClockVals(newClockVals, resets);
-
-    } else {
-      for(const [clock, value] of newClockVals) 
-        newClockVals = newClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
-    }
-
-    playerIsFirst? setSecondClockVals(newClockVals) : setFirstClockVals(newClockVals);
     setPlayerTurn(true);
     setNextRoundOpen(true);
     setSelectAutomatonStage(true);
+
+    setVisitedStates(visitedStates.concat([[currentNode, firstClockVals, secondClockVals, playerIsFirst, nextEdgeIdx, edgeOptions]]));
   }
 
   function handlePreviousStep() {
 
-    // setPlayerTurn(!playerTurn);
+    if(selectAutomatonStage) {
+      setSelectAutomatonStage(false);
+      setPlayerTurn(false);
 
-    // if(!playerTurn) {
-    //   const newVisitedNodes = visitedNodes.filter((_, idx) => idx !== visitedNodes.length - 1);
-    //   setVisitedNodes(newVisitedNodes);
-    // }
+      setPlayerIsFirst(visitedStates[visitedStates.length - 1][3]);
+      setNextEdgeIdx(visitedStates[visitedStates.length - 1][4]);
+      setEdgeOptions(visitedStates[visitedStates.length - 1][5]);
+
+      const newVisitedStates = visitedStates.filter((_, idx) => idx !== visitedStates.length - 1);
+      setVisitedStates(newVisitedStates);
+    }
+
+    if(!selectAutomatonStage && playerTurn)
+      setSelectAutomatonStage(true);
+
+    if(!playerTurn) {
+      setPlayerTurn(true);
+
+      setCurrentNode(visitedStates[visitedStates.length - 1][0]);
+      setFirstClockVals(visitedStates[visitedStates.length - 1][1]);
+      setSecondClockVals(visitedStates[visitedStates.length - 1][2]);
+    }
   }
 
   function handleReset() {
-    setVisitedNodes([initialNode]);
+    setCurrentNode(initialNode);
+
+    const initialFirstClockVals = getInitialClockVals(firstSystem);
+    const initialSecondClockVals = getInitialClockVals(secondSystem);
+
+    setFirstClockVals(initialFirstClockVals);
+    setSecondClockVals(initialSecondClockVals);
+
+    setVisitedStates([[initialNode, initialFirstClockVals, initialSecondClockVals, true, 0, []]]);
+
     setPlayerTurn(true);
 
     setStartOpen(true);
     setSelectAutomatonStage(true);
-
-    setFirstClockVals(getInitialClockVals(firstSystem));
-    setSecondClockVals(getInitialClockVals(secondSystem));
   }
 
   async function handleSelectAutomaton(first: boolean) {
 
-    setPlayerIsFirst(first); 
-    setSelectAutomatonStage(false);
-
     const currentState = certificate.nodeToStateJSON(
-      currentNode().attributes.get(first? "first_vloc" : "second_vloc"),
-      currentNode().attributes.get(first? "first_intval" : "second_intval") as Map<string, string>,
-      first? firstClockVals : secondClockVals
+      currentNode.attributes.get(first ? "first_vloc" : "second_vloc"),
+      currentNode.attributes.get(first ? "first_intval" : "second_intval") as Map<string, string>,
+      first ? firstClockVals : secondClockVals
     );
 
-    const edges = certificate.getOutgoingEdges(currentNode());
+    const edges = certificate.getOutgoingEdges(currentNode);
 
     let edgeOptions = [];
 
@@ -241,38 +253,42 @@ function WitnessDisplay() {
 
       // check if guard and invariant of target location are fulfilled
       const guardCheckerState = JSON.parse(JSON.stringify(currentState));
-      const guard = edge.attributes.get(first? "first_vedge_prov" : "second_vedge_prov");
+      const guard = edge.attributes.get(first ? "first_vedge_prov" : "second_vedge_prov");
 
-      guardCheckerState.zone = (!guard || (guard === "")) ? currentState.zone : guard.concat(" && ").concat(currentState.zone);
+      guardCheckerState.zone = !guard ? currentState.zone : guard.concat(" && ").concat(currentState.zone);
 
-      const guardIsViolated = (await TCheckerUtils.callSimulateOneStep(first? firstSystem : secondSystem, guardCheckerState))[0] === "";
+      const guardIsViolated = (await TCheckerUtils.callSimulateOneStep(first ? firstSystem : secondSystem, guardCheckerState))[0] === "";
       if(guardIsViolated)
         continue;
 
       const edgeTargetNode = edge.targets[1] as NodeModel;
       const edgeTarget = certificate.graph.nodes.filter(node => node.id === edgeTargetNode.id)[0];
 
-      let newClockVals = new Map<string, string>(playerIsFirst? firstClockVals : secondClockVals);
+      let newClockVals = new Map<string, string>(playerIsFirst ? firstClockVals : secondClockVals);
 
       // check which clocks are reset by transition and set according clock values to 0
-      const resets = edge.attributes.get(playerIsFirst? "first_vedge_do" : "second_vedge_do");
+      const resets = edge.attributes.get(playerIsFirst ? "first_vedge_do" : "second_vedge_do");
       newClockVals = resetClockVals(newClockVals, resets);
 
       const invariantCheckerState = certificate.nodeToStateJSON(
-        edgeTarget.attributes.get(first? "first_vloc" : "second_vloc"),
-        edgeTarget.attributes.get(first? "first_intval" : "second_intval") as Map<string, string>,
+        edgeTarget.attributes.get(first ? "first_vloc" : "second_vloc"),
+        edgeTarget.attributes.get(first ? "first_intval" : "second_intval") as Map<string, string>,
         newClockVals
       );
 
-      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(first? firstSystem : secondSystem, invariantCheckerState))[0] === "";
+      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(first ? firstSystem : secondSystem, invariantCheckerState))[0] === "";
       if(invariantIsViolated)
         continue;
 
       edgeOptions = edgeOptions.concat(edge);
     }
 
+    setSelectAutomatonStage(false);
+
+    setPlayerIsFirst(first);
+    setNextEdgeIdx(edgeOptions.length === 0 ? -1 : 0);
     setEdgeOptions(edgeOptions);
-    setNextEdgeIdx(edgeOptions.length === 0 ? -1 : 0)
+
   }
 
   if(!firstSystem || !secondSystem)
@@ -288,7 +304,9 @@ function WitnessDisplay() {
     <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', 
       justifyContent: "center", overflow: 'auto', height: `${1.25/10 * contentHeight}px`, width: '20%', border: "1px solid grey" }}>
         <IconButton
-          disabled={currentNode().id === initialNode.id && playerTurn}
+          disabled={currentNode.id === initialNode.id && playerTurn && 
+            Array.from(firstClockVals.values()).every(val => val === "0") && 
+            Array.from(secondClockVals.values()).every(val => val === "0")}
           onMouseDown={() => handlePreviousStep()}
           onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handlePreviousStep())}
           aria-label={t('tcheckerCounterexampleDisplay.button.previousStep')}
@@ -298,7 +316,9 @@ function WitnessDisplay() {
         </IconButton>
         &nbsp;
         <Button
-          disabled={currentNode().id === initialNode.id && playerTurn}
+          disabled={currentNode.id === initialNode.id && playerTurn && selectAutomatonStage  && 
+            Array.from(firstClockVals.values()).every(val => val === "0") && 
+            Array.from(secondClockVals.values()).every(val => val === "0")}
           onMouseDown={() => handleReset()}
           onKeyDown={(e) => executeOnKeyboardClick(e.key, () => handleReset())}
           variant="contained"
@@ -337,8 +357,8 @@ function WitnessDisplay() {
           system={firstSystem}
           isFirst={true}
           contentHeight={contentHeight} 
-          currentNode={!playerTurn && !playerIsFirst ? (previousNode() || initialNode) : currentNode()}
-          clockvals={firstClockVals}
+          currentNode={!playerTurn && !playerIsFirst ? (visitedStates[visitedStates.length - 1][0] || initialNode) : currentNode}
+          clockvals={!playerTurn && !playerIsFirst ? (visitedStates[visitedStates.length - 1][1] || getInitialClockVals(firstSystem)) : firstClockVals}
           cornerElement={firstCornerElement}
         />
         <TAStateDisplay 
@@ -347,8 +367,8 @@ function WitnessDisplay() {
           system={secondSystem}
           isFirst={false}
           contentHeight={contentHeight} 
-          currentNode={!playerTurn && playerIsFirst ? (previousNode() || initialNode) : currentNode()}
-          clockvals={secondClockVals}
+          currentNode={!playerTurn && playerIsFirst ? (visitedStates[visitedStates.length - 1][0] || initialNode) : currentNode}
+          clockvals={!playerTurn && playerIsFirst ? (visitedStates[visitedStates.length - 1][2] || getInitialClockVals(firstSystem)) : secondClockVals}
           cornerElement={secondCornerElement}
         />
       </Box>
@@ -372,8 +392,8 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={(playerTurn && !playerIsFirst) || (!playerTurn && playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState()}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(true) : handleOpponentNextState()})}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState()}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState()})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -397,8 +417,8 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '10%'}}>
           <Button
             disabled={(playerTurn && playerIsFirst) || (!playerTurn && !playerIsFirst)}
-            onMouseDown={() => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState()}}
-            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState(false) : handleOpponentNextState()})}
+            onMouseDown={() => {playerTurn ? handlePlayerNextState() : handleOpponentNextState()}}
+            onKeyDown={(e) => executeOnKeyboardClick(e.key, () => {playerTurn ? handlePlayerNextState() : handleOpponentNextState()})}
             variant="contained"
           >
             {t('tcheckerCounterexampleDisplay.button.nextStep')}
@@ -420,8 +440,9 @@ function WitnessDisplay() {
 
       <NextRoundDialog 
         open={nextRoundOpen} 
-        onClose={() => {setNextRoundOpen(false); setEdgeOptions(null)}} 
-        opponentEdge={edgeOptions? edgeOptions[nextEdgeIdx] : null}
+        onClose={() => setNextRoundOpen(false)} 
+        opponentEdge={edgeOptions ? edgeOptions[nextEdgeIdx] : null}
+        opponentDelay={nextEdgeIdx < 0 ? -nextEdgeIdx - 1 : null}
         playerIsFirst={playerIsFirst}
         graph={certificate.graph}
       >
@@ -429,7 +450,7 @@ function WitnessDisplay() {
 
       <StartDialog 
         open={startOpen} 
-        onClose={() => {setStartOpen(false); setEdgeOptions(null)}}
+        onClose={() => setStartOpen(false)}
       >
       </StartDialog>
 

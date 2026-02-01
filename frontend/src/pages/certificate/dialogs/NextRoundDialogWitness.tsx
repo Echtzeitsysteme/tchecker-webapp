@@ -8,13 +8,14 @@ export interface NextRoundDialog {
     open: boolean;
     onClose: () => void;
     opponentEdge: EdgeModel;
+    opponentDelay: number;
     playerIsFirst: boolean;
     graph: RootGraphModel;
 }
 
 const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
 
-    const { open, onClose, opponentEdge, playerIsFirst, graph } = props;
+    const { open, onClose, opponentEdge, opponentDelay, playerIsFirst, graph } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
     return (
@@ -27,10 +28,12 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                         on the {playerIsFirst ? "right" : "left"} handside:
                         </p>
 
-                        <p style={{ textAlign: 'center' }}><b>{!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge, graph, !playerIsFirst)}</b></p>
+                        <p style={{ textAlign: 'center' }}><b>{opponentDelay === null ? 
+                        (!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge, graph, !playerIsFirst)) : 
+                        ("Delay of ").concat(opponentDelay.toString())}</b></p>
                         
                         <p>
-                        Please select which timed automaton to take your next step in.
+                        Please select which timed automaton you want to take your next step in.
                         </p>
 
                         <p>
