@@ -25,7 +25,7 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                     <div>
                         <p>
                         The opponent has chosen to take the following transition in the timed automaton
-                        on the {playerIsFirst ? "right" : "left"} handside:
+                        on the {playerIsFirst ? "right" : "left"}-hand side:
                         </p>
 
                         <p style={{ textAlign: 'center' }}><b>{opponentDelay === null ? 
