@@ -88,21 +88,13 @@ export class Certificate {
             intval = intval.concat(lhs).concat("=").concat(rhs).concat(",");
         intval = intval.substring(0, intval.length - 1);
 
-        let zone = "(";
+        let clockval = "";
         for(const [lhs, rhs] of clockvals) {
-            if(rhs.includes("/") || rhs.includes(".")) {
-                const [numerator, denominator] = rhs.split("/");
-                const lowerBound = parseInt((rhs.includes("/")? +numerator / +denominator : +rhs).toString());
-
-                zone = zone.concat(lhs).concat(">").concat(lowerBound.toString()).concat(" && ");
-                zone = zone.concat(lhs).concat("<").concat((lowerBound + 1).toString()).concat(" && ");
-            } else {
-                zone = zone.concat(lhs).concat("==").concat(rhs).concat(" && ");
-            }
+            clockval = clockval.concat(lhs).concat("=").concat(rhs).concat(", ");
         }
-        zone = zone.substring(0, zone.length - 4).concat(")");
+        clockval = clockval.substring(0, clockval.length - 2);
 
-        return {"intval": intval, "labels": "", "vloc": vloc, "zone": zone};
+        return {"intval": intval, "labels": "", "vloc": vloc, "clockval": clockval};
     }
 
     private parseList(list: string[]) {

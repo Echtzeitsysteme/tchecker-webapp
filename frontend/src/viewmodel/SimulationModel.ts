@@ -117,7 +117,7 @@ export const useSimulationModel = (): SimulationModel => {
   };
 
   const loadInitialSimulationState = async (taSystem: SystemOptionType) => {
-    const [response, error] = await TCheckerUtils.callSimulateOneStep(taSystem, null);
+    const [response, error] = await TCheckerUtils.callOneStepSimulation(taSystem, null);
     console.log('Loading initial simulation state:', response, error);
     if (error) {
       console.error('Error starting simulation:', error);
@@ -129,7 +129,7 @@ export const useSimulationModel = (): SimulationModel => {
     console.log(initialState);
     setNextStates([]);
 
-    const [nextStateResponse, nextStateError] = await TCheckerUtils.callSimulateOneStep(
+    const [nextStateResponse, nextStateError] = await TCheckerUtils.callOneStepSimulation(
       taSystem,
       initialState.initial[0].state // this needs to be changed to a JSON object
     );
@@ -150,7 +150,7 @@ export const useSimulationModel = (): SimulationModel => {
       return;
     }
 
-    const [response, error] = await TCheckerUtils.callSimulateOneStep(simulatedSystem, nextState); // this needs to be changed to a JSON object
+    const [response, error] = await TCheckerUtils.callOneStepSimulation(simulatedSystem, nextState); // this needs to be changed to a JSON object
     if (error) {
       console.error('Error fetching next simulation states:', error);
       return;

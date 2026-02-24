@@ -130,7 +130,7 @@ function CounterexampleDisplay() {
           node.attributes.get("first_intval") as Map<string, string>, 
           node.attributes.get("clockval_1") as Map<string, string>
         );
-        const successorStates = JSON.parse((await TCheckerUtils.callSimulateOneStep(firstSystem, state))[0]);
+        const successorStates = JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(firstSystem, state))[0]);
 
         successorStateMap = successorStateMap.set(node, successorStates.next.length);
       }

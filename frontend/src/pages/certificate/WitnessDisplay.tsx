@@ -44,6 +44,7 @@ function WitnessDisplay() {
   const [playerIsFirst, setPlayerIsFirst] = useState<boolean>(true);
   const [selectAutomatonStage, setSelectAutomatonStage] = useState<boolean>(true);
 
+  // positive values (and 0) correspond to indices in edgeOptions, negative values v correspond to delay (-(v + 1))
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
   const [edgeOptions, setEdgeOptions] = useState<EdgeModel[]>([]);
 
@@ -54,7 +55,7 @@ function WitnessDisplay() {
   const headerRef = useRef<HTMLHeadingElement>(null);
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
   
-  const ChooseTransitionContext = createContext({nextEdgeIdx, setNextEdgeIdx});
+  const ChooseTransitionContext = createContext({setNextEdgeIdx});
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(false);
   const [startOpen, setStartOpen] = useState<boolean>(true);
@@ -84,6 +85,23 @@ function WitnessDisplay() {
 
     return newClockVals;
   }
+
+  function updateClockVals(clockVals: Map<string, string>, delay: number) {
+
+    let newClockVals = new Map<string, string>(clockVals);
+
+    for(const [clock, value] of newClockVals) {
+      // count number of decimal places
+      const dpVal = value.split(".")[1] ? value.split(".")[1].length : 0; 
+      const dpDelay = nextEdgeIdx.toString().split(".")[1] ? nextEdgeIdx.toString().split(".")[1].length : 0;
+      // round to number of decimal places to get rid of floating point operation error
+      const newValue = parseFloat((+value + delay).toFixed(dpDelay > dpVal ? dpDelay : dpVal)).toString();
+      newClockVals = newClockVals.set(clock, newValue);
+    }
+
+    return newClockVals;
+  }
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -154,13 +172,8 @@ function WitnessDisplay() {
       setCurrentNode(nextNode);
     } else {
 
-      for(const [clock, value] of playerNewClockVals) {
-        playerNewClockVals = playerNewClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
-      }
-
-      for(const [clock, value] of opponentNewClockVals) {
-        opponentNewClockVals = opponentNewClockVals.set(clock, (+value - (nextEdgeIdx + 1)).toString());
-      }
+      playerNewClockVals = updateClockVals(playerNewClockVals, nextEdgeIdx);
+      opponentNewClockVals = updateClockVals(opponentNewClockVals, nextEdgeIdx);
 
       const newState = certificate.nodeToStateJSON(
         currentNode.attributes.get(playerIsFirst ? "first_vloc" : "second_vloc"),
@@ -169,7 +182,7 @@ function WitnessDisplay() {
       );
       
       // check if delay violates invariant
-      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(playerIsFirst ? firstSystem : secondSystem, newState))[0] === "";
+      const invariantIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? firstSystem : secondSystem, newState))[0] === "";
       if(invariantIsViolated) {
         setInvalidDelayOpen(true);
         return;
@@ -252,14 +265,14 @@ function WitnessDisplay() {
         continue;
 
       // check if guard and invariant of target location are fulfilled
-      const guardCheckerState = JSON.parse(JSON.stringify(currentState));
-      const guard = edge.attributes.get(first ? "first_vedge_prov" : "second_vedge_prov");
+      // const guardCheckerState = JSON.parse(JSON.stringify(currentState));
+      // const guard = edge.attributes.get(first ? "first_vedge_prov" : "second_vedge_prov");
 
-      guardCheckerState.zone = !guard ? currentState.zone : guard.concat(" && ").concat(currentState.zone);
+      // guardCheckerState.clockval = !guard ? currentState.clockval : guard.concat(" && ").concat(currentState.clockval);
 
-      const guardIsViolated = (await TCheckerUtils.callSimulateOneStep(first ? firstSystem : secondSystem, guardCheckerState))[0] === "";
-      if(guardIsViolated)
-        continue;
+      // const guardIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(first ? firstSystem : secondSystem, guardCheckerState))[0] === "";
+      // if(guardIsViolated)
+      //   continue;
 
       const edgeTargetNode = edge.targets[1] as NodeModel;
       const edgeTarget = certificate.graph.nodes.filter(node => node.id === edgeTargetNode.id)[0];
@@ -276,7 +289,7 @@ function WitnessDisplay() {
         newClockVals
       );
 
-      const invariantIsViolated = (await TCheckerUtils.callSimulateOneStep(first ? firstSystem : secondSystem, invariantCheckerState))[0] === "";
+      const invariantIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(first ? firstSystem : secondSystem, invariantCheckerState))[0] === "";
       if(invariantIsViolated)
         continue;
 
@@ -304,7 +317,7 @@ function WitnessDisplay() {
     <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', 
       justifyContent: "center", overflow: 'auto', height: `${1.25/10 * contentHeight}px`, width: '20%', border: "1px solid grey" }}>
         <IconButton
-          disabled={currentNode.id === initialNode.id && playerTurn && 
+          disabled={currentNode.id === initialNode.id && playerTurn && selectAutomatonStage &&
             Array.from(firstClockVals.values()).every(val => val === "0") && 
             Array.from(secondClockVals.values()).every(val => val === "0")}
           onMouseDown={() => handlePreviousStep()}
@@ -316,7 +329,7 @@ function WitnessDisplay() {
         </IconButton>
         &nbsp;
         <Button
-          disabled={currentNode.id === initialNode.id && playerTurn && selectAutomatonStage  && 
+          disabled={currentNode.id === initialNode.id && playerTurn && selectAutomatonStage && 
             Array.from(firstClockVals.values()).every(val => val === "0") && 
             Array.from(secondClockVals.values()).every(val => val === "0")}
           onMouseDown={() => handleReset()}
@@ -426,7 +439,7 @@ function WitnessDisplay() {
         </Grid>
       </Box>)}
       
-      <ChooseTransitionContext.Provider value={{nextEdgeIdx, setNextEdgeIdx}}>
+      <ChooseTransitionContext.Provider value={{setNextEdgeIdx}}>
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
