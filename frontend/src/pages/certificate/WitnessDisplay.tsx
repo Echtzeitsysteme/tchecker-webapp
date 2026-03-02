@@ -236,6 +236,11 @@ function WitnessDisplay() {
       );
       
       // check if delay is allowed
+      if(!(new RegExp(/^\d*(\.5(0)*)*$/)).test((-nextEdgeIdx - 1).toString())) {
+        setInvalidDelayOpen(true);
+        return;
+      }
+
       const successorStates = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? firstSystem : secondSystem, currentState))[0];
       const delayIsAllowed = (JSON.parse(successorStates).max_delay === "infinite") || evaluate(JSON.parse(successorStates).max_delay) >= (-nextEdgeIdx - 1);
       if(!delayIsAllowed) {

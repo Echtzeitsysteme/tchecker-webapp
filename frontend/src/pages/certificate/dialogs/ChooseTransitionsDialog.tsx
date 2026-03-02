@@ -39,7 +39,8 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
                   variant="outlined"
                   value={delay}
                   onChange={(e) => {setDelay(+e.target.value); setCurrentIdx(-1)}}
-                  InputProps={{ inputProps: { min: 0 } }}
+                  InputProps={{ inputProps: { min: 0, step: 0.5 } }}
+                  error={!(new RegExp(/^\d*(\.5(0)*)*$/)).test(delay.toString())}
                 />
             </Grid>
         </Grid>
