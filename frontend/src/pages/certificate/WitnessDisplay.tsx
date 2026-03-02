@@ -35,6 +35,7 @@ function WitnessDisplay() {
 
   const [firstClockVals, setFirstClockVals] = useState<Map<string, string>>(undefined);
   const [secondClockVals, setSecondClockVals] = useState<Map<string, string>>(undefined);
+  const [initialClockVals, setInitialClockVals] = useState<Map<string, string>[]>(undefined);
 
   // one state being [node, firstClockVals, secondClockVals, playerIsFirst, nextEdgeIdx, edgeOptions]
   const [visitedStates, setVisitedStates] = useState<[NodeModel, Map<string, string>, Map<string, string>, boolean, number, {transition: any; target: any}[]][]>(undefined);
@@ -61,16 +62,6 @@ function WitnessDisplay() {
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(false);
   const [startOpen, setStartOpen] = useState<boolean>(true);
   const [invalidDelayOpen, setInvalidDelayOpen] = useState<boolean>(false);
-
-  function getInitialClockVals(system: SystemOptionType) {
-    let result = new Map<string, string>();
-
-    for(const process of system.processes)
-      for(const clock of process.automaton.clocks)
-        result = result.set(clock.name, "0");
-
-    return result;
-  }
 
   async function getOpponentEdge(node: NodeModel, opponentClockVals: Map<string, string>) {
 
@@ -104,19 +95,20 @@ function WitnessDisplay() {
     return newClockVals;
   }
 
-  function stateToClockValMap(state: string) {
-    return certificate.parseAssignmentList(state.split(''));
+  function stateToClockValMap(clockval: string, certificate: Certificate) {
+    return certificate.parseAssignmentList(clockval.split(''));
   }
 
   function symbolicStateContainsState(symbolicState: string, state1: string, state2: string) {
 
-    const clockVals1 = stateToClockValMap(state1);
-    const clockVals2 = stateToClockValMap(state2);
+    const clockVals1 = stateToClockValMap(state1, certificate);
+    const clockVals2 = stateToClockValMap(state2, certificate);
 
     function addSuffix(clock: string, index: number) {
       if(clock.includes("[")){ // clocks of size > 1
          const idx = clock.indexOf("[");
-         return clock.substring(0, idx).concat("_1").concat(clock.substring(idx, clock.length));
+         // add array access into index
+         return clock.substring(0, idx).concat("_").concat(index.toString()).concat("_").concat(clock.substring(idx + 1, clock.length - 1));
       }
       else // clocks of size 1
         return clock.concat("_").concat(index.toString());
@@ -138,10 +130,11 @@ function WitnessDisplay() {
 
     let sState = symbolicState.replace(/&&/g, " and ");
     sState = sState.replace(/,/g, " or ");
+    // add array access into index
+    sState = sState.replace(/\[(\d)+\]/g, "_$1");
 
     return evaluate(sState, evalScope);
   }
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,13 +161,14 @@ function WitnessDisplay() {
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
-      const initialFirstClockVals = getInitialClockVals(firstSystem);
-      const initialSecondClockVals = getInitialClockVals(secondSystem);
+      const initialClockVals1 = stateToClockValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(firstSystem, null))[0]).initial[0].state.clockval, certificate);
+      const initialClockVals2 = stateToClockValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(secondSystem, null))[0]).initial[0].state.clockval, certificate);
 
-      setFirstClockVals(initialFirstClockVals);
-      setSecondClockVals(initialSecondClockVals);
+      setFirstClockVals(initialClockVals1);
+      setSecondClockVals(initialClockVals2);
+      setInitialClockVals([initialClockVals1, initialClockVals2]);
 
-      setVisitedStates([[initialNode, initialFirstClockVals, initialSecondClockVals, true, 0, []]]);
+      setVisitedStates([[initialNode, initialClockVals1, initialClockVals2, true, 0, []]]);
     };
 
     fetchData();
@@ -228,8 +222,8 @@ function WitnessDisplay() {
       // compute edge of opponent
       const opponentEdge = await getOpponentEdge(nextNode, opponentClockVals);
 
-      playerClockVals = stateToClockValMap(edgeOptions[nextEdgeIdx].target.clockval);
-      opponentClockVals = stateToClockValMap(opponentEdge.target.clockval);
+      playerClockVals = stateToClockValMap(edgeOptions[nextEdgeIdx].target.clockval, certificate);
+      opponentClockVals = stateToClockValMap(opponentEdge.target.clockval, certificate);
 
       setCurrentNode(nextNode);
       setOpponentEdge(opponentEdge);
@@ -298,8 +292,8 @@ function WitnessDisplay() {
     setCurrentNode(initialNode);
     setOpponentEdge(null);
 
-    const initialFirstClockVals = getInitialClockVals(firstSystem);
-    const initialSecondClockVals = getInitialClockVals(secondSystem);
+    const initialFirstClockVals = initialClockVals[0];
+    const initialSecondClockVals = initialClockVals[1];
 
     setFirstClockVals(initialFirstClockVals);
     setSecondClockVals(initialSecondClockVals);
@@ -331,7 +325,7 @@ function WitnessDisplay() {
     setEdgeOptions(edgeOptions);
   }
 
-  if(!firstSystem || !secondSystem || !certificate)
+  if(!firstSystem || !secondSystem || !certificate || !firstClockVals || !secondClockVals)
     return (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CircularProgress size='20px' color='inherit' />
             </div>)
@@ -398,7 +392,7 @@ function WitnessDisplay() {
           isFirst={true}
           contentHeight={contentHeight} 
           currentNode={!playerTurn && !playerIsFirst ? (visitedStates[visitedStates.length - 1][0] || initialNode) : currentNode}
-          clockvals={!playerTurn && !playerIsFirst ? (visitedStates[visitedStates.length - 1][1] || getInitialClockVals(firstSystem)) : firstClockVals}
+          clockvals={!playerTurn && !playerIsFirst ? (visitedStates[visitedStates.length - 1][1] || initialClockVals[0]) : firstClockVals}
           cornerElement={firstCornerElement}
         />
         <TAStateDisplay 
@@ -408,7 +402,7 @@ function WitnessDisplay() {
           isFirst={false}
           contentHeight={contentHeight} 
           currentNode={!playerTurn && playerIsFirst ? (visitedStates[visitedStates.length - 1][0] || initialNode) : currentNode}
-          clockvals={!playerTurn && playerIsFirst ? (visitedStates[visitedStates.length - 1][2] || getInitialClockVals(firstSystem)) : secondClockVals}
+          clockvals={!playerTurn && playerIsFirst ? (visitedStates[visitedStates.length - 1][2] || initialClockVals[1]) : secondClockVals}
           cornerElement={secondCornerElement}
         />
       </Box>
