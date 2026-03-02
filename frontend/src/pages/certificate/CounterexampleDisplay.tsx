@@ -9,7 +9,7 @@ import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
 import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
-import { NodeModel } from 'ts-graphviz';
+import { EdgeModel, NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
 import NextRoundDialog from './dialogs/NextRoundDialogCounterexample.tsx';
@@ -50,6 +50,43 @@ function CounterexampleDisplay() {
   const [chooseTransitionsOpen, setChooseTransitionsOpen] = useState<boolean>(false);
   const [nextRoundOpen, setNextRoundOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length > 0);
   const [gameOverOpen, setGameOverOpen] = useState<boolean>(certificate.getOutgoingEdges(initialNode).length === 0);
+
+  function edgeToJSON(edge: EdgeModel, first: boolean) {
+
+    if(!edge)
+      return null;
+
+    if(edge.attributes.get("delay"))
+      return {transition: {delay: edge.attributes.get("delay")}, target: ""};
+
+    const transition = {
+      guard: edge.attributes.get(first? "first_vedge_prov" : "second_vedge_prov"),
+      reset: edge.attributes.get(first? "first_vedge_do" : "second_vedge_do"),
+      vedge: edge.attributes.get(first? "first_vedge" : "second_vedge")
+    };
+
+    const edgeTarget = edge.targets[1] as NodeModel;
+    const targetNode = certificate.graph.nodes.filter(node => node.id === edgeTarget.id)[0];
+
+    function mapToString(map: Map<string, string>) {
+
+      let result = "";
+
+      map.forEach((val, key) => {
+        result = result.concat(key).concat(" = ").concat(val).concat(", ");
+      })
+
+      return result.substring(0, result.length - 2);
+    }
+
+    const target = {
+      clockval: mapToString(targetNode.attributes.get(first? "clockval_1" : "clockval_2") as Map<string, string>), 
+      intval: mapToString(targetNode.attributes.get(first? "first_intval" : "second_intval") as Map<string, string>),
+      vloc: ("<").concat(targetNode.attributes.get(first? "first_vloc" : "second_vloc").join(", ")).concat(">")
+    };
+
+    return {transition: transition, target: target};
+  }
 
   function getNextAction(node: NodeModel) {
 
@@ -327,10 +364,10 @@ function CounterexampleDisplay() {
         <ChooseTransitionsDialog 
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
-          edgeOptions={certificate.getOutgoingEdges(visitedNodes.length === 1 ? initialNode : previousNode())}
-          playerIsFirst={getPlayerIsFirst(previousNode() || initialNode)} // initialNode should never be used in practice
+          edgeOptions={certificate.getOutgoingEdges(visitedNodes.length === 1 ? initialNode : previousNode()).map(
+            edge => edgeToJSON(edge, getPlayerIsFirst(currentNode())))}
           context={ChooseTransitionContext}
-          graph={certificate.graph}
+          counterExample={true}
         >
         </ChooseTransitionsDialog>
       </ChooseTransitionContext.Provider>
@@ -338,9 +375,8 @@ function CounterexampleDisplay() {
       <NextRoundDialog 
         open={nextRoundOpen} 
         onClose={() => setNextRoundOpen(false)} 
-        opponentEdge={certificate.getOutgoingEdges(currentNode())[0]}
+        opponentEdge={edgeToJSON(certificate.getOutgoingEdges(currentNode())[0], !getPlayerIsFirst(currentNode()))}
         playerIsFirst={getPlayerIsFirst(currentNode())}
-        graph={certificate.graph}
       >
       </NextRoundDialog>
 

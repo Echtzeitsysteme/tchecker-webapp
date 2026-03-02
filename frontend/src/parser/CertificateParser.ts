@@ -97,7 +97,7 @@ export class Certificate {
         return {"intval": intval, "labels": "", "vloc": vloc, "clockval": clockval};
     }
 
-    private parseList(list: string[]) {
+    parseList(list: string[]) {
 
         let result = [];
 
@@ -120,7 +120,7 @@ export class Certificate {
         return result;
     }
 
-    private parseAssignmentList(list: string[]) {
+    parseAssignmentList(list: string[]) {
 
         const assignments = this.parseList(list)
         let result = new Map<string, string>()

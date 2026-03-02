@@ -1,21 +1,19 @@
 import { Radio, RadioGroup, Grid, Button, Dialog, DialogActions, DialogContent, FormControl, FormControlLabel, TextField } from '@mui/material';
 import React, { useContext, useState } from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
-import { EdgeModel, RootGraphModel } from 'ts-graphviz';
 import { getEdgeAsString } from '../EdgeFormatting';
 
 export interface ChooseTransitionsDialog {
     open: boolean;
     onClose: () => void;
-    edgeOptions: EdgeModel[];
-    playerIsFirst: boolean;
+    edgeOptions: {transition: any; target: any}[];
     context: React.Context<{setNextEdgeIdx: React.Dispatch<React.SetStateAction<number>>}>;
-    graph: RootGraphModel;
+    counterExample: boolean;
 }
 
 const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
 
-    const { open, onClose, edgeOptions, playerIsFirst, context, graph } = props;
+    const { open, onClose, edgeOptions, context, counterExample } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
     const {setNextEdgeIdx} = useContext(context);
@@ -66,15 +64,15 @@ const ChooseTransitionsDialog: React.FC<ChooseTransitionsDialog> = (props) => {
                                 onChange={(e) => setCurrentIdx(+e.target.value)}
                             >
                             {edgeOptions.map((edge, idx) => (
-                                <div key={getEdgeAsString(edge, graph, playerIsFirst)}>
+                                <div key={getEdgeAsString(edge)}>
                                     <FormControlLabel 
                                         value={idx} 
                                         checked={idx === currentIdx}
                                         control={<Radio />} 
-                                        label={<b>{getEdgeAsString(edge, graph, playerIsFirst)}</b>} 
+                                        label={<b>{getEdgeAsString(edge)}</b>} 
                                     />
                                 </div>
-                            )).concat(graph.nodes[0].attributes.get("zones")? setDelayOption : [])}
+                            )).concat(counterExample? [] : setDelayOption)}
                             </RadioGroup>
                         </FormControl>
                     </div>

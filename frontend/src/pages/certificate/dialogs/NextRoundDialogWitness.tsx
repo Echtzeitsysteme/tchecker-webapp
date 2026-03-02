@@ -1,21 +1,19 @@
 import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import React from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
-import { EdgeModel, RootGraphModel } from 'ts-graphviz';
 import { getEdgeAsString } from '../EdgeFormatting';
 
 export interface NextRoundDialog {
     open: boolean;
     onClose: () => void;
-    opponentEdge: EdgeModel;
+    opponentEdge: {transition: any; target: any};
     opponentDelay: number;
     playerIsFirst: boolean;
-    graph: RootGraphModel;
 }
 
 const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
 
-    const { open, onClose, opponentEdge, opponentDelay, playerIsFirst, graph } = props;
+    const { open, onClose, opponentEdge, opponentDelay, playerIsFirst } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
     return (
@@ -29,7 +27,7 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                         </p>
 
                         <p style={{ textAlign: 'center' }}><b>{opponentDelay === null ? 
-                        (!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge, graph, !playerIsFirst)) : 
+                        (!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge)) : 
                         ("Delay of ").concat(opponentDelay.toString())}</b></p>
                         
                         <p>

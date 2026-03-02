@@ -9,18 +9,18 @@ import { useAnalysisViewModel } from '../../viewmodel/AnalysisViewModel.ts';
 import TAStateDisplay from './TAStateDisplay.tsx';
 import { useOpenedProcesses } from '../../viewmodel/OpenedProcesses.ts';
 import { Certificate } from '../../parser/CertificateParser.ts';
-import { EdgeModel, NodeModel } from 'ts-graphviz';
+import { NodeModel } from 'ts-graphviz';
 import { SystemOptionType } from '../../viewmodel/OpenedSystems.ts';
 import ChooseTransitionsDialog from './dialogs/ChooseTransitionsDialog.tsx';
 import NextRoundDialog from './dialogs/NextRoundDialogWitness.tsx';
 import { TCheckerUtils } from '../../utils/tcheckerUtils.ts';
 import InvalidDelayDialog from './dialogs/InvalidDelayDialog.tsx';
-import { getEdgeAsString } from './EdgeFormatting.ts';
 import StartDialog from './dialogs/StartDialogWitness.tsx';
+import { evaluate } from "mathjs";
 
 function WitnessDisplay() {
 
-  const certificate = new Certificate(localStorage.getItem("certificate"));
+  const [certificate, setCertificate] = useState<Certificate>(undefined);
 
   const [firstSystem, setFirstSystem] = useState<SystemOptionType>(undefined);
   const [secondSystem, setSecondSystem] = useState<SystemOptionType>(undefined);
@@ -30,14 +30,14 @@ function WitnessDisplay() {
   const firstOpenedProcesses = useOpenedProcesses();
   const secondOpenedProcesses = useOpenedProcesses();
 
-  const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
-  const [currentNode, setCurrentNode] = useState<NodeModel>(initialNode);
+  const [initialNode, setInitialNode] = useState<NodeModel>(undefined);
+  const [currentNode, setCurrentNode] = useState<NodeModel>(undefined);
 
   const [firstClockVals, setFirstClockVals] = useState<Map<string, string>>(undefined);
   const [secondClockVals, setSecondClockVals] = useState<Map<string, string>>(undefined);
 
   // one state being [node, firstClockVals, secondClockVals, playerIsFirst, nextEdgeIdx, edgeOptions]
-  const [visitedStates, setVisitedStates] = useState<[NodeModel, Map<string, string>, Map<string, string>, boolean, number, EdgeModel[]][]>(undefined);
+  const [visitedStates, setVisitedStates] = useState<[NodeModel, Map<string, string>, Map<string, string>, boolean, number, {transition: any; target: any}[]][]>(undefined);
 
   const [playerTurn, setPlayerTurn] = useState<boolean>(true);
   // with player is first meaning the player controls the left TA in the next step
@@ -46,7 +46,8 @@ function WitnessDisplay() {
 
   // positive values (and 0) correspond to indices in edgeOptions, negative values v correspond to delay (-(v + 1))
   const [nextEdgeIdx, setNextEdgeIdx] = useState<number>(0);
-  const [edgeOptions, setEdgeOptions] = useState<EdgeModel[]>([]);
+  const [edgeOptions, setEdgeOptions] = useState<{transition: any; target: any}[]>([]);
+  const [opponentEdge, setOpponentEdge] = useState<{transition: any; target: any}>(null);
 
   const { t } = useTranslation();
   const { executeOnKeyboardClick } = useButtonUtils();
@@ -71,19 +72,25 @@ function WitnessDisplay() {
     return result;
   }
 
-  function resetClockVals(clockVals: Map<string, string>, resets: string) {
+  async function getOpponentEdge(node: NodeModel, opponentClockVals: Map<string, string>) {
 
-    let newClockVals = new Map<string, string>(clockVals);
+    const opponentCurrentState = certificate.nodeToStateJSON(
+      currentNode.attributes.get(playerIsFirst ? "second_vloc" : "first_vloc"),
+      currentNode.attributes.get(playerIsFirst ? "second_intval" : "first_intval") as Map<string, string>,
+      opponentClockVals
+    );
 
-    for(const clock of newClockVals.keys()) {
-      const clockName = clock.replace(".", "\.");
-      const regex = new RegExp(`^.*${clockName}\\s*=\\s*0.*$`);
-
-      if(regex.test(resets))
-        newClockVals = newClockVals.set(clock, "0");
-    }
-
-    return newClockVals;
+    const opponentSuccessorStates = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? secondSystem : firstSystem, opponentCurrentState))[0];
+  
+    // return edge with same action as player edge 
+    // (target state must be element of target symbolic state of the certificate edge chosen by player)
+    return JSON.parse(opponentSuccessorStates).next.filter(successor => 
+      successor.transition.vedge === edgeOptions[nextEdgeIdx].transition.vedge &&
+      symbolicStateContainsState(
+        node.attributes.get("zones"), 
+        playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : successor.target.clockval, 
+        playerIsFirst? successor.target.clockval : edgeOptions[nextEdgeIdx].target.clockval)
+    )[0];
   }
 
   function updateClockVals(clockVals: Map<string, string>, delay: number) {
@@ -91,20 +98,59 @@ function WitnessDisplay() {
     let newClockVals = new Map<string, string>(clockVals);
 
     for(const [clock, value] of newClockVals) {
-      // count number of decimal places
-      const dpVal = value.split(".")[1] ? value.split(".")[1].length : 0; 
-      const dpDelay = nextEdgeIdx.toString().split(".")[1] ? nextEdgeIdx.toString().split(".")[1].length : 0;
-      // round to number of decimal places to get rid of floating point operation error
-      const newValue = parseFloat((+value + delay).toFixed(dpDelay > dpVal ? dpDelay : dpVal)).toString();
-      newClockVals = newClockVals.set(clock, newValue);
+      newClockVals = newClockVals.set(clock, (+value + delay).toString());
     }
 
     return newClockVals;
   }
 
+  function stateToClockValMap(state: string) {
+    return certificate.parseAssignmentList(state.split(''));
+  }
+
+  function symbolicStateContainsState(symbolicState: string, state1: string, state2: string) {
+
+    const clockVals1 = stateToClockValMap(state1);
+    const clockVals2 = stateToClockValMap(state2);
+
+    function addSuffix(clock: string, index: number) {
+      if(clock.includes("[")){ // clocks of size > 1
+         const idx = clock.indexOf("[");
+         return clock.substring(0, idx).concat("_1").concat(clock.substring(idx, clock.length));
+      }
+      else // clocks of size 1
+        return clock.concat("_").concat(index.toString());
+    }
+
+    // replace clock names with current values
+    const evalScope: { [key: string]: string } = {};
+    evalScope["Urgent_Clock"] = "0";
+
+    clockVals1.forEach((value, clock) => {
+      // add _1 suffix back in
+      evalScope[addSuffix(clock, 1)] = value;
+    });
+
+    clockVals2.forEach((value, clock) => {
+      // add _2 suffix back in
+      evalScope[addSuffix(clock, 2)] = value;
+    });
+
+    let sState = symbolicState.replace(/&&/g, " and ");
+    sState = sState.replace(/,/g, " or ");
+
+    return evaluate(sState, evalScope);
+  }
+
 
   useEffect(() => {
     const fetchData = async () => {
+
+      const certificate = new Certificate(localStorage.getItem("certificate"));
+      setCertificate(certificate);
+      const initialNode = certificate.graph.nodes.filter(node => node.attributes.get("initial"))[0];
+      setInitialNode(initialNode);
+      setCurrentNode(initialNode);
 
       const parsedDataFirst = await ParseUtils.parseFile(localStorage.getItem("firstSystem"));
       const firstSystem = await ParseUtils.convertToTa(parsedDataFirst);
@@ -155,42 +201,60 @@ function WitnessDisplay() {
 
   async function handlePlayerNextState() {
 
-    let playerNewClockVals = new Map<string, string>(playerIsFirst ? firstClockVals : secondClockVals);
-    let opponentNewClockVals = new Map<string, string>(playerIsFirst ? secondClockVals : firstClockVals);
+    let playerClockVals = new Map<string, string>(playerIsFirst ? firstClockVals : secondClockVals);
+    let opponentClockVals = new Map<string, string>(playerIsFirst ? secondClockVals : firstClockVals);
     
-    if(nextEdgeIdx >= 0 && edgeOptions.length > 0) {
-      const nextNodeTarget = edgeOptions[nextEdgeIdx].targets[1] as NodeModel;
-      const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+    if(nextEdgeIdx >= 0 && edgeOptions.length > 0) { // take transition
 
-      // check which clocks are reset by transition and set according clock values to 0
-      const playerResets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst ? "first_vedge_do" : "second_vedge_do");
-      playerNewClockVals = resetClockVals(playerNewClockVals, playerResets);
+      // compute next node in certificate
+      // (edge must have same action as transition taken by player and
+      // symbolic state of target node must contain target state of transition taken by player)
+      const certificateEdgeOptions = certificate.getOutgoingEdges(currentNode).filter(edge => 
+        edge.attributes.get(playerIsFirst ? "first_vedge" : "second_vedge") === edgeOptions[nextEdgeIdx].transition.vedge);
 
-      const opponentResets = edgeOptions[nextEdgeIdx].attributes.get(playerIsFirst ? "second_vedge_do" : "first_vedge_do");
-      opponentNewClockVals = resetClockVals(opponentNewClockVals, opponentResets);
-
-      setCurrentNode(nextNode);
-    } else {
-
-      playerNewClockVals = updateClockVals(playerNewClockVals, nextEdgeIdx);
-      opponentNewClockVals = updateClockVals(opponentNewClockVals, nextEdgeIdx);
-
-      const newState = certificate.nodeToStateJSON(
-        currentNode.attributes.get(playerIsFirst ? "first_vloc" : "second_vloc"),
-        currentNode.attributes.get(playerIsFirst ? "first_intval" : "second_intval") as Map<string, string>,
-        playerNewClockVals
+      const nextNodes = certificateEdgeOptions.map(edge => {
+          const nextNodeTarget = edge.targets[1] as NodeModel;
+          const nextNode = certificate.graph.nodes.filter(node => node.id === nextNodeTarget.id)[0];
+          return nextNode;
+        }
       );
       
-      // check if delay violates invariant
-      const invariantIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? firstSystem : secondSystem, newState))[0] === "";
-      if(invariantIsViolated) {
+      const nextNode = nextNodes.filter(async node => symbolicStateContainsState(
+        node.attributes.get("zones"), 
+        playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : (await getOpponentEdge(node, opponentClockVals)).target.clockval, 
+        playerIsFirst? (await getOpponentEdge(node, opponentClockVals)).target.clockval : edgeOptions[nextEdgeIdx].target.clockval
+      ))[0];
+
+      // compute edge of opponent
+      const opponentEdge = await getOpponentEdge(nextNode, opponentClockVals);
+
+      playerClockVals = stateToClockValMap(edgeOptions[nextEdgeIdx].target.clockval);
+      opponentClockVals = stateToClockValMap(opponentEdge.target.clockval);
+
+      setCurrentNode(nextNode);
+      setOpponentEdge(opponentEdge);
+    } else { // delay
+
+      const currentState = certificate.nodeToStateJSON(
+        currentNode.attributes.get(playerIsFirst ? "first_vloc" : "second_vloc"),
+        currentNode.attributes.get(playerIsFirst ? "first_intval" : "second_intval") as Map<string, string>,
+        playerClockVals
+      );
+      
+      // check if delay is allowed
+      const successorStates = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? firstSystem : secondSystem, currentState))[0];
+      const delayIsAllowed = (JSON.parse(successorStates).max_delay === "infinite") || evaluate(JSON.parse(successorStates).max_delay) >= (-nextEdgeIdx - 1);
+      if(!delayIsAllowed) {
         setInvalidDelayOpen(true);
         return;
       }
+
+      playerClockVals = updateClockVals(playerClockVals, (-nextEdgeIdx - 1));
+      opponentClockVals = updateClockVals(opponentClockVals, (-nextEdgeIdx - 1));
     }
 
-    setFirstClockVals(playerIsFirst ? playerNewClockVals : opponentNewClockVals);
-    setSecondClockVals(playerIsFirst ? opponentNewClockVals : playerNewClockVals);
+    setFirstClockVals(playerIsFirst ? playerClockVals : opponentClockVals);
+    setSecondClockVals(playerIsFirst ? opponentClockVals : playerClockVals);
     setPlayerTurn(false);
   }
 
@@ -202,7 +266,7 @@ function WitnessDisplay() {
     setVisitedStates(visitedStates.concat([[currentNode, firstClockVals, secondClockVals, playerIsFirst, nextEdgeIdx, edgeOptions]]));
   }
 
-  function handlePreviousStep() {
+  async function handlePreviousStep() {
 
     if(selectAutomatonStage) {
       setSelectAutomatonStage(false);
@@ -223,6 +287,8 @@ function WitnessDisplay() {
       setPlayerTurn(true);
 
       setCurrentNode(visitedStates[visitedStates.length - 1][0]);
+      if(nextEdgeIdx >= 0 && edgeOptions.length > 0)
+        setOpponentEdge(await getOpponentEdge(visitedStates[visitedStates.length - 1][0], visitedStates[visitedStates.length - 1][playerIsFirst? 2 : 1]));
       setFirstClockVals(visitedStates[visitedStates.length - 1][1]);
       setSecondClockVals(visitedStates[visitedStates.length - 1][2]);
     }
@@ -230,6 +296,7 @@ function WitnessDisplay() {
 
   function handleReset() {
     setCurrentNode(initialNode);
+    setOpponentEdge(null);
 
     const initialFirstClockVals = getInitialClockVals(firstSystem);
     const initialSecondClockVals = getInitialClockVals(secondSystem);
@@ -253,58 +320,18 @@ function WitnessDisplay() {
       first ? firstClockVals : secondClockVals
     );
 
-    const edges = certificate.getOutgoingEdges(currentNode);
-
-    let edgeOptions = [];
-
-    for(const edge of edges) {
-      // do not add duplicates to options
-      if(edgeOptions.find(edgeOption => 
-        getEdgeAsString(edgeOption, certificate.graph, first) === getEdgeAsString(edge, certificate.graph, first)
-      )) 
-        continue;
-
-      // check if guard and invariant of target location are fulfilled
-      // const guardCheckerState = JSON.parse(JSON.stringify(currentState));
-      // const guard = edge.attributes.get(first ? "first_vedge_prov" : "second_vedge_prov");
-
-      // guardCheckerState.clockval = !guard ? currentState.clockval : guard.concat(" && ").concat(currentState.clockval);
-
-      // const guardIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(first ? firstSystem : secondSystem, guardCheckerState))[0] === "";
-      // if(guardIsViolated)
-      //   continue;
-
-      const edgeTargetNode = edge.targets[1] as NodeModel;
-      const edgeTarget = certificate.graph.nodes.filter(node => node.id === edgeTargetNode.id)[0];
-
-      let newClockVals = new Map<string, string>(playerIsFirst ? firstClockVals : secondClockVals);
-
-      // check which clocks are reset by transition and set according clock values to 0
-      const resets = edge.attributes.get(playerIsFirst ? "first_vedge_do" : "second_vedge_do");
-      newClockVals = resetClockVals(newClockVals, resets);
-
-      const invariantCheckerState = certificate.nodeToStateJSON(
-        edgeTarget.attributes.get(first ? "first_vloc" : "second_vloc"),
-        edgeTarget.attributes.get(first ? "first_intval" : "second_intval") as Map<string, string>,
-        newClockVals
-      );
-
-      const invariantIsViolated = (await TCheckerUtils.callConcreteOneStepSimulation(first ? firstSystem : secondSystem, invariantCheckerState))[0] === "";
-      if(invariantIsViolated)
-        continue;
-
-      edgeOptions = edgeOptions.concat(edge);
-    }
+    // compute edge options
+    const successorStates = (await TCheckerUtils.callConcreteOneStepSimulation(first ? firstSystem : secondSystem, currentState))[0];
+    const edgeOptions = JSON.parse(successorStates).next;
 
     setSelectAutomatonStage(false);
 
     setPlayerIsFirst(first);
     setNextEdgeIdx(edgeOptions.length === 0 ? -1 : 0);
     setEdgeOptions(edgeOptions);
-
   }
 
-  if(!firstSystem || !secondSystem)
+  if(!firstSystem || !secondSystem || !certificate)
     return (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CircularProgress size='20px' color='inherit' />
             </div>)
@@ -390,7 +417,7 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           {<h3> {((playerTurn && playerIsFirst) || (!playerTurn && !playerIsFirst)) && edgeOptions ? 
             t('switchDialog.input.action').concat(": ").concat(nextEdgeIdx < 0 ? ("Delay of ").concat((-nextEdgeIdx - 1).toString()) : 
-            edgeOptions[nextEdgeIdx].attributes.get("first_vedge")) : ""}</h3>}
+            edgeOptions[nextEdgeIdx].transition.vedge) : ""}</h3>}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -415,7 +442,7 @@ function WitnessDisplay() {
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           {<h3> {((playerTurn && !playerIsFirst) || (!playerTurn && playerIsFirst)) && edgeOptions ? 
             t('switchDialog.input.action').concat(": ").concat(nextEdgeIdx < 0 ? ("Delay of ").concat((-nextEdgeIdx - 1).toString()) : 
-            edgeOptions[nextEdgeIdx].attributes.get("second_vedge")) : ""}</h3>}
+            edgeOptions[nextEdgeIdx].transition.vedge) : ""}</h3>}
         </Grid>
         <Grid item xs={12} sm={8} md={9} lg={9} sx={{ display: 'flex', justifyContent: "center", alignItems: "center", overflowY: 'hidden', height: '100%', width: '20%'}}>
           <Button
@@ -444,9 +471,8 @@ function WitnessDisplay() {
           open={chooseTransitionsOpen} 
           onClose={() => setChooseTransitionsOpen(false)} 
           edgeOptions={edgeOptions}
-          playerIsFirst={playerIsFirst}
           context={ChooseTransitionContext}
-          graph={certificate.graph}
+          counterExample={false}
         >
         </ChooseTransitionsDialog>
       </ChooseTransitionContext.Provider>
@@ -454,10 +480,9 @@ function WitnessDisplay() {
       <NextRoundDialog 
         open={nextRoundOpen} 
         onClose={() => setNextRoundOpen(false)} 
-        opponentEdge={edgeOptions ? edgeOptions[nextEdgeIdx] : null}
+        opponentEdge={opponentEdge}
         opponentDelay={nextEdgeIdx < 0 ? -nextEdgeIdx - 1 : null}
         playerIsFirst={playerIsFirst}
-        graph={certificate.graph}
       >
       </NextRoundDialog>
 

@@ -1,20 +1,18 @@
 import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import React from 'react';
 import { useButtonUtils } from '../../../utils/buttonUtils';
-import { EdgeModel, RootGraphModel } from 'ts-graphviz';
 import { getEdgeAsString } from '../EdgeFormatting';
 
 export interface NextRoundDialog {
     open: boolean;
     onClose: () => void;
-    opponentEdge: EdgeModel;
+    opponentEdge: {transition: any; target: any};
     playerIsFirst: boolean;
-    graph: RootGraphModel;
 }
 
 const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
 
-    const { open, onClose, opponentEdge, playerIsFirst, graph } = props;
+    const { open, onClose, opponentEdge, playerIsFirst } = props;
     const { executeOnKeyboardClick } = useButtonUtils();
 
     return (
@@ -27,7 +25,7 @@ const NextRoundDialog: React.FC<NextRoundDialog> = (props) => {
                         on the {playerIsFirst ? "right" : "left"}-hand side:
                         </p>
 
-                        <p style={{ textAlign: 'center' }}><b>{!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge, graph, !playerIsFirst)}</b></p>
+                        <p style={{ textAlign: 'center' }}><b>{!opponentEdge ? "ERROR : Undefined edge" : getEdgeAsString(opponentEdge)}</b></p>
                         
                         <p>
                         You can view this step by clicking the next step button on the {playerIsFirst ? "right" : "left"}.

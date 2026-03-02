@@ -22,7 +22,7 @@ const GameOverDialog: React.FC<GameOverDialog> = (props) => {
                         <h3><center>Distinguishing transition found</center></h3>
                         
                         <p>
-                        The opponent has chosen the action <b>&lt;{finalSymbol}&gt;</b> for the timed automaton on the {playerIsFirst ? "right" : "left"}-hand side.
+                        The opponent has chosen the action <b>&lt;{finalSymbol.toString()}&gt;</b> for the timed automaton on the {playerIsFirst ? "right" : "left"}-hand side.
                         </p>
 
                         <p>
