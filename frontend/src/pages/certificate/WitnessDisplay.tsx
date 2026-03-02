@@ -72,11 +72,20 @@ function WitnessDisplay() {
     );
 
     const opponentSuccessorStates = (await TCheckerUtils.callConcreteOneStepSimulation(playerIsFirst ? secondSystem : firstSystem, opponentCurrentState))[0];
-  
+    
+    const vedge = edgeOptions[nextEdgeIdx].transition.vedge;
+    const state = certificate.nodeToStateJSON(
+      node.attributes.get(playerIsFirst? "second_vloc" : "first_vloc"),
+      node.attributes.get(playerIsFirst? "second_intval" : "first_intval") as Map<string, string>,
+      new Map<string, string>
+    );
+
     // return edge with same action as player edge 
     // (target state must be element of target symbolic state of the certificate edge chosen by player)
     return JSON.parse(opponentSuccessorStates).next.filter(successor => 
-      successor.transition.vedge === edgeOptions[nextEdgeIdx].transition.vedge &&
+      successor.transition.vedge === vedge &&
+      successor.target.vloc === state.vloc &&
+      successor.target.intval === state.intval &&
       symbolicStateContainsState(
         node.attributes.get("zones"), 
         playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : successor.target.clockval, 
@@ -212,12 +221,29 @@ function WitnessDisplay() {
           return nextNode;
         }
       );
-      
-      const nextNode = nextNodes.filter(async node => symbolicStateContainsState(
-        node.attributes.get("zones"), 
-        playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : (await getOpponentEdge(node, opponentClockVals)).target.clockval, 
-        playerIsFirst? (await getOpponentEdge(node, opponentClockVals)).target.clockval : edgeOptions[nextEdgeIdx].target.clockval
-      ))[0];
+
+      const nextNodeOptions = await Promise.all(
+        nextNodes.map(async node => {
+          const state = certificate.nodeToStateJSON(
+            node.attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
+            node.attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
+            new Map<string, string>
+          );
+
+          const opponentEdge = await getOpponentEdge(node, opponentClockVals);
+
+          return ({node, keep: 
+            (state.vloc === edgeOptions[nextEdgeIdx].target.vloc &&
+            state.intval === edgeOptions[nextEdgeIdx].target.intval &&
+            symbolicStateContainsState(
+            node.attributes.get("zones"), 
+            playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : opponentEdge.target.clockval, 
+            playerIsFirst? opponentEdge.target.clockval : edgeOptions[nextEdgeIdx].target.clockval
+        ))})
+        })
+      );
+
+      const nextNode = nextNodeOptions.filter(item => item.keep).map(item => item.node)[0];
 
       // compute edge of opponent
       const opponentEdge = await getOpponentEdge(nextNode, opponentClockVals);
