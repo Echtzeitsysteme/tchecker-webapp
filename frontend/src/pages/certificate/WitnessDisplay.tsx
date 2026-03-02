@@ -85,7 +85,7 @@ function WitnessDisplay() {
     return JSON.parse(opponentSuccessorStates).next.filter(successor => 
       successor.transition.vedge === vedge &&
       successor.target.vloc === state.vloc &&
-      successor.target.intval === state.intval &&
+      compareIntVals(successor.target.intval, state.intval) &&
       symbolicStateContainsState(
         node.attributes.get("zones"), 
         playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : successor.target.clockval, 
@@ -104,14 +104,30 @@ function WitnessDisplay() {
     return newClockVals;
   }
 
-  function stateToClockValMap(clockval: string, certificate: Certificate) {
-    return certificate.parseAssignmentList(clockval.split(''));
+  function stringToValMap(vals: string, certificate: Certificate) {
+    return certificate.parseAssignmentList(vals.split(''));
+  }
+
+  function compareIntVals(intval1: string, intval2: string) {
+
+    const intval1Map = stringToValMap(intval1, certificate);
+    const intval2Map = stringToValMap(intval2, certificate);
+
+    if (intval1Map.size !== intval2Map.size)
+        return false;
+
+    for (let [key, val] of intval1Map) {
+        if (intval2Map.get(key) !== val)
+          return false;
+    }
+
+    return true;
   }
 
   function symbolicStateContainsState(symbolicState: string, state1: string, state2: string) {
 
-    const clockVals1 = stateToClockValMap(state1, certificate);
-    const clockVals2 = stateToClockValMap(state2, certificate);
+    const clockVals1 = stringToValMap(state1, certificate);
+    const clockVals2 = stringToValMap(state2, certificate);
 
     function addSuffix(clock: string, index: number) {
       if(clock.includes("[")){ // clocks of size > 1
@@ -170,8 +186,8 @@ function WitnessDisplay() {
       secondOpenedProcesses.setAutomatonOptions(secondSystem.processes);
       secondOpenedProcesses.setSelectedAutomaton(secondSystem.processes[0]);
 
-      const initialClockVals1 = stateToClockValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(firstSystem, null))[0]).initial[0].state.clockval, certificate);
-      const initialClockVals2 = stateToClockValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(secondSystem, null))[0]).initial[0].state.clockval, certificate);
+      const initialClockVals1 = stringToValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(firstSystem, null))[0]).initial[0].state.clockval, certificate);
+      const initialClockVals2 = stringToValMap(JSON.parse((await TCheckerUtils.callConcreteOneStepSimulation(secondSystem, null))[0]).initial[0].state.clockval, certificate);
 
       setFirstClockVals(initialClockVals1);
       setSecondClockVals(initialClockVals2);
@@ -234,7 +250,7 @@ function WitnessDisplay() {
 
           return ({node, keep: 
             (state.vloc === edgeOptions[nextEdgeIdx].target.vloc &&
-            state.intval === edgeOptions[nextEdgeIdx].target.intval &&
+            compareIntVals(state.intval, edgeOptions[nextEdgeIdx].target.intval) &&
             symbolicStateContainsState(
             node.attributes.get("zones"), 
             playerIsFirst? edgeOptions[nextEdgeIdx].target.clockval : opponentEdge.target.clockval, 
@@ -248,8 +264,8 @@ function WitnessDisplay() {
       // compute edge of opponent
       const opponentEdge = await getOpponentEdge(nextNode, opponentClockVals);
 
-      playerClockVals = stateToClockValMap(edgeOptions[nextEdgeIdx].target.clockval, certificate);
-      opponentClockVals = stateToClockValMap(opponentEdge.target.clockval, certificate);
+      playerClockVals = stringToValMap(edgeOptions[nextEdgeIdx].target.clockval, certificate);
+      opponentClockVals = stringToValMap(opponentEdge.target.clockval, certificate);
 
       setCurrentNode(nextNode);
       setOpponentEdge(opponentEdge);
