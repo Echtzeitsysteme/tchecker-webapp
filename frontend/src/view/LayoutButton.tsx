@@ -13,15 +13,13 @@ const LayoutButton: React.FC<LayoutButtonProps> = (props) => {
   const { t } = useTranslation();
 
   const adjustLayout = () => {
-    const locs = viewModel.ta.locations;
-    locs.forEach((loc) => {
-      loc.setLayout = false;
-    });
-    viewModel.setAutomaton(viewModel, viewModel.ta);
+    const newLocs = [...viewModel.ta.locations];
+    newLocs.forEach((loc) => loc.setLayout = false);
+    viewModel.setAutomaton({...viewModel.ta, locations: newLocs});
   };
 
   return (
-    <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 0.4, mb: 2.3 }}>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 0.4 }}>
       <Button variant="contained" onClick={adjustLayout}>
         {t('layoutButton.text')}
       </Button>

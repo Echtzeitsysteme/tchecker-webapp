@@ -1,20 +1,20 @@
 import './App.css';
 import { useTranslation } from 'react-i18next';
-import AutomatonVisualization from './view/AutomatonVisualization';
+import AutomatonVisualization from '../view/AutomatonVisualization.tsx';
 import { Box, Grid } from '@mui/material';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { useAnalysisViewModel } from './viewmodel/AnalysisViewModel';
-import { AutomatonManipulation } from './view/AutomatonManipulation';
-import ProcessSelection from './view/ProcessSelection.tsx';
-import AutomatonDrawer from './view/AutomatonDrawer.tsx';
-import { useOpenedSystems } from './viewmodel/OpenedSystems.ts';
-import { useOpenedProcesses } from './viewmodel/OpenedProcesses.ts';
-import LayoutButton from './view/LayoutButton.tsx';
-import TCheckerSimulation from './view/TCheckerSimulation.tsx';
-import TCheckerSimulationDrawer from './view/TcheckerSimulationDrawer.tsx';
-import { useSimulationModel } from './viewmodel/SimulationModel.ts';
+import { useAnalysisViewModel } from '../viewmodel/AnalysisViewModel.ts';
+import { AutomatonManipulation } from '../view/AutomatonManipulation.tsx';
+import ProcessManipulation from '../view/ProcessManipulation.tsx';
+import AutomatonDrawer from '../view/AutomatonDrawer.tsx';
+import { useOpenedSystems } from '../viewmodel/OpenedSystems.ts';
+import { useOpenedProcesses } from '../viewmodel/OpenedProcesses.ts';
+import LayoutButton from '../view/LayoutButton.tsx';
+import TCheckerSimulation from '../view/TCheckerSimulation.tsx';
+import TCheckerSimulationDrawer from '../view/TcheckerSimulationDrawer.tsx';
+import { useSimulationModel } from '../viewmodel/SimulationModel.ts';
 
-function App() {
+function HomePage() {
   const viewModel = useAnalysisViewModel();
   const openedSystems = useOpenedSystems();
   const openedProcesses = useOpenedProcesses();
@@ -61,7 +61,6 @@ function App() {
   //   console.log('ViewModelChanged');
   // }, [viewModel])
 
-  
   return (
     <>
       <h1 style={{ paddingLeft: '16px' }} ref={headerRef}>
@@ -69,7 +68,7 @@ function App() {
       </h1>
       <Box ref={toolRef} sx={{ display: 'flex', alignItems: 'center' }}>
         <AutomatonDrawer viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
-        <ProcessSelection viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
+        <ProcessManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
         <LayoutButton viewModel={viewModel} />
       </Box>
       {simulationModel.simulationActive ? (
@@ -106,7 +105,7 @@ function App() {
               <AutomatonManipulation viewModel={viewModel} openedSystems={openedSystems} openedProcesses={openedProcesses} simulationModel={simulationModel} />
             </Grid>
             <Grid item xs={12} sm={8} md={9} lg={9} sx={{ overflowY: 'hidden', height: '100%' }}>
-              <AutomatonVisualization viewModel={viewModel} />
+              <AutomatonVisualization viewModel={viewModel} coloredLoc='' coloredSwitch='' />
             </Grid>
           </Grid>
         </Box>
@@ -115,4 +114,4 @@ function App() {
   );
 }
 
-export default App;
+export default HomePage;

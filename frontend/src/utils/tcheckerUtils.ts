@@ -1,5 +1,4 @@
 import { SystemOptionType } from '../viewmodel/OpenedSystems';
-import { RawSimulationState } from '../viewmodel/SimulationModel';
 import { getAppConfig } from './appConfigUtils';
 import { createTCheckerFile } from './tckFileUtils';
 import { ErrorResult, tryCatchAsync } from './tryCatchUtil';
@@ -165,6 +164,7 @@ export class TCheckerUtils {
     const responseObj = await response!.json() as {status: string, message: string};
 
     const parsedMessages = responseObj.message
+      .toString()
       .split('\n')
       .filter(
         (line: string) =>
@@ -370,13 +370,105 @@ export class TCheckerUtils {
     }, null];
   }
 
-  public static async callSimulate(system: SystemOptionType, startingState: RawSimulationState): Promise<ErrorResult<string>> {
+  public static async callOneStepSimulation(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; zone: string;}): Promise<ErrorResult<string>> {
     const sysdecl = await createTCheckerFile(system);
-    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/simulate`;
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/one_step_simulation`;
 
     const body = {
       sysdecl: sysdecl,
       starting_state: startingState ? JSON.stringify(startingState) : null,
+    };
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Simulation failed: ${errorText}`)];
+    }
+
+    const simulationResult = await response!.text();
+    return [simulationResult, null];
+  }
+
+  public static async callRandomizedSimulation(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; zone: string;}, nsteps: number): Promise<ErrorResult<string>> {
+    const sysdecl = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/randomized_simulation`;
+
+    const body = {
+      sysdecl: sysdecl,
+      starting_state: startingState ? JSON.stringify(startingState) : null,
+      nsteps: nsteps
+    };
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Simulation failed: ${errorText}`)];
+    }
+
+    const simulationResult = await response!.text();
+    return [simulationResult, null];
+  }
+
+    public static async callConcreteOneStepSimulation(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; clockval: string;}): Promise<ErrorResult<string>> {
+    const sysdecl = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/concrete_one_step_simulation`;
+
+    const body = {
+      sysdecl: sysdecl,
+      starting_state: startingState ? JSON.stringify(startingState) : null,
+    };
+
+    const [response, error] = await tryCatchAsync(() => fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }));
+
+    if (error) {
+      return [null, error];
+    }
+
+    if (!response!.ok) {
+      const errorText = await response!.text();
+      return [null, new Error(`Simulation failed: ${errorText}`)];
+    }
+
+    const simulationResult = await response!.text();
+    return [simulationResult, null];
+  }
+
+  public static async callConcreteRandomizedSimulation(system: SystemOptionType, startingState: {intval: string; labels: string; vloc: string; clockval: string;}, nsteps: number): Promise<ErrorResult<string>> {
+    const sysdecl = await createTCheckerFile(system);
+    const url = `${await this.getUrlForExecutable(TCheckerExecutables.TckSimulate)}/concrete_randomized_simulation`;
+
+    const body = {
+      sysdecl: sysdecl,
+      starting_state: startingState ? JSON.stringify(startingState) : null,
+      nsteps: nsteps
     };
 
     const [response, error] = await tryCatchAsync(() => fetch(url, {

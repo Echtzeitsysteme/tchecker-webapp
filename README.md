@@ -1,9 +1,32 @@
-# ⏰ Timed-Automata Analysis
+# Timed-Automata Analysis
 
-This project is a tool for modeling and analyzing Timed Automata.
-The tool is based on React and TypeScript and can be extended easily to also incorporate analysis techniques based on the created models.
+This project is a tool for modeling and analyzing Timed Automata using [TChecker](https://github.com/Echtzeitsysteme/tchecker).
+The tool is based on Python, React and TypeScript and can be extended easily to also incorporate analysis techniques based on the created models.
 
-## 🚀 Quick Start
+
+## Installation
+
+First, install Python dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+This project utilizes [Node](https://nodejs.org/) and [Yarn Classic](https://classic.yarnpkg.com/) for development.
+The usual commands for React projects also apply here.
+
+To install **Timed-Automata Analysis**, use:
+
+```
+cd frontend
+yarn install
+```
+
+## Usage
+
+You can start **Timed-Automata Analysis** by running the `start.sh` script.
+
+<!-- ## 🚀 Quick Start
 
 This project utilizes [Node](https://nodejs.org/) and [Yarn Classic](https://classic.yarnpkg.com/) for development.
 The usual commands for React projects also apply here.
@@ -20,9 +43,9 @@ The usual commands for React projects also apply here.
 - `yarn build` to build the app for production
 - `yarn deploy` for deployment on GitHub Pages
 
-See `package.json` for further commands.
+See `package.json` for further commands. -->
 
-## 🔗 Links
+## Links
 
 - [Introduction to Timed Automata on Wikipedia](https://en.wikipedia.org/wiki/Timed_automaton)
 - [Original paper on Timed Automata by Alur and Dill](https://doi.org/10.1007/BFb0032042)

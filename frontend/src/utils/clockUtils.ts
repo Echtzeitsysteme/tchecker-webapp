@@ -14,6 +14,9 @@ export function useClockUtils(): ClockUtils {
     (oldClockName: string, newClockName: string, ta: TimedAutomaton) => {
       const { locations, switches, clocks } = ta;
       const oldClock = clocks.filter((clock) => clock.name === oldClockName)[0];
+      if(oldClock === undefined) {
+        return
+      }
       const newClock: Clock = { name: newClockName, size: oldClock.size };
 
       // update clock

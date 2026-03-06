@@ -175,12 +175,17 @@
   "tcheckerCompareAnalysisDialog.downloadCertificate": "Zertifikat herunterladen",
   "tcheckerCompareAnalysisDialog.firstSystem": "Erstes System",
   "tcheckerCompareAnalysisDialog.secondSystem": "Zweites System",
-  "tcheckerCompareAnalysisDialog.generateWitness": "Witness generieren",
+  "tcheckerCompareAnalysisDialog.generateCertificate": "Zertifikat generieren",
+  "tcheckerCompareAnalysisDialog.displayCertificate": "Zertifikat anzeigen",
   "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Beziehung erfüllt",
   "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Besuchte Paare von Zuständen",
   "abortAnalysisDialog.title": "Analyse abbrechen",
   "abortAnalysisDialog.contentText": "Sind Sie sicher, dass Sie die Analyse abbrechen möchten?",
   "abortAnalysisDialog.button.cancel": "Nein",
   "abortAnalysisDialog.button.confirm": "Ja, abbrechen",
-  "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut."
+  "tcheckerErrorDialog.text": "Es ist etwas schiefgelaufen. Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
+  "tcheckerCounterexampleDisplay.button.reset": "Neustart",
+  "tcheckerCounterexampleDisplay.button.nextStep": "Nächster Schritt",
+  "tcheckerCounterexampleDisplay.button.previousStep": "Vorheriger Schritt",
+  "tcheckerCounterexampleDisplay.button.chooseTransitions": "Transitionen wählen"
 }

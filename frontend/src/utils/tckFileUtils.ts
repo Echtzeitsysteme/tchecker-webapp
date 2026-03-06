@@ -28,6 +28,19 @@ export async function createTCheckerFile(currentSystem: SystemOptionType){
     integers += integer;
   });
 
+  //events without edges (to prevent errors for uploaded systems)
+  currentSystem.synchronizations.forEach(sync => {
+    const syncEvents = sync.syncs.map(s => s.event);
+
+    for(const syncEvent of syncEvents) {
+      if (!existingEvents.includes(syncEvent)) {
+        existingEvents.push(syncEvent);
+        const newEvent = 'event:' + syncEvent + '\n';
+        events += newEvent;
+      }
+    }
+  });
+
   const automatonOptions = currentSystem.processes;
   automatonOptions.forEach((option) => {
     const process = option.label;

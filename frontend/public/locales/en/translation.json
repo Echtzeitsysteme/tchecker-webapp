@@ -175,13 +175,18 @@
   "tcheckerCompareAnalysisDialog.downloadCertificate": "Download Certificate",
   "tcheckerCompareAnalysisDialog.firstSystem": "First System",
   "tcheckerCompareAnalysisDialog.secondSystem": "Second System",
-  "tcheckerCompareAnalysisDialog.generateWitness": "Generate Witness",
+  "tcheckerCompareAnalysisDialog.generateCertificate": "Generate Certificate",
+  "tcheckerCompareAnalysisDialog.displayCertificate": "Display Certificate",
   "tcheckerLivenessAnalysisDialog.result.relationshipFulfilled": "Relationship Fulfilled",
   "tcheckerLivenessAnalysisDialog.result.visitedPairOfStates": "Visited Pairs of States",
   "abortAnalysisDialog.title": "Abort Analysis",
   "abortAnalysisDialog.contentText": "Are you sure you want to abort the analysis?",
   "abortAnalysisDialog.button.cancel": "No",
   "abortAnalysisDialog.button.confirm": "Yes, abort",
-  "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again."
+  "tcheckerErrorDialog.text": "Something went wrong. Please check your input and try again.",
+  "tcheckerCounterexampleDisplay.button.reset": "Reset",
+  "tcheckerCounterexampleDisplay.button.nextStep": "Next Step",
+  "tcheckerCounterexampleDisplay.button.previousStep": "Previous Step",
+  "tcheckerCounterexampleDisplay.button.chooseTransitions": "Choose Transitions"
 }
   
