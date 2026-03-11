@@ -105,7 +105,13 @@ function WitnessDisplay() {
   }
 
   function stringToValMap(vals: string, certificate: Certificate) {
-    return certificate.parseAssignmentList(vals.split(''));
+
+    let result = certificate.parseAssignmentList(vals.split(''));
+
+    for (let [clock, val] of result)
+        result = result.set(clock, evaluate(val).toString());
+
+    return result;
   }
 
   function compareIntVals(intval1: string, intval2: string) {
@@ -145,12 +151,12 @@ function WitnessDisplay() {
 
     clockVals1.forEach((value, clock) => {
       // add _1 suffix back in
-      evalScope[addSuffix(clock, 1)] = value;
+      evalScope[addSuffix(clock, 1)] = evaluate(value).toString();
     });
 
     clockVals2.forEach((value, clock) => {
       // add _2 suffix back in
-      evalScope[addSuffix(clock, 2)] = value;
+      evalScope[addSuffix(clock, 2)] = evaluate(value).toString();
     });
 
     let sState = symbolicState.replace(/&&/g, " and ");
@@ -240,6 +246,7 @@ function WitnessDisplay() {
 
       const nextNodeOptions = await Promise.all(
         nextNodes.map(async node => {
+
           const state = certificate.nodeToStateJSON(
             node.attributes.get(playerIsFirst? "first_vloc" : "second_vloc"),
             node.attributes.get(playerIsFirst? "first_intval" : "second_intval") as Map<string, string>,
@@ -247,6 +254,9 @@ function WitnessDisplay() {
           );
 
           const opponentEdge = await getOpponentEdge(node, opponentClockVals);
+          
+          if(!opponentEdge)
+            return ({node, keep: false})
 
           return ({node, keep: 
             (state.vloc === edgeOptions[nextEdgeIdx].target.vloc &&
@@ -278,7 +288,7 @@ function WitnessDisplay() {
       );
       
       // check if delay is allowed
-      if(!(new RegExp(/^\d*(\.5(0)*)*$/)).test((-nextEdgeIdx - 1).toString())) {
+      if(!(new RegExp(/^\d*(\.5(0)*)?$/)).test((-nextEdgeIdx - 1).toString())) {
         setInvalidDelayOpen(true);
         return;
       }

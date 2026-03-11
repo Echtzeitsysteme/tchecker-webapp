@@ -90,7 +90,15 @@ export class Certificate {
 
         let clockval = "";
         for(const [lhs, rhs] of clockvals) {
-            clockval = clockval.concat(lhs).concat("=").concat(rhs).concat(", ");
+
+            let rhs_transformed = rhs;
+            // transform .5 to /2
+            if ((new RegExp(/^\d*(\.5(0)*)$/)).test(rhs_transformed)) {
+                rhs_transformed = rhs_transformed.split(".")[0];
+                rhs_transformed = (+rhs_transformed * 2 + 1).toString().concat("/2");
+            }
+
+            clockval = clockval.concat(lhs).concat("=").concat(rhs_transformed).concat(", ");
         }
         clockval = clockval.substring(0, clockval.length - 2);
 

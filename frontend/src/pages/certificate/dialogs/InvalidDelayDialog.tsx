@@ -20,11 +20,11 @@ const InvalidDelayDialog: React.FC<InvalidDelayDialog> = (props) => {
                     <div>
                         <h3><center>Invalid delay</center></h3>
                         <p>
-                            {!(new RegExp(/^\d*(\.5(0)*)*$/)).test(delay.toString())? 
+                            {!(new RegExp(/^\d*(\.5(0)*)?$/)).test(delay.toString())? 
                             "Delay " : 
                             "Executing a delay of "}
-                            {delay}
-                            {!(new RegExp(/^\d*(\.5(0)*)*$/)).test(delay.toString())? 
+                            <b>{delay}</b>
+                            {!(new RegExp(/^\d*(\.5(0)*)?$/)).test(delay.toString())? 
                             " is invalid. Only 0.5-step increments are permitted for delays." : 
                             " would violate the invariant of one of the automaton's processes' current location."}   
                             <br></br>
